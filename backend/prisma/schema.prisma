@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  name        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  password    String
+  role        String   @default("user")
+  permissions String?  @default("{}", map: "DF__User__permission__01142BA1") @db.NVarChar(Max)
+}
+
+model Supplier {
+  id              Int       @id @default(autoincrement())
+  name            String
+  priority        Int
+  createdAt       DateTime  @default(now())
+  paymentTermDays Int       @default(0)
+  invoices        Invoice[]
+  payments        Payment[]
+}
+
+model Invoice {
+  id          Int      @id @default(autoincrement())
+  supplierId  Int
+  amount      Float
+  paidAmount  Float    @default(0)
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+  invoiceDate DateTime @default(now())
+  description String?
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+}
+
+model Payment {
+  id          Int      @id @default(autoincrement())
+  supplierId  Int
+  amount      Float
+  createdAt   DateTime @default(now())
+  paymentDate DateTime @default(now())
+  accountId   Int
+  account     Account  @relation(fields: [accountId], references: [id])
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+}
+
+model Account {
+  id          Int          @id @default(autoincrement())
+  name        String
+  type        String
+  balance     Float        @default(0)
+  createdAt   DateTime     @default(now())
+  collections Collection[]
+  payments    Payment[]
+}
+
+model Collection {
+  id           Int       @id @default(autoincrement())
+  amount       Float
+  currency     String
+  exchangeRate Float     @default(1)
+  amountInBase Float
+  accountId    Int
+  note         String
+  expectedDate DateTime?
+  receivedDate DateTime
+  status       String    @default("received")
+  createdAt    DateTime  @default(now())
+  account      Account   @relation(fields: [accountId], references: [id])
+}
