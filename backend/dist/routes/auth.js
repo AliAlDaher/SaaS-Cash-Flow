@@ -38,6 +38,7 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             parsedPerms =
                 {
                     dashboard: { view: true },
+                    reports: { view: true },
                     invoices: { view: true, create: true, edit: true, delete: true },
                     payments: { view: true, create: true, edit: true, delete: true },
                     collections: { view: true, create: true, edit: true, delete: true },

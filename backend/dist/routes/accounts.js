@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
+const library_1 = require("@prisma/client/runtime/library");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
@@ -22,7 +23,7 @@ router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res)
             data: {
                 name,
                 type,
-                balance: balance ? parseFloat(balance) : 0
+                balance: balance ? new library_1.Decimal(balance) : new library_1.Decimal(0)
             }
         });
         res.status(201).json(account);
@@ -33,7 +34,7 @@ router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res)
 }));
 router.get('/', (0, auth_1.requirePermission)('accounts', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const accounts = yield prisma.account.findMany();
+        const accounts = yield prisma.account.findMany({ orderBy: { id: "desc" } });
         res.json(accounts);
     }
     catch (error) {
@@ -42,7 +43,10 @@ router.get('/', (0, auth_1.requirePermission)('accounts', 'view'), (req, res) =>
 }));
 router.get('/:id', (0, auth_1.requirePermission)('accounts', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const account = yield prisma.account.findUnique({ where: { id: parseInt(req.params.id) } });
+        const account = yield prisma.account.findUnique({
+            where: { id: parseInt(req.params.id) },
+            include: { adjustments: { orderBy: { createdAt: 'desc' } } }
+        });
         if (!account)
             return res.status(404).json({ error: 'Account not found' });
         res.json(account);
@@ -60,8 +64,16 @@ router.delete('/:id', (0, auth_1.requirePermission)('accounts', 'delete'), (req,
         yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const paymentCount = yield tx.payment.count({ where: { accountId: id } });
             const collectionCount = yield tx.collection.count({ where: { accountId: id } });
-            if (paymentCount > 0 || collectionCount > 0) {
-                throw new Error('Cannot delete account because it has existing transactions.');
+            const adjustmentCount = yield tx.accountAdjustment.count({ where: { accountId: id } });
+            if (paymentCount > 0 || collectionCount > 0 || adjustmentCount > 0) {
+                let reasons = [];
+                if (paymentCount > 0)
+                    reasons.push(`${paymentCount} payments`);
+                if (collectionCount > 0)
+                    reasons.push(`${collectionCount} collections`);
+                if (adjustmentCount > 0)
+                    reasons.push(`${adjustmentCount} adjustments`);
+                throw new Error(`Cannot delete account. Linked data remaining: ${reasons.join(', ')}.`);
             }
             const account = yield tx.account.findUnique({ where: { id } });
             if (!account) {
@@ -73,6 +85,44 @@ router.delete('/:id', (0, auth_1.requirePermission)('accounts', 'delete'), (req,
     }
     catch (error) {
         res.status(400).json({ error: error.message || 'Error deleting account' });
+    }
+}));
+router.post('/:id/reconcile', (0, auth_1.requirePermission)('accounts', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { actualBalance, note } = req.body;
+        const accountId = parseInt(id);
+        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const account = yield tx.account.findUnique({ where: { id: accountId } });
+            if (!account)
+                throw new Error('Account not found');
+            const systemBalance = new library_1.Decimal(account.balance);
+            const targetBalance = new library_1.Decimal(actualBalance);
+            const diff = targetBalance.minus(systemBalance);
+            if (diff.equals(0)) {
+                return { message: 'Balance is already in sync', account };
+            }
+            // Record the adjustment
+            yield tx.accountAdjustment.create({
+                data: {
+                    accountId,
+                    amount: diff,
+                    systemBalance,
+                    actualBalance: targetBalance,
+                    note: note || 'Bank Reconciliation'
+                }
+            });
+            // Update account balance
+            const updatedAccount = yield tx.account.update({
+                where: { id: accountId },
+                data: { balance: targetBalance }
+            });
+            return updatedAccount;
+        }));
+        res.json(result);
+    }
+    catch (error) {
+        res.status(400).json({ error: 'Error reconciling account', details: error.message || String(error) });
     }
 }));
 exports.default = router;

@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth, requirePermission } from '../middleware/auth';
+import { Decimal } from '@prisma/client/runtime/library';
+import { requireAuth, requirePermission, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -13,18 +14,18 @@ const getExchangeRate = (currency: string) => {
   return 1;
 };
 
-router.post('/', requirePermission('collections', 'create'), async (req: Request, res: Response) => {
+router.post('/', requirePermission('collections', 'create'), async (req: Request, res: Response, next) => {
   try {
     const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
     
     // Ignore any exchangeRate sent from frontend
     const exchangeRate = getExchangeRate(currency);
-    const amountInBase = parseFloat(amount) / exchangeRate;
+    const amountInBase = new Decimal(amount).div(exchangeRate);
 
     const collection = await prisma.$transaction(async (tx) => {
       const newCollection = await tx.collection.create({
         data: {
-          amount: parseFloat(amount),
+          amount: new Decimal(amount),
           currency,
           exchangeRate,
           amountInBase,
@@ -50,18 +51,18 @@ router.post('/', requirePermission('collections', 'create'), async (req: Request
 
     res.status(201).json(collection);
   } catch (error: any) {
-    res.status(500).json({ error: 'Error creating collection', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.put('/:id', requirePermission('collections', 'edit'), async (req: Request, res: Response) => {
+router.put('/:id', requirePermission('collections', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
     
     // Ignore any exchangeRate sent from frontend
     const exchangeRate = getExchangeRate(currency);
-    const newAmountInBase = parseFloat(amount) / exchangeRate;
+    const newAmountInBase = new Decimal(amount).div(exchangeRate);
 
     const collection = await prisma.$transaction(async (tx) => {
       const existing = await tx.collection.findUnique({ where: { id: parseInt(id) } });
@@ -88,7 +89,7 @@ router.put('/:id', requirePermission('collections', 'edit'), async (req: Request
       const updated = await tx.collection.update({
         where: { id: parseInt(id) },
         data: {
-          amount: parseFloat(amount),
+          amount: new Decimal(amount),
           currency,
           exchangeRate,
           amountInBase: newAmountInBase,
@@ -109,17 +110,33 @@ router.put('/:id', requirePermission('collections', 'edit'), async (req: Request
   }
 });
 
-router.get('/', requirePermission('collections', 'view'), async (req: Request, res: Response) => {
+router.get('/', requirePermission('collections', 'view'), async (req: AuthRequest, res: Response) => {
   try {
-    const collections = await prisma.collection.findMany({ orderBy: { id: "desc" }
+    const hasAccountsView = req.user?.role === 'admin' || req.user?.permissions?.accounts?.view;
+    
+    const collections = await prisma.collection.findMany({ 
+      orderBy: { id: "desc" },
+      include: { account: true }
     });
+
+    if (!hasAccountsView) {
+      const filtered = collections.map(c => {
+        if (c.account) {
+          const { balance, ...rest } = c.account as any;
+          return { ...c, account: rest };
+        }
+        return c;
+      });
+      return res.json(filtered);
+    }
+
     res.json(collections);
   } catch (error: any) {
-    res.status(500).json({ error: 'Error fetching collections', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.delete('/:id', requirePermission('collections', 'delete'), async (req: Request, res: Response) => {
+router.delete('/:id', requirePermission('collections', 'delete'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     
@@ -146,7 +163,7 @@ router.delete('/:id', requirePermission('collections', 'delete'), async (req: Re
 });
 
 
-router.patch('/:id/status', requirePermission('collections', 'edit'), async (req: Request, res: Response) => {
+router.patch('/:id/status', requirePermission('collections', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     

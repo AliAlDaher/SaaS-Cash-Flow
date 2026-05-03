@@ -6,21 +6,23 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
   try {
-    const users = await prisma.$queryRaw`SELECT * FROM [User] WHERE email = ${email}`;
-    const user = Array.isArray(users) ? users[0] : null;
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    console.log("USER FOUND:", user);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log("PASSWORD MATCH:", isPasswordValid);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -68,7 +70,7 @@ router.post('/login', async (req, res) => {
 
     res.status(200).json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, permissions: parsedPerms } });
   } catch (error) {
-    res.status(500).json({ error: 'Login failed', details: String(error) });
+    next(error);
   }
 });
 export default router;

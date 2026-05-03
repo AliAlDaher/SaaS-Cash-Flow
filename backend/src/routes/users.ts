@@ -9,25 +9,25 @@ const prisma = new PrismaClient();
 // Only admin can access users
 router.use(requireAuth);
 
-
-router.get('/', requirePermission('users', 'view'), async (req, res) => {
+router.get('/', requirePermission('users', 'view'), async (req, res, next) => {
   try {
-    const users = await prisma.$queryRaw`SELECT id, email, name, role, permissions, createdAt, updatedAt FROM [User]`;
-    const mapped = (Array.isArray(users) ? users : []).map(u => {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const mapped = users.map(u => {
       let perms: any = {};
       if (u.role === 'admin') {
-        perms = 
-{
-  dashboard: { view: true },
-  reports: { view: true },
-  invoices: { view: true, create: true, edit: true, delete: true },
-  payments: { view: true, create: true, edit: true, delete: true },
-  collections: { view: true, create: true, edit: true, delete: true },
-  suppliers: { view: true, create: true, edit: true, delete: true },
-  accounts: { view: true, create: true, edit: true, delete: true },
-  users: { view: true, create: true, edit: true, delete: true }
-}
-;
+        perms = {
+          dashboard: { view: true },
+          reports: { view: true },
+          invoices: { view: true, create: true, edit: true, delete: true },
+          payments: { view: true, create: true, edit: true, delete: true },
+          collections: { view: true, create: true, edit: true, delete: true },
+          suppliers: { view: true, create: true, edit: true, delete: true },
+          accounts: { view: true, create: true, edit: true, delete: true },
+          users: { view: true, create: true, edit: true, delete: true }
+        };
       } else {
         try {
           const flatPerms = u.permissions ? JSON.parse(u.permissions) : {};
@@ -53,87 +53,118 @@ router.get('/', requirePermission('users', 'view'), async (req, res) => {
     });
     res.json(mapped);
   } catch (error: any) {
-    res.status(500).json({ error: 'Error fetching users', details: error.message });
+    next(error);
   }
 });
 
-router.post('/', requirePermission('users', 'create'), async (req, res) => {
+router.post('/', requirePermission('users', 'create'), async (req, res, next) => {
   let { email, password, name, role, permissions } = req.body;
+  console.log("CREATING USER:", { email, name, role });
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
   if (role === 'admin') {
-    permissions = 
-{
-  dashboard: { view: true },
-  reports: { view: true },
-  invoices: { view: true, create: true, edit: true, delete: true },
-  payments: { view: true, create: true, edit: true, delete: true },
-  collections: { view: true, create: true, edit: true, delete: true },
-  suppliers: { view: true, create: true, edit: true, delete: true },
-  accounts: { view: true, create: true, edit: true, delete: true },
-  users: { view: true, create: true, edit: true, delete: true }
-}
-;
+    permissions = {
+      dashboard: { view: true },
+      reports: { view: true },
+      invoices: { view: true, create: true, edit: true, delete: true },
+      payments: { view: true, create: true, edit: true, delete: true },
+      collections: { view: true, create: true, edit: true, delete: true },
+      suppliers: { view: true, create: true, edit: true, delete: true },
+      accounts: { view: true, create: true, edit: true, delete: true },
+      users: { view: true, create: true, edit: true, delete: true }
+    };
   }
   try {
     const hashed = await bcrypt.hash(password, 10);
     const permsStr = JSON.stringify(permissions || {});
-    await prisma.$executeRaw`INSERT INTO [User] (email, password, name, role, permissions, createdAt, updatedAt) VALUES (${email}, ${hashed}, ${name}, ${role || 'user'}, ${permsStr}, GETDATE(), GETDATE())`;
-    res.status(201).json({ message: 'User created' });
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashed,
+        name,
+        role: role || 'user',
+        permissions: permsStr
+      }
+    });
+    res.status(201).json({ message: 'User created', user: { id: newUser.id, email: newUser.email } });
   } catch (error: any) {
-    res.status(500).json({ error: 'Error creating user', details: error.message });
+    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    console.error("CREATE USER ERROR:", error);
+    next(error);
   }
 });
 
-
-router.put('/:id/permissions', requirePermission('users', 'edit'), async (req, res) => {
+router.put('/:id/permissions', requirePermission('users', 'edit'), async (req, res, next) => {
   const id = parseInt(req.params.id);
   const { permissions } = req.body;
   try {
     const permsStr = JSON.stringify(permissions || {});
-    await prisma.$executeRaw`UPDATE [User] SET permissions=${permsStr}, updatedAt=GETDATE() WHERE id=${id}`;
+    await prisma.user.update({
+      where: { id },
+      data: { permissions: permsStr }
+    });
     res.json({ message: 'Permissions updated' });
   } catch (error: any) {
-    res.status(500).json({ error: 'Error updating permissions', details: error.message });
+    next(error);
   }
 });
 
-router.put('/:id', requirePermission('users', 'edit'), async (req, res) => {
+router.put('/:id', requirePermission('users', 'edit'), async (req, res, next) => {
   const id = parseInt(req.params.id);
   let { email, password, name, role, permissions } = req.body;
+  console.log("UPDATING USER:", { id, email, name, role });
+
   if (role === 'admin') {
-    permissions = 
-{
-  dashboard: { view: true },
-  reports: { view: true },
-  invoices: { view: true, create: true, edit: true, delete: true },
-  payments: { view: true, create: true, edit: true, delete: true },
-  collections: { view: true, create: true, edit: true, delete: true },
-  suppliers: { view: true, create: true, edit: true, delete: true },
-  accounts: { view: true, create: true, edit: true, delete: true },
-  users: { view: true, create: true, edit: true, delete: true }
-}
-;
+    permissions = {
+      dashboard: { view: true },
+      reports: { view: true },
+      invoices: { view: true, create: true, edit: true, delete: true },
+      payments: { view: true, create: true, edit: true, delete: true },
+      collections: { view: true, create: true, edit: true, delete: true },
+      suppliers: { view: true, create: true, edit: true, delete: true },
+      accounts: { view: true, create: true, edit: true, delete: true },
+      users: { view: true, create: true, edit: true, delete: true }
+    };
   }
   try {
     const permsStr = JSON.stringify(permissions || {});
+    const updateData: any = {
+      email,
+      name,
+      role,
+      permissions: permsStr
+    };
     if (password) {
-      const hashed = await bcrypt.hash(password, 10);
-      await prisma.$executeRaw`UPDATE [User] SET email=${email}, password=${hashed}, name=${name}, role=${role}, permissions=${permsStr}, updatedAt=GETDATE() WHERE id=${id}`;
-    } else {
-      await prisma.$executeRaw`UPDATE [User] SET email=${email}, name=${name}, role=${role}, permissions=${permsStr}, updatedAt=GETDATE() WHERE id=${id}`;
+      updateData.password = await bcrypt.hash(password, 10);
     }
+    await prisma.user.update({
+      where: { id },
+      data: updateData
+    });
     res.json({ message: 'User updated' });
   } catch (error: any) {
-    res.status(500).json({ error: 'Error updating user', details: error.message });
+    if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    console.error("UPDATE USER ERROR:", error);
+    next(error);
   }
 });
 
-router.delete('/:id', requirePermission('users', 'delete'), async (req, res) => {
+router.delete('/:id', requirePermission('users', 'delete'), async (req, res, next) => {
   const id = parseInt(req.params.id);
   try {
-    await prisma.$executeRaw`DELETE FROM [User] WHERE id=${id}`;
+    await prisma.user.delete({
+      where: { id }
+    });
     res.json({ message: 'User deleted' });
   } catch (error: any) {
-    res.status(500).json({ error: 'Error deleting user', details: error.message });
+    next(error);
   }
 });
 

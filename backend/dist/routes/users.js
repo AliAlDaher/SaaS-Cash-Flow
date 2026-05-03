@@ -29,6 +29,7 @@ router.get('/', (0, auth_1.requirePermission)('users', 'view'), (req, res) => __
                 perms =
                     {
                         dashboard: { view: true },
+                        reports: { view: true },
                         invoices: { view: true, create: true, edit: true, delete: true },
                         payments: { view: true, create: true, edit: true, delete: true },
                         collections: { view: true, create: true, edit: true, delete: true },
@@ -43,6 +44,7 @@ router.get('/', (0, auth_1.requirePermission)('users', 'view'), (req, res) => __
                     if (!flatPerms.invoices && (flatPerms.canManageInvoices !== undefined || flatPerms.canViewDashboard !== undefined)) {
                         perms = {
                             dashboard: { view: !!flatPerms.canViewDashboard },
+                            reports: { view: !!flatPerms.canViewDashboard },
                             invoices: { view: !!flatPerms.canManageInvoices, create: !!flatPerms.canManageInvoices, edit: !!flatPerms.canManageInvoices, delete: !!flatPerms.canDelete },
                             payments: { view: !!flatPerms.canManagePayments, create: !!flatPerms.canManagePayments, edit: !!flatPerms.canManagePayments, delete: !!flatPerms.canDelete },
                             collections: { view: !!flatPerms.canManageCollections, create: !!flatPerms.canManageCollections, edit: !!flatPerms.canManageCollections, delete: !!flatPerms.canDelete },
@@ -73,6 +75,7 @@ router.post('/', (0, auth_1.requirePermission)('users', 'create'), (req, res) =>
         permissions =
             {
                 dashboard: { view: true },
+                reports: { view: true },
                 invoices: { view: true, create: true, edit: true, delete: true },
                 payments: { view: true, create: true, edit: true, delete: true },
                 collections: { view: true, create: true, edit: true, delete: true },
@@ -110,6 +113,7 @@ router.put('/:id', (0, auth_1.requirePermission)('users', 'edit'), (req, res) =>
         permissions =
             {
                 dashboard: { view: true },
+                reports: { view: true },
                 invoices: { view: true, create: true, edit: true, delete: true },
                 payments: { view: true, create: true, edit: true, delete: true },
                 collections: { view: true, create: true, edit: true, delete: true },

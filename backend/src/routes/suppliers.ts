@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 router.use(requireAuth);
 
-router.post('/', requirePermission('suppliers', 'create'), async (req: Request, res: Response) => {
+router.post('/', requirePermission('suppliers', 'create'), async (req: Request, res: Response, next) => {
   try {
     const { name, priority, paymentTermDays } = req.body;
     const supplier = await prisma.supplier.create({
@@ -15,20 +15,20 @@ router.post('/', requirePermission('suppliers', 'create'), async (req: Request, 
     });
     res.status(201).json(supplier);
   } catch (error) {
-    res.status(500).json({ error: 'Error creating supplier' });
+    next(error);
   }
 });
 
-router.get('/', requirePermission('suppliers', 'view'), async (req: Request, res: Response) => {
+router.get('/', requirePermission('suppliers', 'view'), async (req: Request, res: Response, next) => {
   try {
     const suppliers = await prisma.supplier.findMany({ orderBy: { id: "desc" } });
     res.json(suppliers);
   } catch (error: any) {
-    res.status(500).json({ error: 'Error fetching suppliers', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.get('/:id', requirePermission('suppliers', 'view'), async (req: Request, res: Response) => {
+router.get('/:id', requirePermission('suppliers', 'view'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const supplier = await prisma.supplier.findUnique({
@@ -40,11 +40,11 @@ router.get('/:id', requirePermission('suppliers', 'view'), async (req: Request, 
       res.status(404).json({ error: 'Supplier not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching supplier' });
+    next(error);
   }
 });
 
-router.put('/:id', requirePermission('suppliers', 'edit'), async (req: Request, res: Response) => {
+router.put('/:id', requirePermission('suppliers', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const { name, priority, paymentTermDays } = req.body;
@@ -56,11 +56,11 @@ router.put('/:id', requirePermission('suppliers', 'edit'), async (req: Request, 
     });
     res.json(supplier);
   } catch (error) {
-    res.status(500).json({ error: 'Error updating supplier' });
+    next(error);
   }
 });
 
-router.delete('/:id', requirePermission('suppliers', 'delete'), async (req: Request, res: Response) => {
+router.delete('/:id', requirePermission('suppliers', 'delete'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const supplierId = parseInt(id);
@@ -77,7 +77,7 @@ router.delete('/:id', requirePermission('suppliers', 'delete'), async (req: Requ
     });
     res.status(204).send();
   } catch (error: any) {
-    res.status(500).json({ error: 'Error deleting supplier', details: error.message || String(error) });
+    next(error);
   }
 });
 

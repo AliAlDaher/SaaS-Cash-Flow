@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { requireAuth, requirePermission } from '../middleware/auth';
+import { Decimal } from '@prisma/client/runtime/library';
+import { requireAuth, requirePermission, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -14,157 +15,223 @@ async function recalculateFIFO(tx: any, supplierId: number) {
     data: { paidAmount: 0 }
   });
 
-  // Get all invoices ordered by createdAt asc
   const invoices = await tx.invoice.findMany({
     where: { supplierId },
     orderBy: { createdAt: 'asc' }
   });
 
-  // Get all payments for this supplier ordered by paymentDate asc
   const payments = await tx.payment.findMany({
     where: { supplierId },
     orderBy: [{ paymentDate: 'asc' }, { createdAt: 'asc' }]
   });
 
-  let totalPaid = payments.reduce((sum: number, p: any) => sum + p.amount, 0);
+  const invoicePaidAmounts: Record<number, Decimal> = {};
+  invoices.forEach((inv: any) => invoicePaidAmounts[inv.id] = new Decimal(0));
 
-  for (const invoice of invoices) {
-    if (totalPaid <= 0) break;
-    const paymentForInvoice = Math.min(invoice.amount, totalPaid);
+  let unlinkedPaymentsTotal = new Decimal(0);
+
+  for (const p of payments) {
+    const amount = new Decimal(p.amount);
+    if (p.invoiceId && invoicePaidAmounts[p.invoiceId] !== undefined) {
+      invoicePaidAmounts[p.invoiceId] = invoicePaidAmounts[p.invoiceId].plus(amount);
+    } else {
+      unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(amount);
+    }
+  }
+
+  for (const inv of invoices) {
+    const invAmount = new Decimal(inv.amount);
+    let specificPaid = invoicePaidAmounts[inv.id];
+    let remainingAmount = invAmount.minus(specificPaid);
+    
+    if (remainingAmount.isNegative()) {
+      unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(remainingAmount.abs());
+      specificPaid = invAmount;
+      remainingAmount = new Decimal(0);
+    }
+
+    let fifoApplied = new Decimal(0);
+    if (unlinkedPaymentsTotal.greaterThan(0) && remainingAmount.greaterThan(0)) {
+      fifoApplied = Decimal.min(remainingAmount, unlinkedPaymentsTotal);
+      unlinkedPaymentsTotal = unlinkedPaymentsTotal.minus(fifoApplied);
+    }
+
+    const newPaidAmount = specificPaid.plus(fifoApplied);
+    const updateData: any = { paidAmount: newPaidAmount };
+    
+    if (inv.reminder) {
+      const baseline = new Decimal(inv.reminderBaseline || 0);
+      const requested = inv.reminderAmount ? new Decimal(inv.reminderAmount) : new Decimal(inv.amount).minus(baseline);
+      const target = baseline.plus(requested);
+      
+      if (newPaidAmount.greaterThanOrEqualTo(target)) {
+        updateData.reminder = false;
+        updateData.reminderAmount = null;
+        updateData.reminderBaseline = 0;
+      }
+    }
+
     await tx.invoice.update({
-      where: { id: invoice.id },
-      data: { paidAmount: paymentForInvoice }
+      where: { id: inv.id },
+      data: updateData
     });
-    totalPaid -= paymentForInvoice;
   }
 }
 
-router.post('/', requirePermission('payments', 'create'), async (req: Request, res: Response) => {
+router.post('/', requirePermission('payments', 'create'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { supplierId, amount, paymentDate, accountId } = req.body;
+    const { supplierId, amount, paymentDate, accountId, invoiceId, allocations } = req.body;
     
     if (!accountId) {
       return res.status(400).json({ error: 'accountId is required' });
     }
 
-    const payment = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const baseDate = paymentDate ? new Date(paymentDate) : new Date();
-      const parsedAmount = parseFloat(amount);
       const parsedAccountId = parseInt(accountId);
+      const totalAmount = new Decimal(amount);
 
-      // Check account balance
       const account = await tx.account.findUnique({ where: { id: parsedAccountId } });
-      if (!account || account.balance < parsedAmount) {
+      if (!account || new Decimal(account.balance).lessThan(totalAmount)) {
         throw new Error('Insufficient balance in selected account');
       }
 
-      const newPayment = await tx.payment.create({
-        data: {
-          supplierId: parseInt(supplierId),
-          amount: parsedAmount,
-          paymentDate: baseDate,
-          accountId: parsedAccountId
-        }
-      });
+      // If allocations are provided (Manual Mode)
+      if (allocations && Array.isArray(allocations) && allocations.length > 0) {
+        for (const alloc of allocations) {
+          const allocAmount = new Decimal(alloc.amount);
+          if (allocAmount.lessThanOrEqualTo(0)) continue;
 
-      // Deduct from account
+          await tx.payment.create({
+            data: {
+              supplierId: parseInt(supplierId),
+              amount: allocAmount,
+              paymentDate: baseDate,
+              accountId: parsedAccountId,
+              invoiceId: parseInt(alloc.invoiceId)
+            }
+          });
+        }
+      } else {
+        // Auto Mode (FIFO)
+        await tx.payment.create({
+          data: {
+            supplierId: parseInt(supplierId),
+            amount: totalAmount,
+            paymentDate: baseDate,
+            accountId: parsedAccountId,
+            invoiceId: invoiceId ? parseInt(invoiceId) : null
+          }
+        });
+      }
+
+      // Deduct total amount from account once
       await tx.account.update({
         where: { id: parsedAccountId },
-        data: { balance: { decrement: parsedAmount } }
+        data: { balance: { decrement: totalAmount } }
       });
 
-      // Recalculate FIFO
       await recalculateFIFO(tx, parseInt(supplierId));
-
-      return newPayment;
+      return { message: 'Payment processed successfully' };
     });
 
-    res.status(201).json(payment);
+    res.status(201).json(result);
   } catch (error: any) {
-    res.status(400).json({ error: 'Error processing payment', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, res: Response) => {
+router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { supplierId, amount, paymentDate, accountId } = req.body;
+    const { supplierId, amount, paymentDate, accountId, invoiceId } = req.body;
     
     if (!accountId) {
       return res.status(400).json({ error: 'accountId is required' });
     }
 
-    const payment = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx) => {
       const oldPayment = await tx.payment.findUnique({ where: { id: parseInt(id) } });
       if (!oldPayment) throw new Error('Payment not found');
 
-      const newAmount = parseFloat(amount);
+      const newAmount = new Decimal(amount);
       const newAccountId = parseInt(accountId);
       const newSupplierId = parseInt(supplierId);
 
-      // Account logic
-      if (oldPayment.accountId !== newAccountId || oldPayment.amount !== newAmount) {
-        // 1. Reverse old amount
+      if (oldPayment.accountId !== newAccountId || !new Decimal(oldPayment.amount).equals(newAmount)) {
         await tx.account.update({
           where: { id: oldPayment.accountId },
           data: { balance: { increment: oldPayment.amount } }
         });
 
-        // 2. Check new balance
         const newAccount = await tx.account.findUnique({ where: { id: newAccountId } });
-        if (!newAccount || newAccount.balance < newAmount) {
+        if (!newAccount || new Decimal(newAccount.balance).lessThan(newAmount)) {
           throw new Error('Insufficient balance in selected account');
         }
 
-        // 3. Deduct new amount
         await tx.account.update({
           where: { id: newAccountId },
           data: { balance: { decrement: newAmount } }
         });
       }
 
-      // Update payment record
       const updatedPayment = await tx.payment.update({
         where: { id: parseInt(id) },
         data: {
           supplierId: newSupplierId,
           amount: newAmount,
           paymentDate: new Date(paymentDate),
-          accountId: newAccountId
+          accountId: newAccountId,
+          invoiceId: invoiceId ? parseInt(invoiceId) : null
         }
       });
 
-      // Maintain FIFO
-      if (oldPayment.amount !== newAmount || oldPayment.supplierId !== newSupplierId) {
-        // Recalculate FIFO for old supplier (if changed)
+      if (!new Decimal(oldPayment.amount).equals(newAmount) || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
         if (oldPayment.supplierId !== newSupplierId) {
           await recalculateFIFO(tx, oldPayment.supplierId);
         }
-        // Recalculate FIFO for new supplier
         await recalculateFIFO(tx, newSupplierId);
       }
 
       return updatedPayment;
     });
 
-    res.json(payment);
+    res.json(updated);
   } catch (error: any) {
-    res.status(400).json({ error: 'Error updating payment', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.get('/', requirePermission('payments', 'view'), async (req: Request, res: Response) => {
+router.get('/', requirePermission('payments', 'view'), async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const payments = await prisma.payment.findMany({ orderBy: { id: "desc" },
-      include: { account: true }
+    const hasAccountsView = req.user?.role === 'admin' || req.user?.permissions?.accounts?.view;
+    
+    const payments = await prisma.payment.findMany({ 
+      orderBy: { id: "desc" },
+      include: { 
+        account: true, 
+        invoice: true 
+      } 
     });
+
+    if (!hasAccountsView) {
+      const filtered = payments.map(p => {
+        if (p.account) {
+          const { balance, ...rest } = p.account as any;
+          return { ...p, account: rest };
+        }
+        return p;
+      });
+      return res.json(filtered);
+    }
+
     res.json(payments);
   } catch (error: any) {
-    res.status(500).json({ error: 'Error fetching payments', details: error.message || String(error) });
+    next(error);
   }
 });
 
-router.delete('/:id', requirePermission('payments', 'delete'), async (req: Request, res: Response) => {
+router.delete('/:id', requirePermission('payments', 'delete'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     
@@ -172,22 +239,19 @@ router.delete('/:id', requirePermission('payments', 'delete'), async (req: Reque
       const payment = await tx.payment.findUnique({ where: { id: parseInt(id) } });
       if (!payment) throw new Error('Payment not found');
 
-      // 1. Restore account balance
       await tx.account.update({
         where: { id: payment.accountId },
         data: { balance: { increment: payment.amount } }
       });
 
-      // 2. Delete payment
       await tx.payment.delete({ where: { id: parseInt(id) } });
 
-      // 3. Undo FIFO allocation
       await recalculateFIFO(tx, payment.supplierId);
     });
 
     res.status(204).send();
   } catch (error: any) {
-    res.status(400).json({ error: 'Error deleting payment', details: error.message || String(error) });
+    next(error);
   }
 });
 

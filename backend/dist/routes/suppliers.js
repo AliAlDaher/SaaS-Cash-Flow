@@ -29,7 +29,7 @@ router.post('/', (0, auth_1.requirePermission)('suppliers', 'create'), (req, res
 }));
 router.get('/', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const suppliers = yield prisma.supplier.findMany();
+        const suppliers = yield prisma.supplier.findMany({ orderBy: { id: "desc" } });
         res.json(suppliers);
     }
     catch (error) {

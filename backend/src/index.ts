@@ -9,6 +9,7 @@ import collectionsRouter from './routes/collections';
 import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import { PrismaClient } from '@prisma/client';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -26,6 +27,8 @@ app.use("/accounts", accountsRouter);
 app.use("/collections", collectionsRouter);
 app.use("/auth", authRouter);
 app.use("/users", usersRouter);
+
+app.use(errorHandler);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Cash Flow API is running 🚀');

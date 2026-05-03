@@ -1,3 +1,4 @@
+import { Decimal } from 'decimal.js';
 import React, { useState } from 'react';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { Wallet, TrendingUp, Clock } from 'lucide-react';
@@ -16,15 +17,15 @@ function StatCard({ title, value, icon, valueColor }: { title: string, value: Re
   )
 }
 
-function FormatCurrency({ amount }: { amount: number }) {
+function FormatCurrency({ amount }: { amount: any }) {
   return (
     <span>
-      {amount.toLocaleString(undefined, {minimumFractionDigits: 2})} <span className="text-[0.65em] opacity-60 ml-0.5">JOD</span>
+      {new Decimal(amount || 0).toNumber().toLocaleString(undefined, {minimumFractionDigits: 2})} <span className="text-[0.65em] opacity-60 ml-0.5">JOD</span>
     </span>
   )
 }
 
-export function ReportsTab({ invoices, payments, collections, suppliers }: any) {
+export function ReportsTab({ invoices, payments, collections, suppliers, onSupplierClick }: any) {
   const [fromDate, setFromDate] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'));
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -44,10 +45,10 @@ export function ReportsTab({ invoices, payments, collections, suppliers }: any) 
   }).sort((a: any, b: any) => new Date(b.receivedDate).getTime() - new Date(a.receivedDate).getTime());
 
 
-  const totalIncoming = filteredCollections.filter((c: any) => c.status === 'received').reduce((sum: number, c: any) => sum + c.amountInBase, 0);
-  const totalOutgoing = filteredPayments.reduce((sum: number, p: any) => sum + p.amount, 0);
-  const netCash = totalIncoming - totalOutgoing;
-  const expectedCollections = filteredCollections.filter((c: any) => c.status === 'expected').reduce((sum: number, c: any) => sum + c.amountInBase, 0);
+  const totalIncoming = filteredCollections.filter((c: any) => c.status === 'received').reduce((sum: any, c: any) => sum.plus(new Decimal(c.amountInBase)), new Decimal(0)).toNumber();
+  const totalOutgoing = filteredPayments.reduce((sum: any, p: any) => sum.plus(new Decimal(p.amount)), new Decimal(0)).toNumber();
+  const netCash = new Decimal(totalIncoming).minus(totalOutgoing).toNumber();
+  const expectedCollections = filteredCollections.filter((c: any) => c.status === 'expected').reduce((sum: any, c: any) => sum.plus(new Decimal(c.amountInBase)), new Decimal(0)).toNumber();
 
   return (
     <div className="space-y-8">
@@ -107,6 +108,7 @@ export function ReportsTab({ invoices, payments, collections, suppliers }: any) 
               <tr>
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Supplier</th>
+                <th className="px-6 py-4">Applied To</th>
                 <th className="px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
@@ -114,7 +116,28 @@ export function ReportsTab({ invoices, payments, collections, suppliers }: any) 
               {filteredPayments.map((p: any) => (
                 <tr key={p.id}>
                   <td className="px-6 py-4">{format(new Date(p.paymentDate), 'MMM dd, yyyy')}</td>
-                  <td className="px-6 py-4">{suppliers.find((s:any)=>s.id===p.supplierId)?.name || p.supplierId}</td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => {
+                        const s = suppliers.find((sup: any) => sup.id === p.supplierId);
+                        if (s && onSupplierClick) onSupplierClick(s);
+                      }}
+                      className="hover:text-sky-600 hover:underline transition-colors text-left"
+                    >
+                      {suppliers.find((s:any)=>s.id===p.supplierId)?.name || p.supplierId}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    {p.invoiceId ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-100">
+                        Inv #{p.invoiceId}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100">
+                        FIFO
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-right font-bold text-rose-600"><FormatCurrency amount={p.amount} /></td>
                 </tr>
               ))}
@@ -132,6 +155,7 @@ export function ReportsTab({ invoices, payments, collections, suppliers }: any) 
               <tr>
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Supplier</th>
+                <th className="px-6 py-4">Applied To</th>
                 <th className="px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
@@ -139,7 +163,17 @@ export function ReportsTab({ invoices, payments, collections, suppliers }: any) 
               {filteredInvoices.map((i: any) => (
                 <tr key={i.id}>
                   <td className="px-6 py-4">{format(new Date(i.invoiceDate), 'MMM dd, yyyy')}</td>
-                  <td className="px-6 py-4">{suppliers.find((s:any)=>s.id===i.supplierId)?.name || i.supplierId}</td>
+                  <td className="px-6 py-4">
+                    <button 
+                      onClick={() => {
+                        const s = suppliers.find((sup: any) => sup.id === i.supplierId);
+                        if (s && onSupplierClick) onSupplierClick(s);
+                      }}
+                      className="hover:text-sky-600 hover:underline transition-colors text-left"
+                    >
+                      {suppliers.find((s:any)=>s.id===i.supplierId)?.name || i.supplierId}
+                    </button>
+                  </td>
                   <td className="px-6 py-4 text-right"><FormatCurrency amount={i.amount} /></td>
                 </tr>
               ))}

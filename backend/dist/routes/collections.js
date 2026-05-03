@@ -8,9 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
+const library_1 = require("@prisma/client/runtime/library");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
@@ -26,11 +38,11 @@ router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, r
         const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
         // Ignore any exchangeRate sent from frontend
         const exchangeRate = getExchangeRate(currency);
-        const amountInBase = parseFloat(amount) / exchangeRate;
+        const amountInBase = new library_1.Decimal(amount).div(exchangeRate);
         const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const newCollection = yield tx.collection.create({
                 data: {
-                    amount: parseFloat(amount),
+                    amount: new library_1.Decimal(amount),
                     currency,
                     exchangeRate,
                     amountInBase,
@@ -60,10 +72,10 @@ router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, r
 router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { amount, currency, accountId, note, receivedDate, status } = req.body;
+        const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
         // Ignore any exchangeRate sent from frontend
         const exchangeRate = getExchangeRate(currency);
-        const newAmountInBase = parseFloat(amount) / exchangeRate;
+        const newAmountInBase = new library_1.Decimal(amount).div(exchangeRate);
         const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const existing = yield tx.collection.findUnique({ where: { id: parseInt(id) } });
             if (!existing)
@@ -87,12 +99,13 @@ router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, r
             const updated = yield tx.collection.update({
                 where: { id: parseInt(id) },
                 data: {
-                    amount: parseFloat(amount),
+                    amount: new library_1.Decimal(amount),
                     currency,
                     exchangeRate,
                     amountInBase: newAmountInBase,
                     accountId: parseInt(accountId),
                     note: note || '',
+                    expectedDate: expectedDate ? new Date(expectedDate) : null,
                     receivedDate: receivedDate ? new Date(receivedDate) : existing.receivedDate,
                     status: newStatus
                 }
@@ -106,10 +119,23 @@ router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, r
     }
 }));
 router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     try {
+        const hasAccountsView = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'admin' || ((_d = (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b.permissions) === null || _c === void 0 ? void 0 : _c.accounts) === null || _d === void 0 ? void 0 : _d.view);
         const collections = yield prisma.collection.findMany({
-            orderBy: { createdAt: 'desc' }
+            orderBy: { id: "desc" },
+            include: { account: true }
         });
+        if (!hasAccountsView) {
+            const filtered = collections.map(c => {
+                if (c.account) {
+                    const _a = c.account, { balance } = _a, rest = __rest(_a, ["balance"]);
+                    return Object.assign(Object.assign({}, c), { account: rest });
+                }
+                return c;
+            });
+            return res.json(filtered);
+        }
         res.json(collections);
     }
     catch (error) {
