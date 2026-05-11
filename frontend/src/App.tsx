@@ -480,7 +480,7 @@ function MainLayout() {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <Activity className="text-sky-600 w-8 h-8 mr-3" />
-                <span className="text-xl font-bold text-slate-800 tracking-tight">CashFlow</span>
+                <span className="text-xl font-bold text-slate-800 tracking-tight">SLCash</span>
               </div>
               
               {/* Logout Button (mobile layout) */}
