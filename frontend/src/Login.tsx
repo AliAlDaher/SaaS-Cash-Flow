@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Lock, Mail } from 'lucide-react';
+import { Lock, Mail } from 'lucide-react';
+import logo from './assets/logo.jpg';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -66,9 +67,7 @@ export default function Login() {
         
         {/* Logo and Title */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-sky-50 rounded-2xl flex items-center justify-center mb-4">
-            <Activity className="text-sky-600 w-8 h-8" />
-          </div>
+          <img src={logo} alt="Smart Lines Logo" className="h-14 w-auto object-contain mb-4" />
           <h2 className="text-2xl font-bold text-slate-900 text-center">
             Welcome Back
           </h2>

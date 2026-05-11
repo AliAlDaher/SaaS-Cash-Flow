@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Decimal } from 'decimal.js'
-import { Activity, FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search } from 'lucide-react'
+import { FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search } from 'lucide-react'
+import logo from './assets/logo.jpg'
 import { format, startOfDay, addDays, isBefore, isEqual } from 'date-fns'
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import Login from './Login'
@@ -479,7 +480,7 @@ function MainLayout() {
             {/* Logo and Mobile Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <Activity className="text-sky-600 w-8 h-8 mr-3" />
+                <img src={logo} alt="Smart Lines Logo" className="h-8 w-auto object-contain mr-3" />
                 <span className="text-xl font-bold text-slate-800 tracking-tight">SLCash</span>
               </div>
               
