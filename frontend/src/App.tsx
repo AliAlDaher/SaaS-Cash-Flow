@@ -473,42 +473,60 @@ function MainLayout() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-12">
       {/* Top Navigation */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Activity className="text-sky-600 w-8 h-8 mr-3" />
-              <span className="text-xl font-bold text-slate-800 tracking-tight">CashFlow</span>
-            </div>
-            <div className="flex space-x-8">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 md:py-0 md:h-16 gap-3 md:gap-0">
+            {/* Logo and Mobile Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Activity className="text-sky-600 w-8 h-8 mr-3" />
+                <span className="text-xl font-bold text-slate-800 tracking-tight">CashFlow</span>
+              </div>
               
-              {tabs.map((tab) => {
-                const isActive = location.pathname === tab.path
-                return (
-                  <Link
-                    key={tab.name}
-                    to={tab.path}
-                    onClick={() => { if(tab.name === "Suppliers") setSelectedSupplier(null); if(tab.name === "Accounts") setSelectedAccount(null); }}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-sky-500 text-sky-600'
-                        : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
-                    }`}
-                  >
-                    {tab.name}
-                  </Link>
-                )
-              })}
+              {/* Logout Button (mobile layout) */}
               <button
                 onClick={() => {
                   localStorage.clear();
                   navigate('/login');
                 }}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 transition-colors ml-4 self-center"
+                className="md:hidden inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors"
               >
                 Logout
               </button>
-
+            </div>
+            
+            {/* Scrollable Tabs Wrapper */}
+            <div className="flex items-center overflow-x-auto no-scrollbar scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
+              <div className="flex space-x-6 md:space-x-8 whitespace-nowrap pb-1 md:pb-0">
+                {tabs.map((tab) => {
+                  const isActive = location.pathname === tab.path
+                  return (
+                    <Link
+                      key={tab.name}
+                      to={tab.path}
+                      onClick={() => { if(tab.name === "Suppliers") setSelectedSupplier(null); if(tab.name === "Accounts") setSelectedAccount(null); }}
+                      className={`inline-flex items-center pb-2 md:py-4 border-b-2 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'border-sky-500 text-sky-600 font-semibold'
+                          : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                      }`}
+                    >
+                      {tab.name}
+                    </Link>
+                  )
+                })}
+              </div>
+              
+              {/* Logout Button (desktop layout) */}
+              <button
+                onClick={() => {
+                  localStorage.clear();
+                  navigate('/login');
+                }}
+                className="hidden md:inline-flex items-center px-3.5 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors ml-6 self-center"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
