@@ -1,10 +1,41 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Decimal } from 'decimal.js'
 import { Activity, FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search } from 'lucide-react'
 import { format, startOfDay, addDays, isBefore, isEqual } from 'date-fns'
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import Login from './Login'
 import { ReportsTab } from './ReportsTab'
+
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800">
+          <h2 className="text-xl font-bold mb-2">Something went wrong.</h2>
+          <pre className="text-xs overflow-auto">{this.state.error?.toString()}</pre>
+          <button 
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-4 px-4 py-2 bg-rose-600 text-white rounded-lg"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 
 // Types
 type Supplier = {
@@ -25,6 +56,8 @@ type Invoice = {
   description?: string
   reminder?: boolean
   reminderAmount?: number | null
+    isCheque?: boolean
+    chequeStatus?: string
   reminderBaseline?: number
   createdAt: string
   supplier?: Supplier
@@ -59,6 +92,32 @@ type Account = {
   balance: number
   createdAt: string
   adjustments?: AccountAdjustment[]
+}
+
+
+type Expense = {
+  id: number
+  category: string
+  amount: number
+  accountId: number
+  account?: Account
+  date: string
+  note?: string
+  createdAt: string
+}
+
+type Cheque = {
+  id: number
+  amount: number
+  chequeDate: string
+  status: 'Pending' | 'Cleared' | 'Bounced'
+  accountId: number
+  supplierId?: number | null
+  invoiceId?: number | null
+  account?: Account
+  supplier?: Supplier
+  invoice?: Invoice
+  createdAt: string
 }
 
 type Collection = {
@@ -121,7 +180,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 
 
-const API_URL = 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
 const apiFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
@@ -140,24 +199,37 @@ const apiFetch = async (url: string, options: RequestInit = {}) => {
       const error: any = new Error(data.error || 'Request failed');
       error.details = data.details;
       throw error;
-    } catch(e) {
-      if (e instanceof Error && (e as any).details) throw e;
-      throw new Error('Server error: ' + res.status);
-    }
+    } catch(e: any) { if (e.message) throw e; throw new Error('Server error: ' + res.status); }
   }
   return res;
 };
 
 
 
+
+type ErrorListener = (msg: string | null) => void;
+let globalErrorListener: ErrorListener | null = null;
+export const setGlobalErrorListener = (listener: ErrorListener | null) => {
+  globalErrorListener = listener;
+};
+export const showError = (msg: string) => {
+  if (globalErrorListener) {
+    globalErrorListener(msg);
+  } else {
+    console.error(msg);
+  }
+};
+
 function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
       <Routes>
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
-      </Routes>
+        </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }
 
@@ -177,6 +249,8 @@ function MainLayout() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
   const [collections, setCollections] = useState<Collection[]>([])
+  const [cheques, setCheques] = useState<Cheque[]>([])
+  const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
@@ -206,6 +280,8 @@ function MainLayout() {
   const refreshPayments = () => fetchModule('payments', '/payments', setPayments);
   const refreshAccounts = () => fetchModule('accounts', '/accounts', setAccounts);
   const refreshCollections = () => fetchModule('collections', '/collections', setCollections);
+  const refreshCheques = () => fetchModule('cheques', '/cheques', setCheques);
+  const refreshExpenses = () => fetchModule('expenses', '/expenses', setExpenses);
 
 
   const [quickPayModal, setQuickPayModal] = useState<{ isOpen: boolean, invoice: Invoice | null }>({ isOpen: false, invoice: null });
@@ -233,7 +309,7 @@ function MainLayout() {
       
       await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]);
     } catch (err: any) {
-      alert(err.message);
+      showError(err.message);
     }
   };
 
@@ -252,7 +328,7 @@ function MainLayout() {
       const updated = await res.json()
       setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...updated } : inv))
     } catch (err: any) {
-      alert(err.message)
+      showError(err.message)
     }
   }
 
@@ -267,7 +343,9 @@ function MainLayout() {
         refreshInvoices(),
         refreshPayments(),
         refreshAccounts(),
-        refreshCollections()
+        refreshCollections(),
+        refreshCheques(),
+        refreshExpenses()
       ]);
     } catch (err: any) {
       setError(err.message);
@@ -284,6 +362,15 @@ function MainLayout() {
   })
   const [isDeleting, setIsDeleting] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setGlobalErrorListener((msg) => {
+      setErrorMessage(msg);
+      if (msg) setTimeout(() => setErrorMessage(null), 4000);
+    });
+    return () => setGlobalErrorListener(null);
+  }, []);
   
 
   const openDeleteModal = (id: number, type: string, title: string) => {
@@ -332,7 +419,7 @@ function MainLayout() {
       }
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (err: any) {
-      alert(err.message)
+      showError(err.message)
     } finally {
       setIsDeleting(false)
     }
@@ -372,14 +459,16 @@ function MainLayout() {
   }
 
     const tabs = [];
-  if (user?.permissions?.dashboard?.view) tabs.push({ name: 'Dashboard', path: '/' });
-  if (user?.permissions?.reports?.view) tabs.push({ name: 'Reports', path: '/reports' });
-  if (user?.permissions?.accounts?.view) tabs.push({ name: 'Accounts', path: '/accounts' });
-  if (user?.permissions?.collections?.view) tabs.push({ name: 'Collections', path: '/collections' });
-  if (user?.permissions?.suppliers?.view) tabs.push({ name: 'Suppliers', path: '/suppliers' });
-  if (user?.permissions?.invoices?.view) tabs.push({ name: 'Invoices', path: '/invoices' });
-  if (user?.permissions?.payments?.view) tabs.push({ name: 'Payments', path: '/payments' });
-  if (user?.permissions?.users?.view) tabs.push({ name: 'Users', path: '/users' });
+  if (user?.role === "admin" || user?.permissions?.dashboard?.view) tabs.push({ name: 'Dashboard', path: '/' });
+  if (user?.role === "admin" || user?.permissions?.reports?.view) tabs.push({ name: 'Reports', path: '/reports' });
+  if (user?.role === "admin" || user?.permissions?.accounts?.view) tabs.push({ name: 'Accounts', path: '/accounts' });
+  if (user?.role === "admin" || user?.permissions?.collections?.view) tabs.push({ name: 'Collections', path: '/collections' });
+  if (user?.role === "admin" || user?.permissions?.suppliers?.view) tabs.push({ name: 'Suppliers', path: '/suppliers' });
+  if (user?.role === "admin" || user?.permissions?.invoices?.view) tabs.push({ name: 'Invoices', path: '/invoices' });
+  if (user?.role === "admin" || user?.permissions?.payments?.view) tabs.push({ name: 'Payments', path: '/payments' });
+  if (user?.role === "admin" || user?.permissions?.cheques?.view) tabs.push({ name: 'Cheques', path: '/cheques' });
+  if (user?.role === "admin" || user?.permissions?.expenses?.view) tabs.push({ name: 'Expenses', path: '/expenses' });
+  if (user?.role === "admin" || user?.permissions?.users?.view) tabs.push({ name: 'Users', path: '/users' });
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-12">
@@ -427,15 +516,20 @@ function MainLayout() {
 
       <main className="max-w-7xl mx-auto px-8 mt-8">
         <Routes>
-          <Route path="/" element={user?.permissions?.dashboard?.view ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
-          <Route path="/reports" element={user?.permissions?.reports?.view ? <ReportsTab invoices={invoices} payments={payments} collections={collections} suppliers={suppliers} accounts={accounts} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
-          <Route path="/accounts" element={user?.permissions?.accounts?.view ? <AccountsTab accounts={accounts} payments={payments} collections={collections} suppliers={suppliers} onRefresh={refreshAccounts} onDelete={(id) => openDeleteModal(id, "accounts", "Account")} openDeleteModal={openDeleteModal} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} setAccounts={setAccounts} /> : <AccessDenied />} />
-          <Route path="/collections" element={user?.permissions?.collections?.view ? <CollectionsTab accounts={accounts} collections={collections} onRefresh={async () => { await refreshCollections(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'collections', 'Collection')}  /> : <AccessDenied />} />
-          <Route path="/suppliers" element={user?.permissions?.suppliers?.view ? <SuppliersTab suppliers={suppliers} invoices={invoices} payments={payments} accounts={accounts} onRefresh={refreshSuppliers} onToggleReminder={handleToggleReminder} setSuppliers={setSuppliers} onDelete={(id) => openDeleteModal(id, "suppliers", "Supplier")} selectedSupplier={selectedSupplier} setSelectedSupplier={setSelectedSupplier} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
-          <Route path="/invoices" element={user?.permissions?.invoices?.view ? <InvoicesTab suppliers={suppliers} invoices={invoices} onRefresh={refreshInvoices} onToggleReminder={handleToggleReminder} setInvoices={setInvoices} onDelete={(id) => openDeleteModal(id, "invoices", "Invoice")} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
-          <Route path="/payments" element={user?.permissions?.payments?.view ? <PaymentsTab suppliers={suppliers} payments={payments} accounts={accounts} onRefresh={async () => { await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]); }} onDelete={(id) => openDeleteModal(id, "payments", "Payment")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/users" element={user?.permissions?.users?.view ? <UsersTab /> : <AccessDenied />} />
-        </Routes>
+          <Route path="/expenses" element={(user?.role === "admin" || user?.permissions?.expenses?.view) ? <ExpensesTab accounts={accounts} expenses={expenses} onRefresh={async () => { await refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'expenses', 'Expense')} /> : <AccessDenied />} />
+          <Route path="/" element={(user?.role === "admin" || user?.permissions?.dashboard?.view) ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} cheques={cheques} expenses={expenses} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
+          <Route path="/reports" element={(user?.role === "admin" || user?.permissions?.reports?.view) ? <ReportsTab invoices={invoices} payments={payments} collections={collections} suppliers={suppliers} accounts={accounts} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
+          <Route path="/accounts" element={(user?.role === "admin" || user?.permissions?.accounts?.view) ? <AccountsTab accounts={accounts} payments={payments} collections={collections} suppliers={suppliers} expenses={expenses} onRefresh={refreshAccounts} onDelete={(id) => openDeleteModal(id, "accounts", "Account")} openDeleteModal={openDeleteModal} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} setAccounts={setAccounts} /> : <AccessDenied />} />
+          <Route path="/collections" element={(user?.role === "admin" || user?.permissions?.collections?.view) ? <CollectionsTab accounts={accounts} collections={collections} onRefresh={async () => { await refreshCollections(),
+        refreshCheques(),
+        refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'collections', 'Collection')}  /> : <AccessDenied />} />
+          <Route path="/suppliers" element={(user?.role === "admin" || user?.permissions?.suppliers?.view) ? <SuppliersTab suppliers={suppliers} invoices={invoices} payments={payments} accounts={accounts} onRefresh={refreshSuppliers} onToggleReminder={handleToggleReminder} setSuppliers={setSuppliers} onDelete={(id) => openDeleteModal(id, "suppliers", "Supplier")} selectedSupplier={selectedSupplier} setSelectedSupplier={setSelectedSupplier} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
+          <Route path="/invoices" element={(user?.role === "admin" || user?.permissions?.invoices?.view) ? <InvoicesTab suppliers={suppliers} invoices={invoices} onRefresh={refreshInvoices} onToggleReminder={handleToggleReminder} setInvoices={setInvoices} onDelete={(id) => openDeleteModal(id, "invoices", "Invoice")} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
+          <Route path="/payments" element={(user?.role === "admin" || user?.permissions?.payments?.view) ? <PaymentsTab suppliers={suppliers} payments={payments} accounts={accounts} invoices={invoices} onRefresh={async () => { await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]); }} onDelete={(id) => openDeleteModal(id, "payments", "Payment")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+          <Route path="/cheques" element={(user?.role === "admin" || user?.permissions?.cheques?.view) ? <ChequesTab suppliers={suppliers} accounts={accounts} cheques={cheques} onRefresh={async () => { await refreshCheques(),
+        refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'cheques', 'Cheque')} /> : <AccessDenied />} />
+          <Route path="/users" element={(user?.role === "admin" || user?.permissions?.users?.view) ? <UsersTab /> : <AccessDenied />} />
+          </Routes>
       </main>
 
       
@@ -464,6 +558,17 @@ function MainLayout() {
           </div>
         </div>
       )}
+
+      {errorMessage && (
+        <div className="fixed bottom-8 left-8 z-50 animate-in slide-in-from-left-8 duration-300">
+          <div className="bg-rose-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-rose-700">
+            <div className="w-8 h-8 bg-rose-500/20 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-rose-400" />
+            </div>
+            <p className="font-medium">{errorMessage}</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -485,7 +590,7 @@ function StatCard({ title, value, icon, valueColor }: { title: string, value: Re
 function FormatCurrency({ amount }: { amount: number | string | any }) {
   return (
     <span>
-      {amount.toLocaleString(undefined, {minimumFractionDigits: 2})} <span className="text-[0.65em] opacity-60 ml-0.5">JOD</span>
+      {(Number(amount) || 0).toLocaleString(undefined, {minimumFractionDigits: 2})} <span className="text-[0.65em] opacity-60 ml-0.5">JOD</span>
     </span>
   )
 }
@@ -548,7 +653,7 @@ function ReconcileModal({ isOpen, onClose, onConfirm, currentBalance }: { isOpen
     e.preventDefault()
     const parsed = parseFloat(actualBalance)
     if (isNaN(parsed)) {
-      alert('Please enter a valid balance')
+      showError('Please enter a valid balance')
       return
     }
     onConfirm(parsed, note)
@@ -681,7 +786,7 @@ function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: {
     e.preventDefault()
     const parsed = parseFloat(amount)
     if (isNaN(parsed) || parsed <= 0 || parsed > remainingAmount) {
-      alert('Please enter a valid amount (up to ' + remainingAmount + ')')
+      showError('Please enter a valid amount (up to ' + remainingAmount + ')')
       return
     }
     onConfirm(parsed)
@@ -727,7 +832,7 @@ function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: {
   )
 }
 
-function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number) => Promise<void>, onQuickPay?: (inv: Invoice) => void }) {
+function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number) => Promise<void>, onQuickPay?: (inv: Invoice) => void }) {
   const { user } = useAuth();
 
 
@@ -758,7 +863,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
     return sum
   }, new Decimal(0)).toNumber()
 
-  const unpaidInvoices = invoices.filter(inv => inv.amount > inv.paidAmount)
+  const unpaidInvoices = invoices.filter(inv => new Decimal(inv.amount).greaterThan(inv.paidAmount))
   const scopeInvoices = unpaidInvoices.filter(inv => {
     const due = new Date(inv.dueDate)
     return isBefore(due, today) || !isBefore(fortyFiveDaysFromNow, due)
@@ -786,7 +891,10 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
     invoiceId?: number
     reminder?: boolean
     reminderAmount?: number | null
+    isCheque?: boolean
+    chequeStatus?: string
   reminderBaseline?: number
+  isPaid?: boolean
   }
 
   const upcomingRows: DisplayRow[] = []
@@ -805,13 +913,14 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
         invoiceId: inv.id,
         supplierName,
         dueDate: due,
-        totalAmount: inv.amount,
-        remainingAmount: inv.amount - inv.paidAmount,
+        totalAmount: new Decimal(inv.amount).toNumber(),
+        remainingAmount: new Decimal(inv.amount).minus(inv.paidAmount).toNumber(),
         isGrouped: false,
         statusClass: "bg-rose-50 text-rose-700 border-rose-200",
         statusLabel: "Overdue",
         textColor: "text-rose-600 font-bold",
-        isPartial: inv.paidAmount > 0,
+        isPartial: new Decimal(inv.paidAmount).greaterThan(0) && new Decimal(inv.amount).minus(inv.paidAmount).greaterThan(0),
+        isPaid: new Decimal(inv.amount).minus(inv.paidAmount).lessThanOrEqualTo(0),
         reminder: inv.reminder,
         reminderAmount: inv.reminderAmount
       })
@@ -836,18 +945,43 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
         invoiceId: inv.id,
         supplierName,
         dueDate: due,
-        totalAmount: inv.amount,
-        remainingAmount: inv.amount - inv.paidAmount,
+        totalAmount: new Decimal(inv.amount).toNumber(),
+        remainingAmount: new Decimal(inv.amount).minus(inv.paidAmount).toNumber(),
         isGrouped: false,
         statusClass,
         statusLabel,
         textColor,
-        isPartial: inv.paidAmount > 0,
+        isPartial: new Decimal(inv.paidAmount).greaterThan(0) && new Decimal(inv.amount).minus(inv.paidAmount).greaterThan(0),
+        isPaid: new Decimal(inv.amount).minus(inv.paidAmount).lessThanOrEqualTo(0),
         reminder: inv.reminder,
         reminderAmount: inv.reminderAmount
       })
     })
   })
+
+  
+    // Add Pending Cheques to Dashboard
+    cheques.filter(c => c.status === 'Pending').forEach(c => {
+      const due = new Date(c.chequeDate)
+      if (isBefore(due, fortyFiveDaysFromNow)) {
+        const isOverdue = isBefore(startOfDay(due), today)
+        const isToday = isEqual(startOfDay(due), today)
+        
+        upcomingRows.push({
+          id: `chq-${c.id}`,
+          supplierName: suppliers.find(s => s.id === c.supplierId)?.name || 'Generic Cheque',
+          dueDate: due,
+          totalAmount: c.amount,
+          remainingAmount: c.amount,
+          isGrouped: false,
+          statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : (isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-sky-50 text-sky-700 border-sky-200"),
+          statusLabel: "Cheque Payment",
+          textColor: isOverdue ? "text-rose-600 font-bold" : "text-sky-700 font-medium",
+          isCheque: true,
+          chequeStatus: c.status
+        })
+      }
+    })
 
   upcomingRows.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
   const finalRows = showSelectedOnly ? upcomingRows.filter(r => r.reminder) : upcomingRows;
@@ -952,7 +1086,15 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {row.isPartial ? (
+                      {row.isCheque ? (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${row.chequeStatus === "Pending" ? "bg-amber-50 text-amber-700 border-amber-200" : (row.chequeStatus === "Cleared" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200")}`}>
+                          {row.chequeStatus}
+                        </span>
+                      ) : (row as any).isPaid ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Paid
+                        </span>
+                      ) : row.isPartial ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
                           Partial
                         </span>
@@ -963,7 +1105,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {row.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.payments?.create) && (
+                      {row.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
                         <button 
                           onClick={() => {
                             const inv = invoices.find(i => i.id === row.invoiceId);
@@ -998,6 +1140,39 @@ function DashboardTab({ suppliers, invoices, accounts, collections, onSupplierCl
             <InvoiceTable invoices={invoices.slice(0, 5)} suppliers={suppliers} onReminderToggle={onToggleReminder} canToggleReminder={user?.role === "admin" || user?.permissions?.invoices?.reminder} onOpenReminderModal={(id, rem) => setReminderModal({isOpen: true, id, remaining: rem})} onSupplierClick={onSupplierClick} onQuickPay={onQuickPay} />
           </div>
         </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-rose-500" />
+            <h2 className="text-lg font-bold text-slate-800">Recent Expenses</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50/50 text-slate-500 font-medium">
+                <tr>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Category</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {expenses?.slice(0, 5).map(exp => (
+                  <tr key={exp.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{format(new Date(exp.date), 'MMM dd')}</td>
+                    <td className="px-6 py-4 font-medium">{exp.category}</td>
+                    <td className="px-6 py-4 text-right font-bold text-rose-600"><FormatCurrency amount={exp.amount} /></td>
+                  </tr>
+                ))}
+                {(expenses?.length || 0) === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-slate-500">No expenses recorded</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         
       </div>
       <PaymentReminderModal 
@@ -1421,7 +1596,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
   )
 }
 
-function PaymentsTab({ suppliers, payments, accounts, onRefresh, onDelete, onSupplierClick }: { suppliers: Supplier[], payments: Payment[], accounts: Account[], onRefresh: () => void, onDelete: (id: number) => void, onSupplierClick?: (s: Supplier) => void }) {
+function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDelete, onSupplierClick }: { suppliers: Supplier[], payments: Payment[], accounts: Account[], invoices: Invoice[], onRefresh: () => void, onDelete: (id: number) => void, onSupplierClick?: (s: Supplier) => void }) {
   const [searchTerm, setSearchTerm] = useState("")
   const { user } = useAuth();
 
@@ -1543,7 +1718,7 @@ function PaymentsTab({ suppliers, payments, accounts, onRefresh, onDelete, onSup
               <label className="block text-sm font-medium text-slate-700 mb-1">Payment Account</label>
               <select required value={paymentAccountId} onChange={e => setPaymentAccountId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
                 <option value="">Select Account</option>
-                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (Bal: {acc.balance.toLocaleString()})</option>)}
+                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (Bal: {acc.balance?.toLocaleString() || "0"})</option>)}
               </select>
             </div>
             <div>
@@ -1722,23 +1897,25 @@ function InvoiceTable({ invoices, suppliers, showDescription = false, onEditClic
           <th className="px-6 py-4 whitespace-nowrap">Due Date</th>
           <th className="px-6 py-4 whitespace-nowrap">Due Status</th>
           <th className="px-6 py-4 whitespace-nowrap">Payment Status</th>
-          {(onEditClick || onDeleteClick || onQuickPay) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.payments?.create) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.payments?.create) && <th className="px-6 py-4 whitespace-nowrap text-right">Actions</th>}
+          {(onEditClick || onDeleteClick || onQuickPay) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.cheques?.create) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.cheques?.create) && <th className="px-6 py-4 whitespace-nowrap text-right">Actions</th>}
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">
         {invoices.map(invoice => {
-          const isPaid = invoice.paidAmount >= invoice.amount
-          const isPartial = invoice.paidAmount > 0 && invoice.paidAmount < invoice.amount
+          const fullAmount = new Decimal(invoice.amount);
+          const paidAmount = new Decimal(invoice.paidAmount);
+          const remainingAmount = fullAmount.minus(paidAmount);
+
+          const isPaid = remainingAmount.lessThanOrEqualTo(0);
+          const isPartial = paidAmount.greaterThan(0) && remainingAmount.greaterThan(0);
+
           const supplierName = suppliers.find(s => s.id === invoice.supplierId)?.name || `ID: ${invoice.supplierId}`
           const due = startOfDay(new Date(invoice.dueDate));
           const todayDate = startOfDay(new Date());
           let dueStatus = 'Upcoming';
           let dueClass = 'bg-slate-50 text-slate-700 border-slate-200';
 
-          if (isPaid) {
-            dueStatus = '-';
-            dueClass = 'bg-slate-50 text-slate-400 border-slate-100';
-          } else if (isBefore(due, todayDate)) {
+          if (isBefore(due, todayDate)) {
             dueStatus = 'Overdue';
             dueClass = 'bg-rose-50 text-rose-700 border-rose-200';
           } else if (isEqual(due, todayDate)) {
@@ -1828,9 +2005,9 @@ function InvoiceTable({ invoices, suppliers, showDescription = false, onEditClic
                   </span>
                 )}
               </td>
-              {(onEditClick || onDeleteClick || onQuickPay) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.payments?.create) && (
+              {(onEditClick || onDeleteClick || onQuickPay) && (user?.role === "admin" || user?.permissions?.invoices?.edit || user?.permissions?.invoices?.delete || user?.permissions?.cheques?.create) && (
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  {invoice.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.payments?.create) && (
+                  {invoice.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
                     <button 
                       onClick={() => onQuickPay(invoice)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all border border-emerald-100 mr-3"
@@ -1856,7 +2033,7 @@ function InvoiceTable({ invoices, suppliers, showDescription = false, onEditClic
   )
 }
 
-function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, onDelete, selectedAccount, setSelectedAccount, setAccounts, openDeleteModal }: { accounts: Account[], payments: Payment[], collections: Collection[], suppliers: Supplier[], onRefresh: () => void, setSuppliers?: React.Dispatch<React.SetStateAction<Supplier[]>>, setInvoices?: React.Dispatch<React.SetStateAction<Invoice[]>>, setPayments?: React.Dispatch<React.SetStateAction<Payment[]>>, setAccounts?: React.Dispatch<React.SetStateAction<Account[]>>, setCollections?: React.Dispatch<React.SetStateAction<Collection[]>>, onDelete: (id: number) => void, selectedAccount: Account | null, setSelectedAccount: (a: Account | null) => void, openDeleteModal: (id: number, type: string, title: string) => void }) {
+function AccountsTab({ accounts, payments, collections, suppliers, expenses, onRefresh, onDelete, selectedAccount, setSelectedAccount, setAccounts, openDeleteModal }: { accounts: Account[], payments: Payment[], collections: Collection[], suppliers: Supplier[], expenses: Expense[], onRefresh: () => void, setSuppliers?: React.Dispatch<React.SetStateAction<Supplier[]>>, setInvoices?: React.Dispatch<React.SetStateAction<Invoice[]>>, setPayments?: React.Dispatch<React.SetStateAction<Payment[]>>, setAccounts?: React.Dispatch<React.SetStateAction<Account[]>>, setCollections?: React.Dispatch<React.SetStateAction<Collection[]>>, onDelete: (id: number) => void, selectedAccount: Account | null, setSelectedAccount: (a: Account | null) => void, openDeleteModal: (id: number, type: string, title: string) => void }) {
   const [searchTerm, setSearchTerm] = useState("")
   const { user } = useAuth();
   const [isReconcileOpen, setIsReconcileOpen] = useState(false);
@@ -1874,7 +2051,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, on
     if (t.type === 'Adjustment') {
       setEditAdjustment({ id: parseInt(t.id.split('-')[1]), note: t.description });
     } else {
-      alert(`Please go to the ${t.type === 'Incoming' ? 'Collections' : 'Payments'} tab to edit this transaction.`);
+      showError(`Please go to the ${t.type === 'Incoming' ? 'Collections' : 'Payments'} tab to edit this transaction.`);
     }
   };
 
@@ -1894,7 +2071,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, on
       const accRes = await apiFetch(`${API_URL}/accounts/${selectedAccount!.id}`);
       if (accRes.ok) setSelectedAccount(await accRes.json());
     } catch (err: any) {
-      alert(err.message);
+      showError(err.message);
     }
   };
 
@@ -1918,7 +2095,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, on
       setIsReconcileOpen(false);
       onRefresh(); // To ensure everything is in sync
     } catch (err: any) {
-      alert(err.message);
+      showError(err.message);
     }
   };
 
@@ -1970,6 +2147,15 @@ function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, on
       amount: p.amount
     }));
 
+    
+    const accountExpenses = expenses.filter(e => e.accountId === selectedAccount.id).map(e => ({
+      id: `exp-${e.id}`,
+      date: new Date(e.date),
+      type: 'Outgoing' as const,
+      description: e.category + (e.note ? `: ${e.note}` : ''),
+      amount: e.amount
+    }));
+
     const accountCollections = collections.filter(c => c.accountId === selectedAccount.id).map(c => ({
       id: `coll-${c.id}`,
       date: new Date(c.receivedDate || c.createdAt),
@@ -1988,7 +2174,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, onRefresh, on
       system: adj.systemBalance
     }));
 
-    const allTransactions = [...accountPayments, ...accountCollections, ...accountAdjustments].sort((a, b) => b.date.getTime() - a.date.getTime());
+    const allTransactions = [...accountPayments, ...accountCollections, ...accountAdjustments, ...accountExpenses].sort((a, b) => b.date.getTime() - a.date.getTime());
 
 
     return (
@@ -2263,7 +2449,7 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
       }
       onRefresh();
     } catch (err: any) {
-      alert(err.message);
+      showError(err.message);
       console.error(err);
     }
   };
@@ -2511,7 +2697,7 @@ function UsersTab() {
       fetchUsers();
     } catch(err: any) {
       console.error("Save Error:", err);
-      alert(err.message + (err.details ? ": " + err.details : ""));
+      showError(err.message + (err.details ? ": " + err.details : ""));
     }
   };
 
@@ -2532,7 +2718,7 @@ function UsersTab() {
       fetchUsers();
     } catch(err: any) {
       console.error("Save Error:", err);
-      alert(err.message + (err.details ? ": " + err.details : ""));
+      showError(err.message + (err.details ? ": " + err.details : ""));
     }
   };
 
@@ -2586,7 +2772,7 @@ function UsersTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {['dashboard', 'reports', 'invoices', 'payments', 'collections', 'suppliers', 'accounts', 'users'].map((mod) => {
+                  {['dashboard', 'reports', 'invoices', 'payments', 'cheques', 'expenses', 'collections', 'suppliers', 'accounts', 'users'].map((mod) => {
                     const modPerms = permissions[mod] || {};
                     const isAll = modPerms.view && modPerms.create && modPerms.edit && modPerms.delete && (mod === "invoices" ? modPerms.reminder : true);
                     
@@ -2668,4 +2854,310 @@ function UsersTab() {
 
 export function getUser() {
   return JSON.parse(localStorage.getItem('user') || 'null');
+}
+function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { suppliers: Supplier[], accounts: Account[], cheques: Cheque[], onRefresh: () => void, onDelete: (id: number) => void }) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const { user } = useAuth();
+  
+  const [amount, setAmount] = useState('')
+  const [chequeDate, setChequeDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [accountId, setAccountId] = useState('')
+  const [supplierId, setSupplierId] = useState('')
+  const [invoiceId, setInvoiceId] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const handleAddCheque = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError(null)
+    try {
+      const res = await apiFetch(`${API_URL}/cheques`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          amount, 
+          chequeDate, 
+          accountId, 
+          supplierId: supplierId || null, 
+          invoiceId: invoiceId || null 
+        })
+      })
+      if (!res.ok) throw new Error('Failed to create cheque')
+      setAmount('')
+      setAccountId('')
+      setSupplierId('')
+      setInvoiceId('')
+      onRefresh()
+    } catch (err: any) {
+      setFormError(err.message)
+    }
+  }
+
+  const handleStatusChange = async (id: number, status: string) => {
+    try {
+      const res = await apiFetch(`${API_URL}/cheques/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      if (!res.ok) throw new Error('Failed to update status')
+      onRefresh()
+    } catch (err: any) {
+      showError(err.message)
+    }
+  }
+
+  const filteredCheques = cheques.filter(c => {
+    const sName = suppliers.find(s => s.id === c.supplierId)?.name || 'Generic'
+    const accName = accounts.find(a => a.id === c.accountId)?.name || ''
+    return searchTerm === '' || 
+      sName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      accName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.amount.toString().includes(searchTerm)
+  })
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Cheques</h1>
+      </header>
+
+      {(user?.role === 'admin' || user?.permissions?.cheques?.create) && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-4xl">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Issue New Cheque</h2>
+          {formError && (
+            <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" /> {formError}
+            </div>
+          )}
+          <form onSubmit={handleAddCheque} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Amount (JOD)</label>
+              <input required type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Cheque Date</label>
+              <input required type="date" value={chequeDate} onChange={e => setChequeDate(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
+              <select required value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
+                <option value="">Select Account</option>
+                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (Bal: {acc.balance?.toLocaleString() || "0"})</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Supplier (Optional)</label>
+              <select value={supplierId} onChange={e => setSupplierId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
+                <option value="">No Supplier</option>
+                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Invoice ID (Optional)</label>
+              <input type="number" value={invoiceId} onChange={e => setInvoiceId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. 123" />
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="w-full bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors">Issue Cheque</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-800">Cheque Registry</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input type="text" placeholder="Search cheques..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-sky-500 w-64" />
+          </div>
+        </div>
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50/50 text-slate-500 font-medium">
+            <tr>
+              <th className="px-6 py-4">Due Date</th>
+              <th className="px-6 py-4">Supplier</th>
+              <th className="px-6 py-4">Account</th>
+              <th className="px-6 py-4 text-right">Amount</th>
+              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredCheques.map(cheque => {
+              const supplier = suppliers.find(s => s.id === cheque.supplierId)
+              const account = accounts.find(a => a.id === cheque.accountId)
+              const isOverdue = isBefore(startOfDay(new Date(cheque.chequeDate)), startOfDay(new Date())) && cheque.status === 'Pending'
+              
+              return (
+                <tr key={cheque.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-slate-700">{format(new Date(cheque.chequeDate), 'MMM dd, yyyy')}</span>
+                      {isOverdue && <span className="text-[10px] font-bold text-rose-50 border border-rose-200 bg-rose-500 px-1 rounded inline-block w-fit mt-0.5">Overdue</span>}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-slate-700 font-medium">{supplier?.name || 'Generic'}</td>
+                  <td className="px-6 py-4 text-slate-500">{account?.name || '-'}</td>
+                  <td className="px-6 py-4 text-right font-bold text-slate-900"><FormatCurrency amount={cheque.amount} /></td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                      cheque.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                      cheque.status === 'Cleared' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      'bg-rose-50 text-rose-700 border-rose-200'
+                    }`}>
+                      {cheque.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    {cheque.status === 'Pending' && (
+                      <>
+                        <button onClick={() => handleStatusChange(cheque.id, 'Cleared')} className="text-emerald-600 hover:text-emerald-800 text-xs font-bold px-2 py-1 bg-emerald-50 rounded border border-emerald-100">Clear</button>
+                        <button onClick={() => handleStatusChange(cheque.id, 'Bounced')} className="text-rose-600 hover:text-rose-800 text-xs font-bold px-2 py-1 bg-rose-50 rounded border border-rose-100">Bounce</button>
+                      </>
+                    )}
+                    {cheque.status !== 'Pending' && (
+                      <button onClick={() => handleStatusChange(cheque.id, 'Pending')} className="text-slate-500 hover:text-slate-700 text-xs font-bold px-2 py-1 bg-slate-50 rounded border border-slate-100">Reset</button>
+                    )}
+                    {(user?.role === 'admin' || user?.permissions?.cheques?.delete) && (
+                      <button onClick={() => onDelete(cheque.id)} className="text-rose-400 hover:text-rose-600 ml-2"><AlertCircle className="w-4 h-4 inline" /></button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+
+function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Account[], expenses: Expense[], onRefresh: () => void, onDelete: (id: number) => void }) {
+  const { user } = useAuth()
+  const [category, setCategory] = useState('')
+  const [amount, setAmount] = useState('')
+  const [accountId, setAccountId] = useState('')
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [note, setNote] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError(null)
+    try {
+      const res = await apiFetch(`${API_URL}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category, amount: parseFloat(amount), accountId, date, note })
+      })
+      if (!res.ok) throw new Error('Failed to add expense')
+      setCategory('')
+      setAmount('')
+      setAccountId('')
+      setNote('')
+      onRefresh()
+    } catch (err: any) {
+      setFormError(err.message)
+    }
+  }
+
+  const filteredExpenses = expenses.filter(exp => 
+    exp.category.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    exp.note?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  const categories = ['Rent', 'Fuel', 'Salary', 'Maintenance', 'Electricity', 'Water', 'Internet', 'Office Supplies', 'Marketing', 'Taxes', 'Other']
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Expenses</h1>
+      </header>
+
+      {(user?.role === 'admin' || user?.permissions?.expenses?.create) && (
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-4xl">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Record New Expense</h2>
+          {formError && (
+            <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-lg flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" /> {formError}
+            </div>
+          )}
+          <form onSubmit={handleAddExpense} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <select required value={category} onChange={e => setCategory(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
+                <option value="">Select Category</option>
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Amount (JOD)</label>
+              <input required type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Account</label>
+              <select required value={accountId} onChange={e => setAccountId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
+                <option value="">Select Account</option>
+                {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name} (Bal: {acc.balance?.toLocaleString() || "0"})</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+              <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1">Note (Optional)</label>
+              <input type="text" value={note} onChange={e => setNote(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. Monthly rent for office" />
+            </div>
+            <div className="flex items-end">
+              <button type="submit" className="w-full bg-rose-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-rose-700 transition-colors">Record Expense</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-800">Expense Registry</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input type="text" placeholder="Search expenses..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-sky-500 w-64" />
+          </div>
+        </div>
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50/50 text-slate-500 font-medium">
+            <tr>
+              <th className="px-6 py-4">Date</th>
+              <th className="px-6 py-4">Category</th>
+              <th className="px-6 py-4">Account</th>
+              <th className="px-6 py-4">Note</th>
+              <th className="px-6 py-4 text-right">Amount</th>
+              <th className="px-6 py-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filteredExpenses.map(expense => {
+              const account = accounts.find(a => a.id === expense.accountId)
+              return (
+                <tr key={expense.id} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap text-slate-700">{format(new Date(expense.date), 'MMM dd, yyyy')}</td>
+                  <td className="px-6 py-4 font-bold text-slate-800">{expense.category}</td>
+                  <td className="px-6 py-4 text-slate-500">{account?.name || '-'}</td>
+                  <td className="px-6 py-4 text-slate-500 max-w-xs truncate">{expense.note || '-'}</td>
+                  <td className="px-6 py-4 text-right font-bold text-rose-600"><FormatCurrency amount={expense.amount} /></td>
+                  <td className="px-6 py-4 text-right">
+                    {(user?.role === 'admin' || user?.permissions?.expenses?.delete) && (
+                      <button onClick={() => onDelete(expense.id)} className="text-rose-400 hover:text-rose-600 ml-2"><AlertCircle className="w-4 h-4 inline" /></button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
 }

@@ -155,23 +155,44 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
       if (!oldPayment) throw new Error('Payment not found');
 
       const newAmount = new Decimal(amount);
+      const oldAmount = new Decimal(oldPayment.amount);
       const newAccountId = parseInt(accountId);
       const newSupplierId = parseInt(supplierId);
 
-      if (oldPayment.accountId !== newAccountId || !new Decimal(oldPayment.amount).equals(newAmount)) {
+      // Fetch the target account to check balance
+      const targetAccount = await tx.account.findUnique({ where: { id: newAccountId } });
+      if (!targetAccount) throw new Error('Account not found');
+
+      // Calculate effective balance if we were to reverse the old payment
+      let effectiveBalance = new Decimal(targetAccount.balance);
+      if (oldPayment.accountId === newAccountId) {
+        effectiveBalance = effectiveBalance.plus(oldAmount);
+      }
+
+      console.log(`Updating Payment ${id}: Old Account=${oldPayment.accountId}, New Account=${newAccountId}, Old Amount=${oldAmount}, New Amount=${newAmount}, Current Balance=${targetAccount.balance}, Effective Balance=${effectiveBalance}`);
+
+      if (effectiveBalance.lessThan(newAmount)) {
+        throw new Error(`Insufficient balance in selected account (Available: ${effectiveBalance}, Required: ${newAmount})`);
+      }
+
+      // Update balances
+      if (oldPayment.accountId !== newAccountId) {
+        // Give back to old account
         await tx.account.update({
           where: { id: oldPayment.accountId },
-          data: { balance: { increment: oldPayment.amount } }
+          data: { balance: { increment: oldAmount } }
         });
-
-        const newAccount = await tx.account.findUnique({ where: { id: newAccountId } });
-        if (!newAccount || new Decimal(newAccount.balance).lessThan(newAmount)) {
-          throw new Error('Insufficient balance in selected account');
-        }
-
+        // Take from new account
         await tx.account.update({
           where: { id: newAccountId },
           data: { balance: { decrement: newAmount } }
+        });
+      } else if (!oldAmount.equals(newAmount)) {
+        // Same account, just adjust the difference
+        const diff = newAmount.minus(oldAmount);
+        await tx.account.update({
+          where: { id: newAccountId },
+          data: { balance: { decrement: diff } }
         });
       }
 
@@ -186,7 +207,7 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
         }
       });
 
-      if (!new Decimal(oldPayment.amount).equals(newAmount) || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
+      if (!oldAmount.equals(newAmount) || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
         if (oldPayment.supplierId !== newSupplierId) {
           await recalculateFIFO(tx, oldPayment.supplierId);
         }

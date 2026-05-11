@@ -87,68 +87,110 @@ function recalculateFIFO(tx, supplierId) {
         }
     });
 }
-router.post('/', (0, auth_1.requirePermission)('payments', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/', (0, auth_1.requirePermission)('payments', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { supplierId, amount, paymentDate, accountId, invoiceId } = req.body;
+        const { supplierId, amount, paymentDate, accountId, invoiceId, allocations } = req.body;
         if (!accountId) {
             return res.status(400).json({ error: 'accountId is required' });
         }
-        const payment = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const baseDate = paymentDate ? new Date(paymentDate) : new Date();
-            const parsedAmount = new library_1.Decimal(amount);
             const parsedAccountId = parseInt(accountId);
+            const totalAmount = new library_1.Decimal(amount);
             const account = yield tx.account.findUnique({ where: { id: parsedAccountId } });
-            if (!account || new library_1.Decimal(account.balance).lessThan(parsedAmount)) {
+            if (!account || new library_1.Decimal(account.balance).lessThan(totalAmount)) {
                 throw new Error('Insufficient balance in selected account');
             }
-            const newPayment = yield tx.payment.create({
-                data: {
-                    supplierId: parseInt(supplierId),
-                    amount: parsedAmount,
-                    paymentDate: baseDate,
-                    accountId: parsedAccountId,
-                    invoiceId: invoiceId ? parseInt(invoiceId) : null
+            // If allocations are provided (Manual Mode)
+            if (allocations && Array.isArray(allocations) && allocations.length > 0) {
+                for (const alloc of allocations) {
+                    const allocAmount = new library_1.Decimal(alloc.amount);
+                    if (allocAmount.lessThanOrEqualTo(0))
+                        continue;
+                    yield tx.payment.create({
+                        data: {
+                            supplierId: parseInt(supplierId),
+                            amount: allocAmount,
+                            paymentDate: baseDate,
+                            accountId: parsedAccountId,
+                            invoiceId: parseInt(alloc.invoiceId)
+                        }
+                    });
                 }
-            });
+            }
+            else {
+                // Auto Mode (FIFO)
+                yield tx.payment.create({
+                    data: {
+                        supplierId: parseInt(supplierId),
+                        amount: totalAmount,
+                        paymentDate: baseDate,
+                        accountId: parsedAccountId,
+                        invoiceId: invoiceId ? parseInt(invoiceId) : null
+                    }
+                });
+            }
+            // Deduct total amount from account once
             yield tx.account.update({
                 where: { id: parsedAccountId },
-                data: { balance: { decrement: parsedAmount } }
+                data: { balance: { decrement: totalAmount } }
             });
             yield recalculateFIFO(tx, parseInt(supplierId));
-            return newPayment;
+            return { message: 'Payment processed successfully' };
         }));
-        res.status(201).json(payment);
+        res.status(201).json(result);
     }
     catch (error) {
-        res.status(400).json({ error: 'Error processing payment', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { supplierId, amount, paymentDate, accountId, invoiceId } = req.body;
         if (!accountId) {
             return res.status(400).json({ error: 'accountId is required' });
         }
-        const payment = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const updated = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const oldPayment = yield tx.payment.findUnique({ where: { id: parseInt(id) } });
             if (!oldPayment)
                 throw new Error('Payment not found');
             const newAmount = new library_1.Decimal(amount);
+            const oldAmount = new library_1.Decimal(oldPayment.amount);
             const newAccountId = parseInt(accountId);
             const newSupplierId = parseInt(supplierId);
-            if (oldPayment.accountId !== newAccountId || !new library_1.Decimal(oldPayment.amount).equals(newAmount)) {
+            // Fetch the target account to check balance
+            const targetAccount = yield tx.account.findUnique({ where: { id: newAccountId } });
+            if (!targetAccount)
+                throw new Error('Account not found');
+            // Calculate effective balance if we were to reverse the old payment
+            let effectiveBalance = new library_1.Decimal(targetAccount.balance);
+            if (oldPayment.accountId === newAccountId) {
+                effectiveBalance = effectiveBalance.plus(oldAmount);
+            }
+            console.log(`Updating Payment ${id}: Old Account=${oldPayment.accountId}, New Account=${newAccountId}, Old Amount=${oldAmount}, New Amount=${newAmount}, Current Balance=${targetAccount.balance}, Effective Balance=${effectiveBalance}`);
+            if (effectiveBalance.lessThan(newAmount)) {
+                throw new Error(`Insufficient balance in selected account (Available: ${effectiveBalance}, Required: ${newAmount})`);
+            }
+            // Update balances
+            if (oldPayment.accountId !== newAccountId) {
+                // Give back to old account
                 yield tx.account.update({
                     where: { id: oldPayment.accountId },
-                    data: { balance: { increment: oldPayment.amount } }
+                    data: { balance: { increment: oldAmount } }
                 });
-                const newAccount = yield tx.account.findUnique({ where: { id: newAccountId } });
-                if (!newAccount || newAccount.balance < newAmount) {
-                    throw new Error('Insufficient balance in selected account');
-                }
+                // Take from new account
                 yield tx.account.update({
                     where: { id: newAccountId },
                     data: { balance: { decrement: newAmount } }
+                });
+            }
+            else if (!oldAmount.equals(newAmount)) {
+                // Same account, just adjust the difference
+                const diff = newAmount.minus(oldAmount);
+                yield tx.account.update({
+                    where: { id: newAccountId },
+                    data: { balance: { decrement: diff } }
                 });
             }
             const updatedPayment = yield tx.payment.update({
@@ -161,7 +203,7 @@ router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res)
                     invoiceId: invoiceId ? parseInt(invoiceId) : null
                 }
             });
-            if (oldPayment.amount !== newAmount || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
+            if (!oldAmount.equals(newAmount) || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
                 if (oldPayment.supplierId !== newSupplierId) {
                     yield recalculateFIFO(tx, oldPayment.supplierId);
                 }
@@ -169,13 +211,13 @@ router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res)
             }
             return updatedPayment;
         }));
-        res.json(payment);
+        res.json(updated);
     }
     catch (error) {
-        res.status(400).json({ error: 'Error updating payment', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.get('/', (0, auth_1.requirePermission)('payments', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', (0, auth_1.requirePermission)('payments', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
         const hasAccountsView = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'admin' || ((_d = (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b.permissions) === null || _c === void 0 ? void 0 : _c.accounts) === null || _d === void 0 ? void 0 : _d.view);
@@ -199,10 +241,10 @@ router.get('/', (0, auth_1.requirePermission)('payments', 'view'), (req, res) =>
         res.json(payments);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching payments', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.delete('/:id', (0, auth_1.requirePermission)('payments', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', (0, auth_1.requirePermission)('payments', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -219,7 +261,7 @@ router.delete('/:id', (0, auth_1.requirePermission)('payments', 'delete'), (req,
         res.status(204).send();
     }
     catch (error) {
-        res.status(400).json({ error: 'Error deleting payment', details: error.message || String(error) });
+        next(error);
     }
 }));
 exports.default = router;

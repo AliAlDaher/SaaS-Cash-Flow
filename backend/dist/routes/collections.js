@@ -33,7 +33,7 @@ const getExchangeRate = (currency) => {
     // Ignore USD as requested, fallback to 1
     return 1;
 };
-router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
         // Ignore any exchangeRate sent from frontend
@@ -66,10 +66,10 @@ router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, r
         res.status(201).json(collection);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error creating collection', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { amount, currency, accountId, note, expectedDate, receivedDate, status } = req.body;
@@ -118,7 +118,7 @@ router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, r
         res.status(400).json({ error: 'Error updating collection', details: error.message || String(error) });
     }
 }));
-router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     try {
         const hasAccountsView = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'admin' || ((_d = (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b.permissions) === null || _c === void 0 ? void 0 : _c.accounts) === null || _d === void 0 ? void 0 : _d.view);
@@ -139,10 +139,10 @@ router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res)
         res.json(collections);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching collections', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.delete('/:id', (0, auth_1.requirePermission)('collections', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', (0, auth_1.requirePermission)('collections', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
@@ -165,7 +165,7 @@ router.delete('/:id', (0, auth_1.requirePermission)('collections', 'delete'), (r
         res.status(400).json({ error: 'Error deleting collection', details: error.message || String(error) });
     }
 }));
-router.patch('/:id/status', (0, auth_1.requirePermission)('collections', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.patch('/:id/status', (0, auth_1.requirePermission)('collections', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {

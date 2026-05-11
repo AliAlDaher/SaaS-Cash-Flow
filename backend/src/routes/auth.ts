@@ -35,6 +35,8 @@ router.post('/login', async (req, res, next) => {
   reports: { view: true },
   invoices: { view: true, create: true, edit: true, delete: true },
   payments: { view: true, create: true, edit: true, delete: true },
+  cheques: { view: true, create: true, edit: true, delete: true },
+  expenses: { view: true, create: true, edit: true, delete: true },
   collections: { view: true, create: true, edit: true, delete: true },
   suppliers: { view: true, create: true, edit: true, delete: true },
   accounts: { view: true, create: true, edit: true, delete: true },

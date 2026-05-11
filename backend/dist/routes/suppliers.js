@@ -15,7 +15,7 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
-router.post('/', (0, auth_1.requirePermission)('suppliers', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/', (0, auth_1.requirePermission)('suppliers', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, priority, paymentTermDays } = req.body;
         const supplier = yield prisma.supplier.create({
@@ -24,19 +24,19 @@ router.post('/', (0, auth_1.requirePermission)('suppliers', 'create'), (req, res
         res.status(201).json(supplier);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error creating supplier' });
+        next(error);
     }
 }));
-router.get('/', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const suppliers = yield prisma.supplier.findMany({ orderBy: { id: "desc" } });
         res.json(suppliers);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching suppliers', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.get('/:id', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:id', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const supplier = yield prisma.supplier.findUnique({
@@ -50,10 +50,10 @@ router.get('/:id', (0, auth_1.requirePermission)('suppliers', 'view'), (req, res
         }
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching supplier' });
+        next(error);
     }
 }));
-router.put('/:id', (0, auth_1.requirePermission)('suppliers', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:id', (0, auth_1.requirePermission)('suppliers', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { name, priority, paymentTermDays } = req.body;
@@ -67,10 +67,10 @@ router.put('/:id', (0, auth_1.requirePermission)('suppliers', 'edit'), (req, res
         res.json(supplier);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error updating supplier' });
+        next(error);
     }
 }));
-router.delete('/:id', (0, auth_1.requirePermission)('suppliers', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', (0, auth_1.requirePermission)('suppliers', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const supplierId = parseInt(id);
@@ -85,7 +85,7 @@ router.delete('/:id', (0, auth_1.requirePermission)('suppliers', 'delete'), (req
         res.status(204).send();
     }
     catch (error) {
-        res.status(500).json({ error: 'Error deleting supplier', details: error.message || String(error) });
+        next(error);
     }
 }));
 exports.default = router;

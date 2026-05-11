@@ -16,7 +16,7 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
-router.post('/', (0, auth_1.requirePermission)('invoices', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/', (0, auth_1.requirePermission)('invoices', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { supplierId, amount, invoiceDate, description } = req.body;
         const supplier = yield prisma.supplier.findUnique({
@@ -40,10 +40,10 @@ router.post('/', (0, auth_1.requirePermission)('invoices', 'create'), (req, res)
         res.status(201).json(invoice);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error creating invoice', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.put('/:id', (0, auth_1.requirePermission)('invoices', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.put('/:id', (0, auth_1.requirePermission)('invoices', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { amount, invoiceDate, description } = req.body;
@@ -76,26 +76,26 @@ router.put('/:id', (0, auth_1.requirePermission)('invoices', 'edit'), (req, res)
         res.status(400).json({ error: 'Error updating invoice', details: error.message || String(error) });
     }
 }));
-router.get('/', (0, auth_1.requirePermission)('invoices', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', (0, auth_1.requirePermission)('invoices', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const invoices = yield prisma.invoice.findMany({ orderBy: { id: "desc" }, include: { supplier: true } });
         res.json(invoices);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching invoices', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.get('/:supplierId', (0, auth_1.requirePermission)('invoices', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/:supplierId', (0, auth_1.requirePermission)('invoices', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { supplierId } = req.params;
         const invoices = yield prisma.invoice.findMany({ where: { supplierId: parseInt(supplierId) }, orderBy: { id: "desc" } });
         res.json(invoices);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching supplier invoices', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.delete('/:id', (0, auth_1.requirePermission)('invoices', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', (0, auth_1.requirePermission)('invoices', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const invoiceId = parseInt(id);
@@ -109,10 +109,10 @@ router.delete('/:id', (0, auth_1.requirePermission)('invoices', 'delete'), (req,
         res.status(204).send();
     }
     catch (error) {
-        res.status(500).json({ error: 'Error deleting invoice', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.patch('/:id/reminder', (0, auth_1.requirePermission)('invoices', 'reminder'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.patch('/:id/reminder', (0, auth_1.requirePermission)('invoices', 'reminder'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
         const { reminder, reminderAmount } = req.body;

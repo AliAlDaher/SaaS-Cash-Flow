@@ -16,7 +16,7 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
-router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, type, balance } = req.body;
         const account = yield prisma.account.create({
@@ -29,19 +29,59 @@ router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res)
         res.status(201).json(account);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error creating account', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.get('/', (0, auth_1.requirePermission)('accounts', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get('/', (0, auth_1.requirePermission)('accounts', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const accounts = yield prisma.account.findMany({ orderBy: { id: "desc" } });
         res.json(accounts);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching accounts', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.get('/:id', (0, auth_1.requirePermission)('accounts', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.patch('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accounts', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { adjustmentId } = req.params;
+    const { note } = req.body;
+    try {
+        const updated = yield prisma.accountAdjustment.update({
+            where: { id: parseInt(adjustmentId) },
+            data: { note }
+        });
+        res.json(updated);
+    }
+    catch (error) {
+        res.status(400).json({ error: 'Error updating adjustment', details: error.message || String(error) });
+    }
+}));
+router.delete('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accounts', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { adjustmentId } = req.params;
+    try {
+        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const adjustment = yield tx.accountAdjustment.findUnique({
+                where: { id: parseInt(adjustmentId) }
+            });
+            if (!adjustment)
+                throw new Error('Adjustment not found');
+            // Reverse the balance change
+            yield tx.account.update({
+                where: { id: adjustment.accountId },
+                data: {
+                    balance: { decrement: adjustment.amount }
+                }
+            });
+            yield tx.accountAdjustment.delete({
+                where: { id: parseInt(adjustmentId) }
+            });
+        }));
+        res.status(204).send();
+    }
+    catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}));
+router.get('/:id', (0, auth_1.requirePermission)('accounts', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const account = yield prisma.account.findUnique({
             where: { id: parseInt(req.params.id) },
@@ -52,10 +92,10 @@ router.get('/:id', (0, auth_1.requirePermission)('accounts', 'view'), (req, res)
         res.json(account);
     }
     catch (error) {
-        res.status(500).json({ error: 'Error fetching account', details: error.message || String(error) });
+        next(error);
     }
 }));
-router.delete('/:id', (0, auth_1.requirePermission)('accounts', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.delete('/:id', (0, auth_1.requirePermission)('accounts', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const id = parseInt(req.params.id);
     if (isNaN(id)) {
         return res.status(400).json({ error: 'Invalid account ID' });

@@ -18,18 +18,19 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
-router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/login', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
     }
     try {
-        const users = yield prisma.$queryRaw `SELECT * FROM [User] WHERE email = ${email}`;
-        const user = Array.isArray(users) ? users[0] : null;
+        const user = yield prisma.user.findUnique({ where: { email } });
+        console.log("USER FOUND:", user);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
+        console.log("PASSWORD MATCH:", isPasswordValid);
         if (!isPasswordValid) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -41,6 +42,8 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     reports: { view: true },
                     invoices: { view: true, create: true, edit: true, delete: true },
                     payments: { view: true, create: true, edit: true, delete: true },
+                    cheques: { view: true, create: true, edit: true, delete: true },
+                    expenses: { view: true, create: true, edit: true, delete: true },
                     collections: { view: true, create: true, edit: true, delete: true },
                     suppliers: { view: true, create: true, edit: true, delete: true },
                     accounts: { view: true, create: true, edit: true, delete: true },
@@ -73,7 +76,7 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.status(200).json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, permissions: parsedPerms } });
     }
     catch (error) {
-        res.status(500).json({ error: 'Login failed', details: String(error) });
+        next(error);
     }
 }));
 exports.default = router;

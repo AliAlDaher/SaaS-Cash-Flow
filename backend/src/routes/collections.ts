@@ -110,7 +110,7 @@ router.put('/:id', requirePermission('collections', 'edit'), async (req: Request
   }
 });
 
-router.get('/', requirePermission('collections', 'view'), async (req: AuthRequest, res: Response) => {
+router.get('/', requirePermission('collections', 'view'), async (req: AuthRequest, res: Response, next) => {
   try {
     const hasAccountsView = req.user?.role === 'admin' || req.user?.permissions?.accounts?.view;
     

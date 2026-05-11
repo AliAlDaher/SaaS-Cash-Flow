@@ -27,7 +27,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
 
   // Default Fallback
   const status = err.status || 500;
-  const message = status === 500 ? "Something went wrong. Please try again later." : err.message;
+  const message = err.message + " | " + err.stack;
   
   res.status(status).json({ error: message });
 };
