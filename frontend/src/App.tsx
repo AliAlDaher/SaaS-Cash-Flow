@@ -1308,6 +1308,7 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
   const [newSupplierPriority, setNewSupplierPriority] = useState(1)
   const [newSupplierPaymentTerms, setNewSupplierPaymentTerms] = useState(0)
   const [editSupplierId, setEditSupplierId] = useState<number | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   
   const filteredSuppliers = suppliers.filter(s => 
     searchTerm === '' || s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.priority.toString().includes(searchTerm)
@@ -1329,6 +1330,8 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
 
   const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       const url = editSupplierId ? `${API_URL}/suppliers/${editSupplierId}` : `${API_URL}/suppliers`
       const method = editSupplierId ? 'PUT' : 'POST'
@@ -1350,6 +1353,8 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
       handleCancelEdit()
     } catch (err) {
       console.error(err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -1467,7 +1472,22 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {((user?.permissions?.suppliers?.[editSupplierId ? 'edit' : 'create'])) ? <button type="submit" className="w-full sm:w-auto bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors">{editSupplierId ? 'Update Supplier' : 'Save Supplier'}</button> : null}
+            {((user?.permissions?.suppliers?.[editSupplierId ? 'edit' : 'create'])) ? (
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full sm:w-auto bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {editSupplierId ? 'Updating...' : 'Saving...'}
+                  </>
+                ) : (
+                  editSupplierId ? 'Update Supplier' : 'Save Supplier'
+                )}
+              </button>
+            ) : null}
             {editSupplierId && <button type="button" onClick={handleCancelEdit} className="w-full sm:w-auto bg-slate-100 text-slate-700 rounded-lg px-6 py-2 font-medium hover:bg-slate-200 transition-colors">Cancel</button>}
           </div>
         </form>
@@ -1559,6 +1579,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
   const [editInvoiceId, setEditInvoiceId] = useState<number | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [filterSupplierId, setFilterSupplierId] = useState<string>('')
+  const [submitting, setSubmitting] = useState(false)
 
   const filteredInvoices = invoices.filter(inv => {
     const sName = suppliers.find(s => s.id === inv.supplierId)?.name || '';
@@ -1591,6 +1612,8 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
   const handleAddInvoice = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
+    if (submitting) return
+    setSubmitting(true)
     try {
       const url = editInvoiceId ? `${API_URL}/invoices/${editInvoiceId}` : `${API_URL}/invoices`
       const method = editInvoiceId ? 'PUT' : 'POST'
@@ -1621,6 +1644,8 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
     } catch (err: any) {
       setFormError(err.message)
       console.error(err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -1662,7 +1687,22 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
             <input type="text" value={newInvoiceDescription} onChange={e => setNewInvoiceDescription(e.target.value)} placeholder="" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
           </div>
           <div className="flex items-center gap-3">
-            {((user?.permissions?.invoices?.[editInvoiceId ? 'edit' : 'create'])) ? <button type="submit" className="w-full sm:w-auto bg-emerald-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-emerald-700 transition-colors">{editInvoiceId ? 'Update Invoice' : 'Add Invoice'}</button> : null}
+            {((user?.permissions?.invoices?.[editInvoiceId ? 'edit' : 'create'])) ? (
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full sm:w-auto bg-emerald-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    {editInvoiceId ? 'Updating...' : 'Adding...'}
+                  </>
+                ) : (
+                  editInvoiceId ? 'Update Invoice' : 'Add Invoice'
+                )}
+              </button>
+            ) : null}
             {editInvoiceId && <button type="button" onClick={handleCancelEdit} className="w-full sm:w-auto bg-slate-100 text-slate-700 rounded-lg px-6 py-2 font-medium hover:bg-slate-200 transition-colors">Cancel</button>}
           </div>
         </form>
@@ -1719,6 +1759,7 @@ function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDel
   const [manualAllocations, setManualAllocations] = useState<Record<number, string>>({})
   const [editPaymentId, setEditPaymentId] = useState<number | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   
   const filteredPayments = payments.filter(p => {
     const sName = suppliers.find(s => s.id === p.supplierId)?.name || '';
@@ -1762,6 +1803,8 @@ function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDel
       return
     }
 
+    if (submitting) return
+    setSubmitting(true)
     try {
       const url = editPaymentId ? `${API_URL}/payments/${editPaymentId}` : `${API_URL}/payments`
       const method = editPaymentId ? 'PUT' : 'POST'
@@ -1791,6 +1834,8 @@ function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDel
     } catch (err: any) {
       setFormError(err.message)
       console.error(err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -1896,8 +1941,21 @@ function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDel
             </div>
           )}
           <div className="flex items-center gap-3">
-            <button type="submit" className="w-full sm:w-auto bg-teal-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2">
-              <CreditCard className="w-4 h-4" /> {editPaymentId ? 'Update Payment' : 'Process Payment'}
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="w-full sm:w-auto bg-teal-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-teal-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {editPaymentId ? 'Updating...' : 'Processing...'}
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4" /> {editPaymentId ? 'Update Payment' : 'Process Payment'}
+                </>
+              )}
             </button>
             {editPaymentId && (
               <button type="button" onClick={handleCancelEdit} className="w-full sm:w-auto bg-slate-100 text-slate-700 rounded-lg px-6 py-2 font-medium hover:bg-slate-200 transition-colors">
@@ -2226,6 +2284,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
 
   const [name, setName] = useState('')
   const [type, setType] = useState('Bank')
+  const [submitting, setSubmitting] = useState(false)
   
   const filteredAccounts = accounts.filter(a => 
     searchTerm === '' || a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.type.toLowerCase().includes(searchTerm.toLowerCase()) || a.balance.toString().includes(searchTerm)
@@ -2233,6 +2292,8 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
 
   const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       await apiFetch(`${API_URL}/accounts`, {
         method: 'POST',
@@ -2244,6 +2305,8 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
       onRefresh()
     } catch (err) {
       console.error(err)
+    } finally {
+      setSubmitting(false)
     }
   }
   if (selectedAccount) {
@@ -2407,7 +2470,22 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
               </select>
             </div>
           </div>
-          {user?.permissions?.accounts?.create ? <button type="submit" className="w-full sm:w-auto bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors">Create Account</button> : null}
+          {user?.permissions?.accounts?.create ? (
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="w-full sm:w-auto bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          ) : null}
         </form>
       </div>
       )}
@@ -2992,10 +3070,13 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
   const [supplierId, setSupplierId] = useState('')
   const [invoiceId, setInvoiceId] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   const handleAddCheque = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
+    if (submitting) return
+    setSubmitting(true)
     try {
       const res = await apiFetch(`${API_URL}/cheques`, {
         method: 'POST',
@@ -3016,6 +3097,8 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
       onRefresh()
     } catch (err: any) {
       setFormError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -3084,7 +3167,20 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
               <input type="number" value={invoiceId} onChange={e => setInvoiceId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="flex items-end">
-              <button type="submit" className="w-full bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors">Issue Cheque</button>
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Issuing...
+                  </>
+                ) : (
+                  'Issue Cheque'
+                )}
+              </button>
             </div>
           </form>
         </div>
@@ -3169,10 +3265,13 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
   const [note, setNote] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError(null)
+    if (submitting) return
+    setSubmitting(true)
     try {
       const res = await apiFetch(`${API_URL}/expenses`, {
         method: 'POST',
@@ -3187,6 +3286,8 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
       onRefresh()
     } catch (err: any) {
       setFormError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -3239,7 +3340,20 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
               <input type="text" value={note} onChange={e => setNote(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="flex items-end">
-              <button type="submit" className="w-full bg-rose-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-rose-700 transition-colors">Record Expense</button>
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full bg-rose-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-rose-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Recording...
+                  </>
+                ) : (
+                  'Record Expense'
+                )}
+              </button>
             </div>
           </form>
         </div>
