@@ -140,4 +140,33 @@ router.patch('/:id/reminder', (0, auth_1.requirePermission)('invoices', 'reminde
         res.status(400).json({ error: 'Error updating invoice reminder', details: error.message || String(error) });
     }
 }));
+router.patch('/:id/postpone', (0, auth_1.requirePermission)('cheques', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { postponeDate, reason } = req.body;
+        const existing = yield prisma.invoice.findUnique({ where: { id: parseInt(id) } });
+        if (!existing)
+            return res.status(404).json({ error: 'Invoice not found' });
+        const originalDateStr = new Date(existing.dueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
+        const updatedDescription = existing.description
+            ? existing.description + " " + postponementLog
+            : postponementLog;
+        const invoice = yield prisma.invoice.update({
+            where: { id: parseInt(id) },
+            data: {
+                dueDate: new Date(postponeDate),
+                reminder: false, // Automatically clears the manager reminder!
+                reminderAmount: null,
+                reminderBaseline: 0,
+                description: updatedDescription
+            }
+        });
+        res.json(invoice);
+    }
+    catch (error) {
+        res.status(400).json({ error: 'Error postponing invoice', details: error.message || String(error) });
+    }
+}));
 exports.default = router;

@@ -132,4 +132,33 @@ router.delete('/:id', requirePermission('cheques', 'delete'), async (req, res, n
   }
 });
 
+// Postpone cheque due date
+router.patch('/:id/postpone', requirePermission('cheques', 'create'), async (req: Request, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { postponeDate, reason } = req.body;
+
+    const existing = await prisma.cheque.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) return res.status(404).json({ error: 'Cheque not found' });
+
+    const originalDateStr = new Date(existing.chequeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
+    const newNote = existing.note
+      ? existing.note + " " + postponementLog
+      : postponementLog;
+
+    const updated = await prisma.cheque.update({
+      where: { id: parseInt(id) },
+      data: {
+        chequeDate: new Date(postponeDate),
+        note: newNote
+      }
+    });
+    res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

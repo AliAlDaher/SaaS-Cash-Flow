@@ -107,6 +107,7 @@ model Cheque {
   accountId   Int
   supplierId  Int?
   invoiceId   Int?
+  note        String?
   createdAt   DateTime @default(now())
   
   account     Account   @relation(fields: [accountId], references: [id])
@@ -117,11 +118,11 @@ model Expense {
   id          Int      @id @default(autoincrement())
   category    String
   amount      Decimal 
+  paidAmount  Decimal  @default(0)
   accountId   Int
   account     Account  @relation(fields: [accountId], references: [id])
   date        DateTime
   note        String?
   reminder    Boolean  @default(false)
-  paid        Boolean  @default(true)
   createdAt   DateTime @default(now())
 }

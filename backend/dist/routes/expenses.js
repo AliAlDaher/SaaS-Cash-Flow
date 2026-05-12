@@ -27,46 +27,28 @@ router.get('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'v
         res.status(500).json({ error: 'Failed to fetch expenses' });
     }
 }));
-// Add new expense
+// Add new expense (created as Unpaid with paidAmount = 0, no bank account deduction on creation)
 router.post('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { category, amount, accountId, date, note } = req.body;
     try {
-        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
-            const expDate = new Date(date);
-            // Determine if it is a planned/future expense
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const targetDate = new Date(expDate);
-            targetDate.setHours(0, 0, 0, 0);
-            const isFuture = targetDate > today;
-            const paid = !isFuture;
-            const expense = yield tx.expense.create({
-                data: {
-                    category,
-                    amount,
-                    accountId: parseInt(accountId),
-                    date: expDate,
-                    note,
-                    paid
-                }
-            });
-            // Deduct from account balance ONLY if it is not a future/planned expense
-            if (paid) {
-                yield tx.account.update({
-                    where: { id: parseInt(accountId) },
-                    data: { balance: { decrement: amount } }
-                });
+        const expense = yield prisma.expense.create({
+            data: {
+                category,
+                amount,
+                paidAmount: 0, // Unpaid by default
+                accountId: parseInt(accountId),
+                date: new Date(date),
+                note
             }
-            return expense;
-        }));
-        res.json(result);
+        });
+        res.json(expense);
     }
     catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Failed to create expense' });
     }
 }));
-// Delete expense
+// Delete expense (restores any actually paid amount back to the account balance)
 router.delete('/:id', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = parseInt(req.params.id);
@@ -74,11 +56,13 @@ router.delete('/:id', auth_1.requireAuth, (0, auth_1.requirePermission)('expense
             const expense = yield tx.expense.findUnique({ where: { id } });
             if (!expense)
                 throw new Error('Expense not found');
-            // Add back to account balance
-            yield tx.account.update({
-                where: { id: expense.accountId },
-                data: { balance: { increment: expense.amount } }
-            });
+            // Add back only the actually paid amount to the account balance
+            if (Number(expense.paidAmount) > 0) {
+                yield tx.account.update({
+                    where: { id: expense.accountId },
+                    data: { balance: { increment: expense.paidAmount } }
+                });
+            }
             yield tx.expense.delete({ where: { id } });
         }));
         res.json({ success: true });
@@ -102,36 +86,71 @@ router.patch('/:id/reminder', auth_1.requireAuth, (0, auth_1.requirePermission)(
         res.status(500).json({ error: err.message });
     }
 }));
-// Pay/clear a planned expense
+// Pay/clear a planned expense (supports partial payments, deducts chosen bank account balance)
 router.patch('/:id/pay', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = parseInt(req.params.id);
-        const { accountId } = req.body;
+        const { accountId, amount } = req.body;
         const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const expense = yield tx.expense.findUnique({ where: { id } });
             if (!expense)
                 throw new Error('Expense not found');
-            if (expense.paid)
-                throw new Error('Expense is already paid');
+            const remaining = Number(expense.amount) - Number(expense.paidAmount);
+            if (remaining <= 0)
+                throw new Error('Expense is already fully paid');
+            // Default payment amount is the remaining balance
+            const paymentAmount = amount !== undefined ? Number(amount) : remaining;
+            if (paymentAmount <= 0)
+                throw new Error('Payment amount must be greater than 0');
+            if (paymentAmount > remaining)
+                throw new Error('Payment amount cannot exceed remaining amount');
             const parsedAccountId = parseInt(accountId);
-            // 1. Deduct from the selected payment account
+            // 1. Deduct from the selected payment account balance
             yield tx.account.update({
                 where: { id: parsedAccountId },
-                data: { balance: { decrement: expense.amount } }
+                data: { balance: { decrement: paymentAmount } }
             });
-            // 2. Update the expense record with today's date, new account, clear reminder, and mark as paid
+            // 2. Increment paidAmount on the expense, update accountId, date, and set reminder to false if fully paid
+            const isFullyPaid = (Number(expense.paidAmount) + paymentAmount) >= Number(expense.amount);
             const updated = yield tx.expense.update({
                 where: { id },
                 data: {
                     accountId: parsedAccountId,
-                    date: new Date(), // Set to today (actual payment date)
-                    reminder: false, // Clear reminder/approval checkmark
-                    paid: true // Mark as fully paid!
+                    paidAmount: { increment: paymentAmount },
+                    date: new Date(), // Set date to actual payment execution date
+                    reminder: isFullyPaid ? false : expense.reminder // Clear reminder checkmark only when fully paid
                 }
             });
             return updated;
         }));
         res.json(result);
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}));
+router.patch('/:id/postpone', auth_1.requireAuth, (0, auth_1.requirePermission)('cheques', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = parseInt(req.params.id);
+        const { postponeDate, reason } = req.body;
+        const existing = yield prisma.expense.findUnique({ where: { id } });
+        if (!existing)
+            return res.status(404).json({ error: 'Expense not found' });
+        const originalDateStr = new Date(existing.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
+        const updatedNote = existing.note
+            ? existing.note + " " + postponementLog
+            : postponementLog;
+        const expense = yield prisma.expense.update({
+            where: { id },
+            data: {
+                date: new Date(postponeDate),
+                reminder: false, // Automatically clears the manager reminder!
+                note: updatedNote
+            }
+        });
+        res.json(expense);
     }
     catch (err) {
         res.status(500).json({ error: err.message });

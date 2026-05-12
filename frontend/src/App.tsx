@@ -100,12 +100,12 @@ type Expense = {
   id: number
   category: string
   amount: number
+  paidAmount: number
   accountId: number
   account?: Account
   date: string
   note?: string
   reminder?: boolean
-  paid?: boolean
   createdAt: string
 }
 
@@ -120,6 +120,7 @@ type Cheque = {
   account?: Account
   supplier?: Supplier
   invoice?: Invoice
+  note?: string
   createdAt: string
 }
 
@@ -288,6 +289,7 @@ function MainLayout() {
 
 
   const [quickPayModal, setQuickPayModal] = useState<{ isOpen: boolean, invoice: Invoice | null, expense: Expense | null }>({ isOpen: false, invoice: null, expense: null });
+  const [postponeModal, setPostponeModal] = useState<{ isOpen: boolean, invoice: Invoice | null, expense: Expense | null, cheque: Cheque | null }>({ isOpen: false, invoice: null, expense: null, cheque: null });
 
   const handleQuickPay = async (accountId: number) => {
     if (!quickPayModal.invoice && !quickPayModal.expense) return;
@@ -337,6 +339,67 @@ function MainLayout() {
       setQuickPayModal({ isOpen: true, invoice: null, expense: item as Expense });
     } else {
       setQuickPayModal({ isOpen: true, invoice: item as Invoice, expense: null });
+    }
+  };
+
+  const handlePostpone = async (postponeDate: string, reason: string) => {
+    if (!postponeModal.invoice && !postponeModal.expense && !postponeModal.cheque) return;
+    try {
+      if (postponeModal.expense) {
+        const expense = postponeModal.expense;
+        const res = await apiFetch(`${API_URL}/expenses/${expense.id}/postpone`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postponeDate, reason })
+        });
+        if (!res.ok) throw new Error('Failed to postpone expense');
+        
+        setPostponeModal({ isOpen: false, invoice: null, expense: null, cheque: null });
+        setSuccessMessage("Expense postponed successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        await Promise.all([refreshExpenses()]);
+      } else if (postponeModal.invoice) {
+        const invoice = postponeModal.invoice;
+        const res = await apiFetch(`${API_URL}/invoices/${invoice.id}/postpone`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postponeDate, reason })
+        });
+        if (!res.ok) throw new Error('Failed to postpone invoice');
+        
+        setPostponeModal({ isOpen: false, invoice: null, expense: null, cheque: null });
+        setSuccessMessage("Invoice postponed successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        await Promise.all([refreshInvoices()]);
+      } else if (postponeModal.cheque) {
+        const cheque = postponeModal.cheque;
+        const res = await apiFetch(`${API_URL}/cheques/${cheque.id}/postpone`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postponeDate, reason })
+        });
+        if (!res.ok) throw new Error('Failed to postpone cheque');
+        
+        setPostponeModal({ isOpen: false, invoice: null, expense: null, cheque: null });
+        setSuccessMessage("Cheque postponed successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        await Promise.all([refreshCheques()]);
+      }
+    } catch (err: any) {
+      showError(err.message);
+    }
+  };
+
+  const openPostpone = (item: Invoice | Expense | Cheque, type: 'invoice' | 'expense' | 'cheque') => {
+    if (type === 'expense') {
+      setPostponeModal({ isOpen: true, invoice: null, expense: item as Expense, cheque: null });
+    } else if (type === 'invoice') {
+      setPostponeModal({ isOpen: true, invoice: item as Invoice, expense: null, cheque: null });
+    } else if (type === 'cheque') {
+      setPostponeModal({ isOpen: true, invoice: null, expense: null, cheque: item as Cheque });
     }
   };
 
@@ -569,7 +632,7 @@ function MainLayout() {
       <main className="max-w-7xl mx-auto px-8 mt-8">
         <Routes>
           <Route path="/expenses" element={(user?.role === "admin" || user?.permissions?.expenses?.view) ? <ExpensesTab accounts={accounts} expenses={expenses} onRefresh={async () => { await refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'expenses', 'Expense')} /> : <AccessDenied />} />
-          <Route path="/" element={(user?.role === "admin" || user?.permissions?.dashboard?.view) ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} cheques={cheques} expenses={expenses} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
+          <Route path="/" element={(user?.role === "admin" || user?.permissions?.dashboard?.view) ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} cheques={cheques} expenses={expenses} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} onPostponeClick={openPostpone} /> : <AccessDenied />} />
           <Route path="/reports" element={(user?.role === "admin" || user?.permissions?.reports?.view) ? <ReportsTab invoices={invoices} payments={payments} collections={collections} suppliers={suppliers} accounts={accounts} onSupplierClick={handleSupplierClick} onQuickPay={openQuickPay} /> : <AccessDenied />} />
           <Route path="/accounts" element={(user?.role === "admin" || user?.permissions?.accounts?.view) ? <AccountsTab accounts={accounts} payments={payments} collections={collections} suppliers={suppliers} expenses={expenses} onRefresh={refreshAccounts} onDelete={(id) => openDeleteModal(id, "accounts", "Account")} openDeleteModal={openDeleteModal} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} setAccounts={setAccounts} /> : <AccessDenied />} />
           <Route path="/collections" element={(user?.role === "admin" || user?.permissions?.collections?.view) ? <CollectionsTab accounts={accounts} collections={collections} onRefresh={async () => { await refreshCollections(),
@@ -590,6 +653,12 @@ function MainLayout() {
         onClose={() => setQuickPayModal({ isOpen: false, invoice: null, expense: null })} 
         onConfirm={handleQuickPay}
         accounts={accounts}
+      />
+
+      <PostponePaymentModal 
+        isOpen={postponeModal.isOpen} 
+        onClose={() => setPostponeModal({ isOpen: false, invoice: null, expense: null, cheque: null })} 
+        onConfirm={handlePostpone}
       />
 
       <DeleteConfirmModal 
@@ -825,6 +894,73 @@ function QuickPayModal({ isOpen, onClose, onConfirm, accounts }: { isOpen: boole
   )
 }
 
+function PostponePaymentModal({ isOpen, onClose, onConfirm }: { isOpen: boolean, onClose: () => void, onConfirm: (postponeDate: string, reason: string) => void }) {
+  const [postponeDate, setPostponeDate] = useState('')
+  const [reason, setReason] = useState('')
+
+  useEffect(() => {
+    if (isOpen) {
+      // Set default postpone date to today + 7 days
+      const defaultDate = format(addDays(new Date(), 7), 'yyyy-MM-dd')
+      setPostponeDate(defaultDate)
+      setReason('')
+    }
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!postponeDate) {
+      showError('Please select a valid date')
+      return
+    }
+    onConfirm(postponeDate, reason)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
+          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+            <Clock className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Postpone Payment</h2>
+            <p className="text-sm text-slate-500 font-medium">Specify new target date & optional reason.</p>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">New Target Date</label>
+            <input 
+              type="date"
+              value={postponeDate} 
+              onChange={e => setPostponeDate(e.target.value)} 
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-medium"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Reason / Note (Optional)</label>
+            <input 
+              type="text"
+              value={reason} 
+              onChange={e => setReason(e.target.value)} 
+              placeholder="e.g. Approved by manager, waiting for collections"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-medium"
+            />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
+            <button type="submit" className="flex-1 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-600/20 transition-colors">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: { isOpen: boolean, onClose: () => void, onConfirm: (amount: number) => void, remainingAmount: number }) {
   const [amount, setAmount] = useState(remainingAmount.toString())
 
@@ -884,7 +1020,7 @@ function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: {
   )
 }
 
-function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number, isExpense?: boolean) => Promise<void>, onQuickPay?: (item: Invoice | Expense, isExpense?: boolean) => void }) {
+function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay, onPostponeClick }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number, isExpense?: boolean) => Promise<void>, onQuickPay?: (item: Invoice | Expense, isExpense?: boolean) => void, onPostponeClick?: (item: Invoice | Expense | Cheque, type: 'invoice' | 'expense' | 'cheque') => void }) {
   const { user } = useAuth();
 
 
@@ -945,6 +1081,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     reminderBaseline?: number
     isPaid?: boolean
     isExpense?: boolean
+    description?: string
   }
 
   const upcomingRows: DisplayRow[] = []
@@ -972,7 +1109,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         isPartial: new Decimal(inv.paidAmount).greaterThan(0) && new Decimal(inv.amount).minus(inv.paidAmount).greaterThan(0),
         isPaid: new Decimal(inv.amount).minus(inv.paidAmount).lessThanOrEqualTo(0),
         reminder: inv.reminder,
-        reminderAmount: inv.reminderAmount
+        reminderAmount: inv.reminderAmount,
+        description: inv.description || undefined
       })
     })
 
@@ -1004,7 +1142,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         isPartial: new Decimal(inv.paidAmount).greaterThan(0) && new Decimal(inv.amount).minus(inv.paidAmount).greaterThan(0),
         isPaid: new Decimal(inv.amount).minus(inv.paidAmount).lessThanOrEqualTo(0),
         reminder: inv.reminder,
-        reminderAmount: inv.reminderAmount
+        reminderAmount: inv.reminderAmount,
+        description: inv.description || undefined
       })
     })
   })
@@ -1027,29 +1166,36 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         statusLabel: "Cheque Payment",
         textColor: isOverdue ? "text-rose-600 font-bold" : "text-sky-700 font-medium",
         isCheque: true,
-        chequeStatus: c.status
+        chequeStatus: c.status,
+        description: c.note || undefined
       })
     })
 
     // Add Upcoming/Planned Expenses to Dashboard
     if (expenses) {
-      expenses.filter(e => !e.paid).forEach(e => {
+      expenses.filter(e => Number(e.amount) > Number(e.paidAmount || 0)).forEach(e => {
         const due = new Date(e.date)
         const isToday = isEqual(startOfDay(due), today)
         const isOverdue = isBefore(startOfDay(due), today)
+        const total = Number(e.amount)
+        const paid = Number(e.paidAmount || 0)
+        const remaining = total - paid
+        const isPartial = paid > 0 && paid < total
         
         upcomingRows.push({
           id: `exp-${e.id}`,
           supplierName: `Expense: ${e.category}`,
           dueDate: due,
-          totalAmount: e.amount,
-          remainingAmount: e.amount,
+          totalAmount: total,
+          remainingAmount: remaining,
           isGrouped: false,
           statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
           statusLabel: isOverdue ? "Overdue" : isToday ? "Due Today" : "Upcoming Expense",
           textColor: "text-purple-700 font-semibold",
           isExpense: true,
-          reminder: e.reminder || false
+          isPartial: isPartial,
+          reminder: e.reminder || false,
+          description: e.note || undefined
         })
       })
     }
@@ -1212,6 +1358,21 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                           {row.supplierName}
                         </button>
                       )}
+                      {row.description && (() => {
+                        const match = row.description.match(/\[Postponed from (.*?) to ([^\]:]+)/);
+                        if (match) {
+                          const cleanFrom = match[1].replace(/,\s*\d{4}/, '').trim();
+                          const cleanTo = match[2].replace(/,\s*\d{4}/, '').trim();
+                          return (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100/60 shadow-sm">
+                                ⏳ {cleanFrom} → {cleanTo}
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {row.isExpense ? (
@@ -1263,15 +1424,11 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {row.isExpense ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                          Planned Outflow
-                        </span>
-                      ) : row.isCheque ? (
+                      {row.isCheque ? (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${row.chequeStatus === "Pending" ? "bg-amber-50 text-amber-700 border-amber-200" : (row.chequeStatus === "Cleared" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200")}`}>
                           {row.chequeStatus}
                         </span>
-                      ) : (row as any).isPaid ? (
+                      ) : (row.isPaid || (row.isExpense && row.remainingAmount === 0)) ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                           Paid
                         </span>
@@ -1286,24 +1443,48 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {row.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
-                        <button 
-                          onClick={() => {
-                            if (row.isExpense) {
-                              const expId = parseInt(row.id.replace('exp-', ''));
-                              const exp = expenses.find(e => e.id === expId);
-                              if (exp) onQuickPay(exp, true);
-                            } else {
-                              const inv = invoices.find(i => i.id === row.invoiceId);
-                              if (inv) onQuickPay(inv);
-                            }
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all border border-emerald-100"
-                        >
-                          <CreditCard className="w-3.5 h-3.5" />
-                          Pay Now
-                        </button>
-                      )}
+                      <div className="flex justify-end gap-2">
+                        {row.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
+                          <button 
+                            onClick={() => {
+                              if (row.isExpense) {
+                                const expId = parseInt(row.id.replace('exp-', ''));
+                                const exp = expenses.find(e => e.id === expId);
+                                if (exp) onQuickPay(exp, true);
+                              } else {
+                                const inv = invoices.find(i => i.id === row.invoiceId);
+                                if (inv) onQuickPay(inv);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all border border-emerald-100"
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            Pay Now
+                          </button>
+                        )}
+                        {onPostponeClick && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
+                          <button 
+                            onClick={() => {
+                              if (row.isExpense) {
+                                const expId = parseInt(row.id.replace('exp-', ''));
+                                const exp = expenses.find(e => e.id === expId);
+                                if (exp) onPostponeClick(exp, 'expense');
+                              } else if (row.isCheque) {
+                                const chqId = parseInt(row.id.replace('chq-', ''));
+                                const chq = cheques.find(c => c.id === chqId);
+                                if (chq) onPostponeClick(chq, 'cheque');
+                              } else {
+                                const inv = invoices.find(i => i.id === row.invoiceId);
+                                if (inv) onPostponeClick(inv, 'invoice');
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold transition-all border border-slate-200"
+                          >
+                            <Clock className="w-3.5 h-3.5 text-purple-600" />
+                            Postpone
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -2181,7 +2362,7 @@ function InvoiceTable({ invoices, suppliers, showDescription = false, onEditClic
                     const s = suppliers.find(sup => sup.id === invoice.supplierId);
                     if (s && onSupplierClick) onSupplierClick(s);
                   }}
-                  className="hover:text-sky-600 hover:underline transition-colors text-left"
+                  className="hover:text-sky-600 hover:underline transition-colors text-left font-bold"
                 >
                   {supplierName}
                 </button>
@@ -2218,8 +2399,8 @@ function InvoiceTable({ invoices, suppliers, showDescription = false, onEditClic
                 )}
               </td>
               {showDescription && (
-                <td className="px-6 py-4 text-slate-600 truncate max-w-xs" title={invoice.description}>
-                  {invoice.description || '-'}
+                <td className="px-6 py-4 text-slate-600 truncate max-w-xs" title={invoice.description ? invoice.description.replace(/\[Postponed.*?\]/g, '').trim() : undefined}>
+                  {invoice.description ? invoice.description.replace(/\[Postponed.*?\]/g, '').trim() || '-' : '-'}
                 </td>
               )}
               <td className="px-6 py-4 whitespace-nowrap text-slate-600">{invoice.invoiceDate ? format(new Date(invoice.invoiceDate), 'MMM dd, yyyy') : '-'}</td>
@@ -3453,20 +3634,46 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
               <th className="px-6 py-4">Category</th>
               <th className="px-6 py-4">Account</th>
               <th className="px-6 py-4">Note</th>
-              <th className="px-6 py-4 text-right">Amount</th>
+              <th className="px-6 py-4 text-right">Full Amount</th>
+              <th className="px-6 py-4 text-right">Paid Amount</th>
+              <th className="px-6 py-4 text-right">Remaining</th>
+              <th className="px-6 py-4 text-center">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {filteredExpenses.map(expense => {
               const account = accounts.find(a => a.id === expense.accountId)
+              const total = Number(expense.amount)
+              const paid = Number(expense.paidAmount || 0)
+              const remaining = total - paid
+              const isPaid = paid >= total
+              const isPartial = paid > 0 && paid < total
+
               return (
                 <tr key={expense.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-slate-700">{format(new Date(expense.date), 'MMM dd, yyyy')}</td>
                   <td className="px-6 py-4 font-bold text-slate-800">{expense.category}</td>
                   <td className="px-6 py-4 text-slate-500">{account?.name || '-'}</td>
-                  <td className="px-6 py-4 text-slate-500 max-w-xs truncate">{expense.note || '-'}</td>
-                  <td className="px-6 py-4 text-right font-bold text-rose-600"><FormatCurrency amount={expense.amount} /></td>
+                  <td className="px-6 py-4 text-slate-500 max-w-xs truncate" title={expense.note ? expense.note.replace(/\[Postponed.*?\]/g, '').trim() : undefined}>{expense.note ? expense.note.replace(/\[Postponed.*?\]/g, '').trim() || '-' : '-'}</td>
+                  <td className="px-6 py-4 text-right font-bold text-slate-900"><FormatCurrency amount={total} /></td>
+                  <td className="px-6 py-4 text-right text-emerald-600 font-medium"><FormatCurrency amount={paid} /></td>
+                  <td className="px-6 py-4 text-right text-rose-600 font-medium"><FormatCurrency amount={remaining} /></td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    {isPaid ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Paid
+                      </span>
+                    ) : isPartial ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+                        Partial
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200">
+                        Unpaid
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-4 text-right">
                     {(user?.role === 'admin' || user?.permissions?.expenses?.delete) && (
                       <button onClick={() => onDelete(expense.id)} className="text-rose-400 hover:text-rose-600 ml-2"><AlertCircle className="w-4 h-4 inline" /></button>

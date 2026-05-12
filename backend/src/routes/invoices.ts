@@ -149,4 +149,37 @@ router.patch('/:id/reminder', requirePermission('invoices', 'reminder'), async (
   }
 });
 
+router.patch('/:id/postpone', requirePermission('cheques', 'create'), async (req: Request, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { postponeDate, reason } = req.body;
+
+    const existing = await prisma.invoice.findUnique({ where: { id: parseInt(id) } });
+    if (!existing) return res.status(404).json({ error: 'Invoice not found' });
+
+
+    const originalDateStr = new Date(existing.dueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
+    const updatedDescription = existing.description 
+      ? existing.description + " " + postponementLog
+      : postponementLog;
+
+    const invoice = await prisma.invoice.update({
+      where: { id: parseInt(id) },
+      data: {
+        dueDate: new Date(postponeDate),
+        reminder: false, // Automatically clears the manager reminder!
+        reminderAmount: null,
+        reminderBaseline: 0,
+        description: updatedDescription
+      }
+    });
+
+    res.json(invoice);
+  } catch (error: any) {
+    res.status(400).json({ error: 'Error postponing invoice', details: error.message || String(error) });
+  }
+});
+
 export default router;
