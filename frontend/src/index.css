@@ -24,6 +24,16 @@
   --color-amber-700: #996c1b;
   
   --color-yellow-500: #d69e2e;
+
+  /* Premium Midnight Corporate Navy overrides instead of black/slate */
+  --color-slate-900: #0c1e30; /* Premium Deep Midnight Blue */
+  --color-slate-800: #132a42; /* Premium Deep Dark Navy */
+  --color-slate-700: #264360; /* Tinted Slate Navy */
+  --color-slate-600: #3f5d7d;
+  --color-slate-500: #5d7a9b;
+
+  --color-zinc-900: #0c1e30;
+  --color-zinc-800: #132a42;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
