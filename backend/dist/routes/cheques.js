@@ -37,11 +37,33 @@ router.get('/', (0, auth_1.requirePermission)('cheques', 'view'), (req, res, nex
 router.post('/', (0, auth_1.requirePermission)('cheques', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { amount, chequeDate, accountId, supplierId, invoiceId } = req.body;
+        if (!accountId) {
+            return res.status(400).json({ error: 'Account is required.' });
+        }
+        const parsedAccountId = parseInt(accountId);
+        const accountExists = yield prisma.account.findUnique({ where: { id: parsedAccountId } });
+        if (!accountExists) {
+            return res.status(400).json({ error: 'Selected account does not exist.' });
+        }
+        if (supplierId) {
+            const parsedSupplierId = parseInt(supplierId);
+            const supplierExists = yield prisma.supplier.findUnique({ where: { id: parsedSupplierId } });
+            if (!supplierExists) {
+                return res.status(400).json({ error: `Selected supplier (ID ${parsedSupplierId}) does not exist.` });
+            }
+        }
+        if (invoiceId) {
+            const parsedInvoiceId = parseInt(invoiceId);
+            const invoiceExists = yield prisma.invoice.findUnique({ where: { id: parsedInvoiceId } });
+            if (!invoiceExists) {
+                return res.status(400).json({ error: `Invoice with ID ${parsedInvoiceId} does not exist.` });
+            }
+        }
         const cheque = yield prisma.cheque.create({
             data: {
                 amount: new library_1.Decimal(amount),
                 chequeDate: new Date(chequeDate),
-                accountId: parseInt(accountId),
+                accountId: parsedAccountId,
                 supplierId: supplierId ? parseInt(supplierId) : null,
                 invoiceId: invoiceId ? parseInt(invoiceId) : null,
                 status: 'Pending'

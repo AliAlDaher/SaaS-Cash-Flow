@@ -21,7 +21,17 @@ dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3001;
 const prisma = new client_1.PrismaClient();
-app.use((0, cors_1.default)());
+const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+app.use((0, cors_1.default)({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+}));
 app.use(express_1.default.json());
 app.use("/suppliers", suppliers_1.default);
 app.use("/invoices", invoices_1.default);

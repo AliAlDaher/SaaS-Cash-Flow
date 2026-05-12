@@ -29,11 +29,38 @@ router.get('/', requirePermission('cheques', 'view'), async (req, res, next) => 
 router.post('/', requirePermission('cheques', 'create'), async (req, res, next) => {
   try {
     const { amount, chequeDate, accountId, supplierId, invoiceId } = req.body;
+
+    if (!accountId) {
+      return res.status(400).json({ error: 'Account is required.' });
+    }
+
+    const parsedAccountId = parseInt(accountId);
+    const accountExists = await prisma.account.findUnique({ where: { id: parsedAccountId } });
+    if (!accountExists) {
+      return res.status(400).json({ error: 'Selected account does not exist.' });
+    }
+
+    if (supplierId) {
+      const parsedSupplierId = parseInt(supplierId);
+      const supplierExists = await prisma.supplier.findUnique({ where: { id: parsedSupplierId } });
+      if (!supplierExists) {
+        return res.status(400).json({ error: `Selected supplier (ID ${parsedSupplierId}) does not exist.` });
+      }
+    }
+
+    if (invoiceId) {
+      const parsedInvoiceId = parseInt(invoiceId);
+      const invoiceExists = await prisma.invoice.findUnique({ where: { id: parsedInvoiceId } });
+      if (!invoiceExists) {
+        return res.status(400).json({ error: `Invoice with ID ${parsedInvoiceId} does not exist.` });
+      }
+    }
+
     const cheque = await prisma.cheque.create({
       data: {
         amount: new Decimal(amount),
         chequeDate: new Date(chequeDate),
-        accountId: parseInt(accountId),
+        accountId: parsedAccountId,
         supplierId: supplierId ? parseInt(supplierId) : null,
         invoiceId: invoiceId ? parseInt(invoiceId) : null,
         status: 'Pending'
