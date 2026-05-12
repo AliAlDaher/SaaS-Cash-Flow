@@ -105,6 +105,7 @@ type Expense = {
   date: string
   note?: string
   reminder?: boolean
+  paid?: boolean
   createdAt: string
 }
 
@@ -1032,12 +1033,10 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
 
     // Add Upcoming/Planned Expenses to Dashboard
     if (expenses) {
-      expenses.filter(e => {
-        const expDate = startOfDay(new Date(e.date));
-        return !isBefore(expDate, today);
-      }).forEach(e => {
+      expenses.filter(e => !e.paid).forEach(e => {
         const due = new Date(e.date)
         const isToday = isEqual(startOfDay(due), today)
+        const isOverdue = isBefore(startOfDay(due), today)
         
         upcomingRows.push({
           id: `exp-${e.id}`,
@@ -1046,8 +1045,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
           totalAmount: e.amount,
           remainingAmount: e.amount,
           isGrouped: false,
-          statusClass: isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
-          statusLabel: isToday ? "Due Today" : "Upcoming Expense",
+          statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
+          statusLabel: isOverdue ? "Overdue" : isToday ? "Due Today" : "Upcoming Expense",
           textColor: "text-purple-700 font-semibold",
           isExpense: true,
           reminder: e.reminder || false

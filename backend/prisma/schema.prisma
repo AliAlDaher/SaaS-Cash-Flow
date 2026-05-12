@@ -122,5 +122,6 @@ model Expense {
   date        DateTime
   note        String?
   reminder    Boolean  @default(false)
+  paid        Boolean  @default(true)
   createdAt   DateTime @default(now())
 }

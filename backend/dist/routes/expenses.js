@@ -32,20 +32,31 @@ router.post('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', '
     const { category, amount, accountId, date, note } = req.body;
     try {
         const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const expDate = new Date(date);
+            // Determine if it is a planned/future expense
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const targetDate = new Date(expDate);
+            targetDate.setHours(0, 0, 0, 0);
+            const isFuture = targetDate > today;
+            const paid = !isFuture;
             const expense = yield tx.expense.create({
                 data: {
                     category,
                     amount,
                     accountId: parseInt(accountId),
-                    date: new Date(date),
-                    note
+                    date: expDate,
+                    note,
+                    paid
                 }
             });
-            // Deduct from account balance
-            yield tx.account.update({
-                where: { id: parseInt(accountId) },
-                data: { balance: { decrement: amount } }
-            });
+            // Deduct from account balance ONLY if it is not a future/planned expense
+            if (paid) {
+                yield tx.account.update({
+                    where: { id: parseInt(accountId) },
+                    data: { balance: { decrement: amount } }
+                });
+            }
             return expense;
         }));
         res.json(result);
@@ -100,24 +111,22 @@ router.patch('/:id/pay', auth_1.requireAuth, (0, auth_1.requirePermission)('expe
             const expense = yield tx.expense.findUnique({ where: { id } });
             if (!expense)
                 throw new Error('Expense not found');
+            if (expense.paid)
+                throw new Error('Expense is already paid');
             const parsedAccountId = parseInt(accountId);
-            // 1. Reverse the deduction from the old account
-            yield tx.account.update({
-                where: { id: expense.accountId },
-                data: { balance: { increment: expense.amount } }
-            });
-            // 2. Deduct from the new selected payment account
+            // 1. Deduct from the selected payment account
             yield tx.account.update({
                 where: { id: parsedAccountId },
                 data: { balance: { decrement: expense.amount } }
             });
-            // 3. Update the expense record with today's date, new account, and clear reminder
+            // 2. Update the expense record with today's date, new account, clear reminder, and mark as paid
             const updated = yield tx.expense.update({
                 where: { id },
                 data: {
                     accountId: parsedAccountId,
                     date: new Date(), // Set to today (actual payment date)
-                    reminder: false // Clear reminder/approval checkmark
+                    reminder: false, // Clear reminder/approval checkmark
+                    paid: true // Mark as fully paid!
                 }
             });
             return updated;
