@@ -856,6 +856,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
 
 
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
+  const [timeFilter, setTimeFilter] = useState<'all' | 'overdue' | 'week' | 'month'>('all');
 
   const [reminderModal, setReminderModal] = useState<{isOpen: boolean, id: number, remaining: number}>({isOpen: false, id: 0, remaining: 0})
 
@@ -1003,7 +1004,31 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     })
 
   upcomingRows.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
-  const finalRows = showSelectedOnly ? upcomingRows.filter(r => r.reminder) : upcomingRows;
+
+  // Compute filter options based on sorted upcomingRows
+  const overdueRowsList = upcomingRows.filter(r => isBefore(startOfDay(r.dueDate), today));
+  const overdueFilteredTotal = overdueRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
+
+  const sevenDaysFromNow = addDays(today, 7);
+  const weekRowsList = upcomingRows.filter(r => !isBefore(startOfDay(r.dueDate), today) && isBefore(startOfDay(r.dueDate), sevenDaysFromNow));
+  const weekFilteredTotal = weekRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
+
+  const thirtyDaysFromNow = addDays(today, 30);
+  const monthRowsList = upcomingRows.filter(r => !isBefore(startOfDay(r.dueDate), today) && isBefore(startOfDay(r.dueDate), thirtyDaysFromNow));
+  const monthFilteredTotal = monthRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
+
+  const allFilteredTotal = upcomingRows.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
+
+  let filteredRows = upcomingRows;
+  if (timeFilter === 'overdue') {
+    filteredRows = overdueRowsList;
+  } else if (timeFilter === 'week') {
+    filteredRows = weekRowsList;
+  } else if (timeFilter === 'month') {
+    filteredRows = monthRowsList;
+  }
+
+  const finalRows = showSelectedOnly ? filteredRows.filter(r => r.reminder) : filteredRows;
 
   return (
     <div className="space-y-8">
@@ -1040,6 +1065,70 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                 </button>
               </div>
             </div>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-slate-50/40 border-b border-slate-100">
+            {[
+              {
+                key: 'all' as const,
+                label: 'All Upcoming',
+                amount: allFilteredTotal,
+                count: upcomingRows.length,
+                activeClass: 'border-sky-500 bg-sky-50/40 text-sky-900 shadow-sm shadow-sky-500/5 ring-1 ring-sky-500/20',
+                inactiveClass: 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/30 text-slate-600',
+                dotColor: 'bg-sky-500'
+              },
+              {
+                key: 'overdue' as const,
+                label: 'Overdue',
+                amount: overdueFilteredTotal,
+                count: overdueRowsList.length,
+                activeClass: 'border-rose-500 bg-rose-50/40 text-rose-900 shadow-sm shadow-rose-500/5 ring-1 ring-rose-500/20',
+                inactiveClass: 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/30 text-slate-600',
+                dotColor: 'bg-rose-500 animate-pulse'
+              },
+              {
+                key: 'week' as const,
+                label: 'Next 7 Days',
+                amount: weekFilteredTotal,
+                count: weekRowsList.length,
+                activeClass: 'border-amber-500 bg-amber-50/40 text-amber-900 shadow-sm shadow-amber-500/5 ring-1 ring-amber-500/20',
+                inactiveClass: 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/30 text-slate-600',
+                dotColor: 'bg-amber-500'
+              },
+              {
+                key: 'month' as const,
+                label: 'Next 30 Days',
+                amount: monthFilteredTotal,
+                count: monthRowsList.length,
+                activeClass: 'border-emerald-500 bg-emerald-50/40 text-emerald-900 shadow-sm shadow-emerald-500/5 ring-1 ring-emerald-500/20',
+                inactiveClass: 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/30 text-slate-600',
+                dotColor: 'bg-emerald-500'
+              }
+            ].map(card => {
+              const isActive = timeFilter === card.key;
+              return (
+                <button
+                  key={card.key}
+                  onClick={() => setTimeFilter(card.key)}
+                  className={`flex flex-col p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none ${
+                    isActive ? card.activeClass : card.inactiveClass
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2 w-full">
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{card.label}</span>
+                    <span className={`w-2 h-2 rounded-full ${card.dotColor}`} />
+                  </div>
+                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                    <span className="text-base font-extrabold">
+                      <FormatCurrency amount={card.amount} />
+                    </span>
+                    <span className="text-[11px] opacity-60 font-medium">
+                      (${card.count})
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
@@ -2399,6 +2488,7 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
   const [editCollectionId, setEditCollectionId] = useState<number | null>(null)
   const [filter, setFilter] = useState('all')
   const [isExpected, setIsExpected] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   
   const filtered = (filter === 'all' ? collections : collections.filter(c => c.status === filter)).filter(c => {
     const accName = accounts.find(a => a.id === c.accountId)?.name || '';
@@ -2433,6 +2523,8 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
 
   const handleAddCollection = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       const url = editCollectionId ? `${API_URL}/collections/${editCollectionId}` : `${API_URL}/collections`
       const method = editCollectionId ? 'PUT' : 'POST'
@@ -2453,6 +2545,8 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
       onRefresh()
     } catch (err) {
       console.error(err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -2528,8 +2622,22 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
             )}
           </div>
           <div className="flex items-center gap-3">
-            <button type="submit" className="w-full sm:w-auto bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-              <TrendingUp className="w-4 h-4" /> {editCollectionId ? 'Update Collection' : 'Add Collection'}
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="w-full sm:w-auto bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {editCollectionId ? 'Updating...' : 'Adding...'}
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="w-4 h-4" />
+                  {editCollectionId ? 'Update Collection' : 'Add Collection'}
+                </>
+              )}
             </button>
             {editCollectionId && <button type="button" onClick={handleCancelEdit} className="w-full sm:w-auto bg-slate-100 text-slate-700 rounded-lg px-6 py-2 font-medium hover:bg-slate-200 transition-colors">Cancel</button>}
           </div>
