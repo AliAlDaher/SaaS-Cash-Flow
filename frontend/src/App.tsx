@@ -1163,7 +1163,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center gap-2">
             <CreditCard className="w-5 h-5 text-rose-500" />
-            <h2 className="text-lg font-bold text-slate-800">Recent Expenses</h2>
+            <h2 className="text-lg font-bold text-slate-800">Expenses</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
