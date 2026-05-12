@@ -76,4 +76,19 @@ router.delete('/:id', auth_1.requireAuth, (0, auth_1.requirePermission)('expense
         res.status(500).json({ error: err.message });
     }
 }));
+// Toggle reminder status
+router.patch('/:id/reminder', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = parseInt(req.params.id);
+        const { reminder } = req.body;
+        const updated = yield prisma.expense.update({
+            where: { id },
+            data: { reminder: Boolean(reminder) }
+        });
+        res.json(updated);
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}));
 exports.default = router;

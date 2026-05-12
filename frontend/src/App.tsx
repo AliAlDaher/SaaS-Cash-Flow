@@ -104,6 +104,7 @@ type Expense = {
   account?: Account
   date: string
   note?: string
+  reminder?: boolean
   createdAt: string
 }
 
@@ -318,16 +319,27 @@ function MainLayout() {
     setQuickPayModal({ isOpen: true, invoice });
   };
 
-  const handleToggleReminder = async (id: number, reminder: boolean, amount?: number) => {
+  const handleToggleReminder = async (id: number, reminder: boolean, amount?: number, isExpense?: boolean) => {
     try {
-      const res = await apiFetch(`${API_URL}/invoices/${id}/reminder`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reminder, reminderAmount: amount })
-      })
-      if (!res.ok) throw new Error('Failed to toggle reminder')
-      const updated = await res.json()
-      setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...updated } : inv))
+      if (isExpense) {
+        const res = await apiFetch(`${API_URL}/expenses/${id}/reminder`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reminder })
+        })
+        if (!res.ok) throw new Error('Failed to toggle expense reminder')
+        const updated = await res.json()
+        setExpenses(prev => prev.map(exp => exp.id === id ? { ...exp, ...updated } : exp))
+      } else {
+        const res = await apiFetch(`${API_URL}/invoices/${id}/reminder`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reminder, reminderAmount: amount })
+        })
+        if (!res.ok) throw new Error('Failed to toggle reminder')
+        const updated = await res.json()
+        setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...updated } : inv))
+      }
     } catch (err: any) {
       showError(err.message)
     }
@@ -851,7 +863,7 @@ function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: {
   )
 }
 
-function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number) => Promise<void>, onQuickPay?: (inv: Invoice) => void }) {
+function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number, isExpense?: boolean) => Promise<void>, onQuickPay?: (inv: Invoice) => void }) {
   const { user } = useAuth();
 
 
@@ -1017,7 +1029,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
           statusClass: isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
           statusLabel: isToday ? "Due Today" : "Upcoming Expense",
           textColor: "text-purple-700 font-semibold",
-          isExpense: true
+          isExpense: true,
+          reminder: e.reminder || false
         })
       })
     }
@@ -1182,7 +1195,21 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       )}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      {(user?.role === "admin" || user?.permissions?.invoices?.reminder) && row.invoiceId ? (
+                      {row.isExpense ? (
+                        (user?.role === "admin" || user?.permissions?.expenses?.edit) ? (
+                          <div className="flex flex-col items-center gap-1">
+                            <button onClick={() => {
+                              onToggleReminder!(parseInt(row.id.replace('exp-', '')), !row.reminder, undefined, true);
+                            }} className={`transition-colors ${row.reminder ? 'text-emerald-500 hover:text-emerald-600' : 'text-slate-300 hover:text-emerald-400'}`}>
+                              <CheckCircle className={`w-5 h-5 ${row.reminder ? 'fill-current text-emerald-500' : ''}`} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-1">
+                            <CheckCircle className={`w-5 h-5 mx-auto ${row.reminder ? 'text-emerald-500 fill-current' : 'text-slate-200'}`} />
+                          </div>
+                        )
+                      ) : (user?.role === "admin" || user?.permissions?.invoices?.reminder) && row.invoiceId ? (
                         <div className="flex flex-col items-center gap-1">
                           <button onClick={() => {
                             if (!row.reminder) {

@@ -70,4 +70,19 @@ router.delete('/:id', requireAuth, requirePermission('expenses', 'delete'), asyn
   }
 });
 
+// Toggle reminder status
+router.patch('/:id/reminder', requireAuth, requirePermission('expenses', 'edit'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { reminder } = req.body;
+    const updated = await prisma.expense.update({
+      where: { id },
+      data: { reminder: Boolean(reminder) }
+    });
+    res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

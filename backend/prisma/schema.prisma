@@ -121,5 +121,6 @@ model Expense {
   account     Account  @relation(fields: [accountId], references: [id])
   date        DateTime
   note        String?
+  reminder    Boolean  @default(false)
   createdAt   DateTime @default(now())
 }
