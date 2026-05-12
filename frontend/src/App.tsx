@@ -286,37 +286,57 @@ function MainLayout() {
   const refreshExpenses = () => fetchModule('expenses', '/expenses', setExpenses);
 
 
-  const [quickPayModal, setQuickPayModal] = useState<{ isOpen: boolean, invoice: Invoice | null }>({ isOpen: false, invoice: null });
+  const [quickPayModal, setQuickPayModal] = useState<{ isOpen: boolean, invoice: Invoice | null, expense: Expense | null }>({ isOpen: false, invoice: null, expense: null });
 
   const handleQuickPay = async (accountId: number) => {
-    if (!quickPayModal.invoice) return;
-    const invoice = quickPayModal.invoice;
+    if (!quickPayModal.invoice && !quickPayModal.expense) return;
     try {
-      const res = await apiFetch(`${API_URL}/payments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          supplierId: invoice.supplierId,
-          amount: invoice.reminderAmount || (new Decimal(invoice.amount).minus(invoice.paidAmount).toNumber()),
-          paymentDate: format(new Date(), 'yyyy-MM-dd'),
-          accountId,
-          invoiceId: invoice.id
-        })
-      });
-      if (!res.ok) throw new Error('Failed to process quick pay');
-      
-      setQuickPayModal({ isOpen: false, invoice: null });
-      setSuccessMessage("Payment processed successfully!");
-      setTimeout(() => setSuccessMessage(null), 3000);
-      
-      await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]);
+      if (quickPayModal.expense) {
+        const expense = quickPayModal.expense;
+        const res = await apiFetch(`${API_URL}/expenses/${expense.id}/pay`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ accountId })
+        });
+        if (!res.ok) throw new Error('Failed to process quick pay for expense');
+        
+        setQuickPayModal({ isOpen: false, invoice: null, expense: null });
+        setSuccessMessage("Expense paid successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        await Promise.all([refreshExpenses(), refreshAccounts()]);
+      } else if (quickPayModal.invoice) {
+        const invoice = quickPayModal.invoice;
+        const res = await apiFetch(`${API_URL}/payments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            supplierId: invoice.supplierId,
+            amount: invoice.reminderAmount || (new Decimal(invoice.amount).minus(invoice.paidAmount).toNumber()),
+            paymentDate: format(new Date(), 'yyyy-MM-dd'),
+            accountId,
+            invoiceId: invoice.id
+          })
+        });
+        if (!res.ok) throw new Error('Failed to process quick pay');
+        
+        setQuickPayModal({ isOpen: false, invoice: null, expense: null });
+        setSuccessMessage("Payment processed successfully!");
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]);
+      }
     } catch (err: any) {
       showError(err.message);
     }
   };
 
-  const openQuickPay = (invoice: Invoice) => {
-    setQuickPayModal({ isOpen: true, invoice });
+  const openQuickPay = (item: Invoice | Expense, isExpense?: boolean) => {
+    if (isExpense) {
+      setQuickPayModal({ isOpen: true, invoice: null, expense: item as Expense });
+    } else {
+      setQuickPayModal({ isOpen: true, invoice: item as Invoice, expense: null });
+    }
   };
 
   const handleToggleReminder = async (id: number, reminder: boolean, amount?: number, isExpense?: boolean) => {
@@ -566,7 +586,7 @@ function MainLayout() {
       
       <QuickPayModal 
         isOpen={quickPayModal.isOpen} 
-        onClose={() => setQuickPayModal({ isOpen: false, invoice: null })} 
+        onClose={() => setQuickPayModal({ isOpen: false, invoice: null, expense: null })} 
         onConfirm={handleQuickPay}
         accounts={accounts}
       />
@@ -863,7 +883,7 @@ function PaymentReminderModal({ isOpen, onClose, onConfirm, remainingAmount }: {
   )
 }
 
-function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number, isExpense?: boolean) => Promise<void>, onQuickPay?: (inv: Invoice) => void }) {
+function DashboardTab({ suppliers, invoices, accounts, collections, cheques, expenses, onSupplierClick, onToggleReminder, onQuickPay }: { suppliers: Supplier[], invoices: Invoice[], accounts: Account[], collections: Collection[], cheques: Cheque[], expenses: Expense[], onSupplierClick?: (s: Supplier) => void, onToggleReminder: (id: number, r: boolean, a?: number, isExpense?: boolean) => Promise<void>, onQuickPay?: (item: Invoice | Expense, isExpense?: boolean) => void }) {
   const { user } = useAuth();
 
 
@@ -1270,8 +1290,14 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       {row.reminder && onQuickPay && (user?.role === 'admin' || user?.permissions?.cheques?.create) && (
                         <button 
                           onClick={() => {
-                            const inv = invoices.find(i => i.id === row.invoiceId);
-                            if (inv) onQuickPay(inv);
+                            if (row.isExpense) {
+                              const expId = parseInt(row.id.replace('exp-', ''));
+                              const exp = expenses.find(e => e.id === expId);
+                              if (exp) onQuickPay(exp, true);
+                            } else {
+                              const inv = invoices.find(i => i.id === row.invoiceId);
+                              if (inv) onQuickPay(inv);
+                            }
                           }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-all border border-emerald-100"
                         >

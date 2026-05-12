@@ -91,4 +91,41 @@ router.patch('/:id/reminder', auth_1.requireAuth, (0, auth_1.requirePermission)(
         res.status(500).json({ error: err.message });
     }
 }));
+// Pay/clear a planned expense
+router.patch('/:id/pay', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const id = parseInt(req.params.id);
+        const { accountId } = req.body;
+        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            const expense = yield tx.expense.findUnique({ where: { id } });
+            if (!expense)
+                throw new Error('Expense not found');
+            const parsedAccountId = parseInt(accountId);
+            // 1. Reverse the deduction from the old account
+            yield tx.account.update({
+                where: { id: expense.accountId },
+                data: { balance: { increment: expense.amount } }
+            });
+            // 2. Deduct from the new selected payment account
+            yield tx.account.update({
+                where: { id: parsedAccountId },
+                data: { balance: { decrement: expense.amount } }
+            });
+            // 3. Update the expense record with today's date, new account, and clear reminder
+            const updated = yield tx.expense.update({
+                where: { id },
+                data: {
+                    accountId: parsedAccountId,
+                    date: new Date(), // Set to today (actual payment date)
+                    reminder: false // Clear reminder/approval checkmark
+                }
+            });
+            return updated;
+        }));
+        res.json(result);
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}));
 exports.default = router;

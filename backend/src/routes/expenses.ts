@@ -85,4 +85,47 @@ router.patch('/:id/reminder', requireAuth, requirePermission('expenses', 'edit')
   }
 });
 
+// Pay/clear a planned expense
+router.patch('/:id/pay', requireAuth, requirePermission('expenses', 'edit'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { accountId } = req.body;
+    
+    const result = await prisma.$transaction(async (tx) => {
+      const expense = await tx.expense.findUnique({ where: { id } });
+      if (!expense) throw new Error('Expense not found');
+      
+      const parsedAccountId = parseInt(accountId);
+      
+      // 1. Reverse the deduction from the old account
+      await tx.account.update({
+        where: { id: expense.accountId },
+        data: { balance: { increment: expense.amount } }
+      });
+      
+      // 2. Deduct from the new selected payment account
+      await tx.account.update({
+        where: { id: parsedAccountId },
+        data: { balance: { decrement: expense.amount } }
+      });
+      
+      // 3. Update the expense record with today's date, new account, and clear reminder
+      const updated = await tx.expense.update({
+        where: { id },
+        data: {
+          accountId: parsedAccountId,
+          date: new Date(), // Set to today (actual payment date)
+          reminder: false   // Clear reminder/approval checkmark
+        }
+      });
+      
+      return updated;
+    });
+    
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
