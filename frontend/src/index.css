@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+@theme {
+  --color-sky-50: #f4fafd;
+  --color-sky-100: #e3f3fa;
+  --color-sky-200: #c1e4f4;
+  --color-sky-300: #8dceea;
+  --color-sky-400: #51b2dd;
+  --color-sky-500: #2094c9; /* Smart Lines Main Blue */
+  --color-sky-600: #1a94c4; /* Smart Lines Logo Blue Solid */
+  --color-sky-700: #13749b; /* Smart Lines Hover Blue */
+  --color-sky-800: #115d7e;
+  --color-sky-900: #134e6b;
+  --color-sky-950: #0a3146;
+
+  --color-brand-blue: #1a94c4;
+  --color-brand-gold: #d69e2e;
+
+  /* Map standard amber/yellow alerts to Smart Lines brand Gold! */
+  --color-amber-50: #fefbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-500: #d69e2e;
+  --color-amber-600: #b88523;
+  --color-amber-700: #996c1b;
+  
+  --color-yellow-500: #d69e2e;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
