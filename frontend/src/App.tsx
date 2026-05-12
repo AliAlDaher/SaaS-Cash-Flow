@@ -724,7 +724,7 @@ function ReconcileModal({ isOpen, onClose, onConfirm, currentBalance }: { isOpen
               value={note} 
               onChange={e => setNote(e.target.value)} 
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all min-h-[80px]"
-              placeholder="e.g., Monthly reconciliation, Bank fee adjustment..."
+              placeholder=""
             />
           </div>
           <div className="flex gap-3 pt-2">
@@ -1570,7 +1570,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Description / Supplier Invoice No. (Optional)</label>
-            <input type="text" value={newInvoiceDescription} onChange={e => setNewInvoiceDescription(e.target.value)} placeholder="e.g. INV-2026-042 or Services rendered" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            <input type="text" value={newInvoiceDescription} onChange={e => setNewInvoiceDescription(e.target.value)} placeholder="" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
           </div>
           <div className="flex items-center gap-3">
             {((user?.permissions?.invoices?.[editInvoiceId ? 'edit' : 'create'])) ? <button type="submit" className="w-full sm:w-auto bg-emerald-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-emerald-700 transition-colors">{editInvoiceId ? 'Update Invoice' : 'Add Invoice'}</button> : null}
@@ -2308,7 +2308,7 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Account Name</label>
-              <input required type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Arab Bank USD" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+              <input required type="text" value={name} onChange={e => setName(e.target.value)} placeholder="" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
@@ -2513,7 +2513,7 @@ function CollectionsTab({ accounts, collections, onRefresh, onDelete }: { accoun
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Note (Source / Description)</label>
-              <input required type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="e.g. Sales Revenue Q2" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+              <input required type="text" value={note} onChange={e => setNote(e.target.value)} placeholder="" className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
             </div>
             {isExpected ? (
               <div>
@@ -2755,11 +2755,11 @@ function UsersTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-slate-700">Full Name</label>
-              <input required value={name} onChange={e=>setName(e.target.value)} className="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. John Doe" />
+              <input required value={name} onChange={e=>setName(e.target.value)} className="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-slate-700">Email Address</label>
-              <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. john@example.com" />
+              <input required type="email" value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-slate-300 rounded-xl p-3 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="space-y-1">
               <label className="block text-sm font-semibold text-slate-700">Password {editingUser && <span className="text-slate-400 font-normal">(Leave blank to keep)</span>}</label>
@@ -2973,7 +2973,7 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Invoice ID (Optional)</label>
-              <input type="number" value={invoiceId} onChange={e => setInvoiceId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. 123" />
+              <input type="number" value={invoiceId} onChange={e => setInvoiceId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="flex items-end">
               <button type="submit" className="w-full bg-sky-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-sky-700 transition-colors">Issue Cheque</button>
@@ -3128,7 +3128,7 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
             </div>
             <div className="lg:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1">Note (Optional)</label>
-              <input type="text" value={note} onChange={e => setNote(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="e.g. Monthly rent for office" />
+              <input type="text" value={note} onChange={e => setNote(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
             <div className="flex items-end">
               <button type="submit" className="w-full bg-rose-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-rose-700 transition-colors">Record Expense</button>
