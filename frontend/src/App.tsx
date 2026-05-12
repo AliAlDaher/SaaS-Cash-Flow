@@ -1008,7 +1008,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard Overview</h1>
+        <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h1>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1029,7 +1029,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
           <div className="p-6 border-b border-slate-100 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-rose-500" />
             <div className="flex flex-1 items-center justify-between">
-              <h2 className="text-lg font-bold text-slate-800">Upcoming & Overdue Payments (1.5 Months)</h2>
+              <h2 className="text-lg font-bold text-slate-800">Upcoming</h2>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-slate-600">Show Selected Only</span>
                 <button 
@@ -1152,7 +1152,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center gap-2">
             <FileText className="w-5 h-5 text-sky-500" />
-            <h2 className="text-lg font-bold text-slate-800">Recent Invoices</h2>
+            <h2 className="text-lg font-bold text-slate-800">Invoices</h2>
           </div>
           <div className="overflow-x-auto">
             {/* NO description shown here */}
