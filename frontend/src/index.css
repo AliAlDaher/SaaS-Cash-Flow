@@ -25,15 +25,15 @@
   
   --color-yellow-500: #d69e2e;
 
-  /* Premium Midnight Corporate Navy overrides instead of black/slate */
-  --color-slate-900: #0c1e30; /* Premium Deep Midnight Blue */
-  --color-slate-800: #132a42; /* Premium Deep Dark Navy */
-  --color-slate-700: #264360; /* Tinted Slate Navy */
-  --color-slate-600: #3f5d7d;
-  --color-slate-500: #5d7a9b;
+  /* Noticeably rich dark Corporate Teal-Navy instead of black/gray */
+  --color-slate-900: #113f59; /* Rich dark teal-navy */
+  --color-slate-800: #1a5675; /* Lighter corporate navy */
+  --color-slate-700: #256b90; /* High-contrast blue-navy */
+  --color-slate-600: #3c7f9e;
+  --color-slate-500: #5795b2;
 
-  --color-zinc-900: #0c1e30;
-  --color-zinc-800: #132a42;
+  --color-zinc-900: #113f59;
+  --color-zinc-800: #1a5675;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
