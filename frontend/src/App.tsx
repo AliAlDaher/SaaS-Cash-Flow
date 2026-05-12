@@ -1031,7 +1031,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
             <div className="flex flex-1 items-center justify-between">
               <h2 className="text-lg font-bold text-slate-800">Upcoming</h2>
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-slate-600">Show Selected Only</span>
+                <span className="text-sm font-medium text-slate-600">Show Selected</span>
                 <button 
                   onClick={() => setShowSelectedOnly(!showSelectedOnly)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${showSelectedOnly ? 'bg-sky-600' : 'bg-slate-200'}`}
@@ -1141,7 +1141,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                 ))}
                 {finalRows.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">showSelectedOnly ? "No invoices selected for payment!" : "No upcoming or overdue payments!"</td>
+                    <td colSpan={8} className="px-6 py-8 text-center text-slate-500">{showSelectedOnly ? "No invoices selected for payment!" : "No upcoming or overdue payments!"}</td>
                   </tr>
                 )}
               </tbody>
