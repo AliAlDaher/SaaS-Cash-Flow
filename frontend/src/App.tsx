@@ -869,7 +869,6 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
 
   // --- Upcoming & Overdue Payments Logic ---
   const today = startOfDay(new Date())
-  const fortyFiveDaysFromNow = addDays(today, 45)
   
 
   // Total Due (Today)
@@ -884,10 +883,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
   }, new Decimal(0)).toNumber()
 
   const unpaidInvoices = invoices.filter(inv => new Decimal(inv.amount).greaterThan(inv.paidAmount))
-  const scopeInvoices = unpaidInvoices.filter(inv => {
-    const due = new Date(inv.dueDate)
-    return isBefore(due, today) || !isBefore(fortyFiveDaysFromNow, due)
-  })
+  const scopeInvoices = unpaidInvoices
 
   const supplierGroups: Record<number, Invoice[]> = {}
   scopeInvoices.forEach(inv => {
@@ -913,8 +909,9 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     reminderAmount?: number | null
     isCheque?: boolean
     chequeStatus?: string
-  reminderBaseline?: number
-  isPaid?: boolean
+    reminderBaseline?: number
+    isPaid?: boolean
+    isExpense?: boolean
   }
 
   const upcomingRows: DisplayRow[] = []
@@ -980,28 +977,50 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
   })
 
   
-    // Add Pending Cheques to Dashboard
+    // Add Pending Cheques to Dashboard (No Date Limits)
     cheques.filter(c => c.status === 'Pending').forEach(c => {
       const due = new Date(c.chequeDate)
-      if (isBefore(due, fortyFiveDaysFromNow)) {
-        const isOverdue = isBefore(startOfDay(due), today)
+      const isOverdue = isBefore(startOfDay(due), today)
+      const isToday = isEqual(startOfDay(due), today)
+      
+      upcomingRows.push({
+        id: `chq-${c.id}`,
+        supplierName: suppliers.find(s => s.id === c.supplierId)?.name || 'Generic Cheque',
+        dueDate: due,
+        totalAmount: c.amount,
+        remainingAmount: c.amount,
+        isGrouped: false,
+        statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : (isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-sky-50 text-sky-700 border-sky-200"),
+        statusLabel: "Cheque Payment",
+        textColor: isOverdue ? "text-rose-600 font-bold" : "text-sky-700 font-medium",
+        isCheque: true,
+        chequeStatus: c.status
+      })
+    })
+
+    // Add Upcoming/Planned Expenses to Dashboard
+    if (expenses) {
+      expenses.filter(e => {
+        const expDate = startOfDay(new Date(e.date));
+        return !isBefore(expDate, today);
+      }).forEach(e => {
+        const due = new Date(e.date)
         const isToday = isEqual(startOfDay(due), today)
         
         upcomingRows.push({
-          id: `chq-${c.id}`,
-          supplierName: suppliers.find(s => s.id === c.supplierId)?.name || 'Generic Cheque',
+          id: `exp-${e.id}`,
+          supplierName: `Expense: ${e.category}`,
           dueDate: due,
-          totalAmount: c.amount,
-          remainingAmount: c.amount,
+          totalAmount: e.amount,
+          remainingAmount: e.amount,
           isGrouped: false,
-          statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : (isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-sky-50 text-sky-700 border-sky-200"),
-          statusLabel: "Cheque Payment",
-          textColor: isOverdue ? "text-rose-600 font-bold" : "text-sky-700 font-medium",
-          isCheque: true,
-          chequeStatus: c.status
+          statusClass: isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
+          statusLabel: isToday ? "Due Today" : "Upcoming Expense",
+          textColor: "text-purple-700 font-semibold",
+          isExpense: true
         })
-      }
-    })
+      })
+    }
 
   upcomingRows.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime())
 
@@ -1148,15 +1167,19 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                 {finalRows.map(row => (
                   <tr key={row.id} className={`hover:bg-slate-50/50 transition-colors`}>
                     <td className={`px-6 py-4 font-medium ${row.textColor}`}>
-                      <button 
-                        onClick={() => {
-                          const s = suppliers.find(sup => sup.name === row.supplierName);
-                          if (s && onSupplierClick) onSupplierClick(s);
-                        }}
-                        className="hover:underline transition-colors text-left"
-                      >
-                        {row.supplierName}
-                      </button>
+                      {row.isExpense ? (
+                        <span className="text-purple-700 font-bold">{row.supplierName}</span>
+                      ) : (
+                        <button 
+                          onClick={() => {
+                            const s = suppliers.find(sup => sup.name === row.supplierName);
+                            if (s && onSupplierClick) onSupplierClick(s);
+                          }}
+                          className="hover:underline transition-colors text-left"
+                        >
+                          {row.supplierName}
+                        </button>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {(user?.role === "admin" || user?.permissions?.invoices?.reminder) && row.invoiceId ? (
@@ -1194,7 +1217,11 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {row.isCheque ? (
+                      {row.isExpense ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                          Planned Outflow
+                        </span>
+                      ) : row.isCheque ? (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${row.chequeStatus === "Pending" ? "bg-amber-50 text-amber-700 border-amber-200" : (row.chequeStatus === "Cleared" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-rose-50 text-rose-700 border-rose-200")}`}>
                           {row.chequeStatus}
                         </span>
