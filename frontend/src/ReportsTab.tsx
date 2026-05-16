@@ -25,7 +25,7 @@ function FormatCurrency({ amount }: { amount: any }) {
   )
 }
 
-export function ReportsTab({ invoices, payments, collections, suppliers, onSupplierClick }: any) {
+export function ReportsTab({ invoices, payments, collections, suppliers, accounts, onSupplierClick }: any) {
   const [fromDate, setFromDate] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), 'yyyy-MM-dd'));
   const [toDate, setToDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -45,9 +45,24 @@ export function ReportsTab({ invoices, payments, collections, suppliers, onSuppl
   }).sort((a: any, b: any) => new Date(b.receivedDate).getTime() - new Date(a.receivedDate).getTime());
 
 
-  const totalIncoming = filteredCollections.filter((c: any) => c.status === 'received').reduce((sum: any, c: any) => sum.plus(new Decimal(c.amountInBase)), new Decimal(0)).toNumber();
+    const totalIncoming = filteredCollections.filter((c: any) => c.status === 'received').reduce((sum: any, c: any) => sum.plus(new Decimal(c.amountInBase)), new Decimal(0)).toNumber();
   const totalOutgoing = filteredPayments.reduce((sum: any, p: any) => sum.plus(new Decimal(p.amount)), new Decimal(0)).toNumber();
-  const netCash = new Decimal(totalIncoming).minus(totalOutgoing).toNumber();
+
+  let totalAdjustments = 0;
+  if (accounts) {
+    accounts.forEach((acc: any) => {
+      if (acc.adjustments) {
+        acc.adjustments.forEach((adj: any) => {
+          const d = new Date(adj.createdAt || adj.date);
+          if (!isBefore(d, startOfDay(new Date(fromDate))) && !isAfter(d, endOfDay(new Date(toDate)))) {
+            totalAdjustments = new Decimal(totalAdjustments).plus(new Decimal(adj.amount)).toNumber();
+          }
+        });
+      }
+    });
+  }
+
+  const netCash = new Decimal(totalIncoming).minus(totalOutgoing).plus(totalAdjustments).toNumber();
   const expectedCollections = filteredCollections.filter((c: any) => c.status === 'expected').reduce((sum: any, c: any) => sum.plus(new Decimal(c.amountInBase)), new Decimal(0)).toNumber();
 
   return (

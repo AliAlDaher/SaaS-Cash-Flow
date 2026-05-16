@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 import { requireAuth, requirePermission, AuthRequest } from '../middleware/auth';
 
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 router.use(requireAuth);
 
@@ -27,7 +27,7 @@ router.post('/', requirePermission('accounts', 'create'), async (req: Request, r
 
 router.get('/', requirePermission('accounts', 'view'), async (req: Request, res: Response, next) => {
   try {
-    const accounts = await prisma.account.findMany({ orderBy: { id: "desc" } });
+    const accounts = await prisma.account.findMany({ orderBy: { id: "desc" }, include: { adjustments: true } });
     res.json(accounts);
   } catch (error: any) {
     next(error);

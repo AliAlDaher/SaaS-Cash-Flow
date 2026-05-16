@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 import { requireAuth, requirePermission, AuthRequest } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 router.use(requireAuth);
 
@@ -133,7 +133,7 @@ router.post('/', requirePermission('payments', 'create'), async (req: Request, r
 
       await recalculateFIFO(tx, parseInt(supplierId));
       return { message: 'Payment processed successfully' };
-    });
+    }, { timeout: 30000 });
 
     res.status(201).json(result);
   } catch (error: any) {
@@ -215,7 +215,7 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
       }
 
       return updatedPayment;
-    });
+    }, { timeout: 30000 });
 
     res.json(updated);
   } catch (error: any) {
@@ -268,7 +268,7 @@ router.delete('/:id', requirePermission('payments', 'delete'), async (req: Reque
       await tx.payment.delete({ where: { id: parseInt(id) } });
 
       await recalculateFIFO(tx, payment.supplierId);
-    });
+    }, { timeout: 30000 });
 
     res.status(204).send();
   } catch (error: any) {

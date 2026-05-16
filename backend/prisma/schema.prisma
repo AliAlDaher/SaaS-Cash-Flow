@@ -22,7 +22,6 @@ model User {
 model Supplier {
   id              Int       @id @default(autoincrement())
   name            String
-  priority        Int
   createdAt       DateTime  @default(now())
   paymentTermDays Int       @default(0)
   invoices        Invoice[]

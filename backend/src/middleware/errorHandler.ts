@@ -27,7 +27,7 @@ export const errorHandler = (err: any, req: Request, res: Response, next: NextFu
 
   // Default Fallback
   const status = err.status || 500;
-  const message = err.message + " | " + err.stack;
+  const message = err.message || 'An unexpected error occurred.';
   
   res.status(status).json({ error: message });
 };

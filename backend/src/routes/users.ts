@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { requireAuth, requirePermission } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 // Only admin can access users
 router.use(requireAuth);

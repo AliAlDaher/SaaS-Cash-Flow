@@ -1,16 +1,16 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 import { requireAuth, requirePermission } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 router.use(requireAuth);
 
 router.post('/', requirePermission('invoices', 'create'), async (req: Request, res: Response, next) => {
   try {
-    const { supplierId, amount, invoiceDate, description } = req.body;
+    const { supplierId, amount, invoiceDate, description, dueDate: customDueDate } = req.body;
     
     const supplier = await prisma.supplier.findUnique({
       where: { id: parseInt(supplierId) }
@@ -22,8 +22,11 @@ router.post('/', requirePermission('invoices', 'create'), async (req: Request, r
 
     const baseDate = invoiceDate ? new Date(invoiceDate) : new Date();
     
-    const dueDate = new Date(baseDate);
-    dueDate.setDate(dueDate.getDate() + (supplier.paymentTermDays || 0));
+    const dueDate = customDueDate ? new Date(customDueDate) : (() => {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() + (supplier.paymentTermDays || 0));
+      return d;
+    })();
 
     const invoice = await prisma.invoice.create({
       data: {
@@ -43,7 +46,7 @@ router.post('/', requirePermission('invoices', 'create'), async (req: Request, r
 router.put('/:id', requirePermission('invoices', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
-    const { amount, invoiceDate, description } = req.body;
+    const { amount, invoiceDate, description, dueDate: customDueDate } = req.body;
 
     const parsedAmount = new Decimal(amount);
 
@@ -61,8 +64,11 @@ router.put('/:id', requirePermission('invoices', 'edit'), async (req: Request, r
     }
 
     const baseDate = invoiceDate ? new Date(invoiceDate) : existingInvoice.invoiceDate;
-    const dueDate = new Date(baseDate);
-    dueDate.setDate(dueDate.getDate() + (existingInvoice.supplier.paymentTermDays || 0));
+    const dueDate = customDueDate ? new Date(customDueDate) : (() => {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() + (existingInvoice.supplier.paymentTermDays || 0));
+      return d;
+    })();
 
     const invoice = await prisma.invoice.update({
       where: { id: parseInt(id) },

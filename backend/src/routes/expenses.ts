@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { requireAuth, requirePermission } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 // Get all expenses
 router.get('/', requireAuth, requirePermission('expenses', 'view'), async (req, res) => {
@@ -15,6 +15,49 @@ router.get('/', requireAuth, requirePermission('expenses', 'view'), async (req, 
     res.json(expenses);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch expenses' });
+  }
+});
+
+
+// Generate monthly recurring expenses on demand (e.g. before the month starts)
+router.post('/generate-monthly', requireAuth, requirePermission('expenses', 'create'), async (req, res) => {
+  try {
+    const { accountId, targetMonth } = req.body; // targetMonth: "2026-06" (YYYY-MM)
+    
+    if (!accountId) return res.status(400).json({ error: 'accountId is required' });
+    
+    // Parse target month or default to next month
+    let targetDate: Date;
+    if (targetMonth) {
+      targetDate = new Date(targetMonth + '-01');
+    } else {
+      const now = new Date();
+      targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+    
+    const monthLabel = targetDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' });
+    
+    const recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+    
+    const created = [];
+    for (const category of recurringCategories) {
+      const expense = await prisma.expense.create({
+        data: {
+          category,
+          amount: 0,
+          paidAmount: 0,
+          accountId: parseInt(accountId),
+          date: targetDate,
+          note: 'مصروف شهري - ' + monthLabel
+        }
+      });
+      created.push(expense);
+    }
+    
+    res.json({ success: true, created });
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -126,7 +169,7 @@ router.patch('/:id/pay', requireAuth, requirePermission('expenses', 'edit'), asy
   }
 });
 
-router.patch('/:id/postpone', requireAuth, requirePermission('cheques', 'create'), async (req, res) => {
+router.patch('/:id(\\d+)/postpone', requireAuth, requirePermission('cheques', 'create'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { postponeDate, reason } = req.body;
@@ -152,6 +195,36 @@ router.patch('/:id/postpone', requireAuth, requirePermission('cheques', 'create'
     });
 
     res.json(expense);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// Edit expense details (amount, note, etc.)
+router.patch('/:id(\\d+)', requireAuth, requirePermission('expenses', 'edit'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { category, amount, accountId, date, note } = req.body;
+    
+    const expense = await prisma.expense.findUnique({ where: { id } });
+    if (!expense) return res.status(404).json({ error: 'Expense not found' });
+    
+    if (amount !== undefined && parseFloat(amount) < Number(expense.paidAmount)) {
+      return res.status(400).json({ error: 'New amount cannot be less than the already paid amount' });
+    }
+    
+    const updated = await prisma.expense.update({
+      where: { id },
+      data: {
+        category,
+        amount: amount !== undefined ? parseFloat(amount) : undefined,
+        accountId: accountId !== undefined ? parseInt(accountId) : undefined,
+        date: date ? new Date(date) : undefined,
+        note
+      }
+    });
+    res.json(updated);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

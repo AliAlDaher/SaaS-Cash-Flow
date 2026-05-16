@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Decimal } from 'decimal.js'
-import { FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search } from 'lucide-react'
-import logo from './assets/logo.jpg'
+import { FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search, Edit } from 'lucide-react'
+import logo from './assets/slcash_logo.png'
 import { format, startOfDay, addDays, isBefore, isEqual } from 'date-fns'
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
 import Login from './Login'
@@ -42,7 +42,6 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
 type Supplier = {
   id: number
   name: string
-  priority: number
   paymentTermDays: number
   createdAt: string
 }
@@ -216,7 +215,9 @@ let globalErrorListener: ErrorListener | null = null;
 export const setGlobalErrorListener = (listener: ErrorListener | null) => {
   globalErrorListener = listener;
 };
-export const showError = (msg: string) => {
+export const showError = (rawMsg: string) => {
+  // Strip stack traces that leaked from backend
+  const msg = rawMsg ? rawMsg.split(' | ')[0].split(' at ')[0].trim() : 'An unexpected error occurred.';
   if (globalErrorListener) {
     globalErrorListener(msg);
   } else {
@@ -291,7 +292,7 @@ function MainLayout() {
   const [quickPayModal, setQuickPayModal] = useState<{ isOpen: boolean, invoice: Invoice | null, expense: Expense | null }>({ isOpen: false, invoice: null, expense: null });
   const [postponeModal, setPostponeModal] = useState<{ isOpen: boolean, invoice: Invoice | null, expense: Expense | null, cheque: Cheque | null }>({ isOpen: false, invoice: null, expense: null, cheque: null });
 
-  const handleQuickPay = async (accountId: number) => {
+  const handleQuickPay = async (accountId: number, amount?: number) => {
     if (!quickPayModal.invoice && !quickPayModal.expense) return;
     try {
       if (quickPayModal.expense) {
@@ -299,7 +300,7 @@ function MainLayout() {
         const res = await apiFetch(`${API_URL}/expenses/${expense.id}/pay`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accountId })
+          body: JSON.stringify({ accountId, amount })
         });
         if (!res.ok) throw new Error('Failed to process quick pay for expense');
         
@@ -310,15 +311,16 @@ function MainLayout() {
         await Promise.all([refreshExpenses(), refreshAccounts()]);
       } else if (quickPayModal.invoice) {
         const invoice = quickPayModal.invoice;
+        const payAmount = amount ?? (invoice.reminderAmount || (new Decimal(invoice.amount).minus(invoice.paidAmount).toNumber()));
         const res = await apiFetch(`${API_URL}/payments`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             supplierId: invoice.supplierId,
-            amount: invoice.reminderAmount || (new Decimal(invoice.amount).minus(invoice.paidAmount).toNumber()),
+            amount: payAmount,
             paymentDate: format(new Date(), 'yyyy-MM-dd'),
             accountId,
-            invoiceId: invoice.id
+            invoiceId: invoice.id ?? null
           })
         });
         if (!res.ok) throw new Error('Failed to process quick pay');
@@ -572,12 +574,11 @@ function MainLayout() {
       {/* Top Navigation */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 md:py-0 md:h-16 gap-3 md:gap-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-3 md:py-0 md:h-24 gap-3 md:gap-0">
             {/* Logo and Mobile Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <img src={logo} alt="Smart Lines Logo" className="h-8 w-auto object-contain mr-3" />
-                <span className="text-xl font-bold text-slate-800 tracking-tight">SLCash</span>
+                <img src={logo} alt="SLCASH Logo" className="h-20 w-auto object-contain" />
               </div>
               
               {/* Logout Button (mobile layout) */}
@@ -681,12 +682,28 @@ function MainLayout() {
       )}
 
       {errorMessage && (
-        <div className="fixed bottom-8 left-8 z-50 animate-in slide-in-from-left-8 duration-300">
-          <div className="bg-rose-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 border border-rose-700">
-            <div className="w-8 h-8 bg-rose-500/20 rounded-full flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5 text-rose-400" />
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-start sm:justify-end p-4 sm:p-8 pointer-events-none">
+          <div className="pointer-events-auto w-full max-w-sm animate-in slide-in-from-bottom-4 sm:slide-in-from-right-4 duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden">
+              <div className="flex items-center gap-3 px-5 py-4 bg-rose-50 border-b border-rose-100">
+                <div className="w-9 h-9 bg-rose-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-rose-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-rose-700">Payment Error</p>
+                  <p className="text-xs text-rose-500 mt-0.5">Action could not be completed</p>
+                </div>
+                <button
+                  onClick={() => setErrorMessage(null)}
+                  className="text-rose-400 hover:text-rose-600 transition-colors flex-shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-sm text-slate-700 font-medium leading-relaxed">{errorMessage}</p>
+              </div>
             </div>
-            <p className="font-medium">{errorMessage}</p>
           </div>
         </div>
       )}
@@ -840,21 +857,23 @@ function ReconcileModal({ isOpen, onClose, onConfirm, currentBalance }: { isOpen
 }
 
 
-function QuickPayModal({ isOpen, onClose, onConfirm, accounts }: { isOpen: boolean, onClose: () => void, onConfirm: (accountId: number) => void, accounts: Account[] }) {
+function QuickPayModal({ isOpen, onClose, onConfirm, accounts, defaultAmount }: { isOpen: boolean, onClose: () => void, onConfirm: (accountId: number, amount: number) => void, accounts: Account[], defaultAmount?: number }) {
   const [selectedAccountId, setSelectedAccountId] = useState('')
+  const [payAmount, setPayAmount] = useState('')
 
   useEffect(() => {
-    if (isOpen && accounts.length > 0) {
-      setSelectedAccountId(accounts[0].id.toString())
+    if (isOpen) {
+      if (accounts.length > 0) setSelectedAccountId(accounts[0].id.toString())
+      setPayAmount(defaultAmount !== undefined ? String(defaultAmount) : '')
     }
-  }, [isOpen, accounts])
+  }, [isOpen, accounts, defaultAmount])
 
   if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!selectedAccountId) return
-    onConfirm(parseInt(selectedAccountId))
+    if (!selectedAccountId || !payAmount || parseFloat(payAmount) <= 0) return
+    onConfirm(parseInt(selectedAccountId), parseFloat(payAmount))
   }
 
   return (
@@ -866,10 +885,22 @@ function QuickPayModal({ isOpen, onClose, onConfirm, accounts }: { isOpen: boole
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800">Quick Pay</h2>
-            <p className="text-sm text-slate-500">Select account to process this payment.</p>
+            <p className="text-sm text-slate-500">Select account and confirm the amount to pay.</p>
           </div>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Payment Amount (JOD)</label>
+            <input
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={payAmount}
+              onChange={e => setPayAmount(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium"
+              required
+            />
+          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Source Account</label>
             <select 
@@ -922,8 +953,8 @@ function PostponePaymentModal({ isOpen, onClose, onConfirm }: { isOpen: boolean,
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-            <Clock className="w-5 h-5 text-purple-600" />
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+            <Clock className="w-5 h-5 text-slate-600" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-slate-800">Postpone Payment</h2>
@@ -953,7 +984,7 @@ function PostponePaymentModal({ isOpen, onClose, onConfirm }: { isOpen: boolean,
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors">Cancel</button>
-            <button type="submit" className="flex-1 px-4 py-2.5 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-600/20 transition-colors">Confirm</button>
+            <button type="submit" className="flex-1 px-4 py-2.5 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 shadow-lg shadow-sky-600/20 transition-colors">Confirm</button>
           </div>
         </form>
       </div>
@@ -1025,7 +1056,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
 
 
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [timeFilter, setTimeFilter] = useState<'all' | 'overdue' | 'week' | 'month'>('all');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'overdue' | 'week' | 'custom'>('all');
+  const [customDays, setCustomDays] = useState<number>(30);
 
   const [reminderModal, setReminderModal] = useState<{isOpen: boolean, id: number, remaining: number}>({isOpen: false, id: 0, remaining: 0})
 
@@ -1082,6 +1114,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     isPaid?: boolean
     isExpense?: boolean
     description?: string
+    invoiceCount?: number
   }
 
   const upcomingRows: DisplayRow[] = []
@@ -1093,26 +1126,38 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     const overdueInvoices = supsInvoices.filter(inv => isBefore(startOfDay(new Date(inv.dueDate)), today))
     const upcomingInvs = supsInvoices.filter(inv => !isBefore(startOfDay(new Date(inv.dueDate)), today))
 
-    overdueInvoices.forEach(inv => {
-      const due = new Date(inv.dueDate)
+    if (overdueInvoices.length > 0) {
+      // Group all overdue invoices for this supplier into one row
+      const totalOverdue = overdueInvoices.reduce((sum, inv) => sum.plus(new Decimal(inv.amount)), new Decimal(0))
+      const totalPaid = overdueInvoices.reduce((sum, inv) => sum.plus(new Decimal(inv.paidAmount)), new Decimal(0))
+      const totalRemaining = totalOverdue.minus(totalPaid)
+      const earliestDue = overdueInvoices.reduce((earliest, inv) => {
+        const d = new Date(inv.dueDate)
+        return d < earliest ? d : earliest
+      }, new Date(overdueInvoices[0].dueDate))
+      const anyReminder = overdueInvoices.some(inv => inv.reminder)
+      const totalReminderAmount = overdueInvoices.reduce((sum, inv) => sum + (inv.reminderAmount ? parseFloat(String(inv.reminderAmount)) : 0), 0)
+      const allPaid = totalRemaining.lessThanOrEqualTo(0)
+      const anyPartial = totalPaid.greaterThan(0) && !allPaid
+
       upcomingRows.push({
-        id: `inv-${inv.id}`,
-        invoiceId: inv.id,
+        id: `inv-overdue-${supplierId}`,
+        invoiceId: overdueInvoices.length === 1 ? overdueInvoices[0].id : undefined,
         supplierName,
-        dueDate: due,
-        totalAmount: new Decimal(inv.amount).toNumber(),
-        remainingAmount: new Decimal(inv.amount).minus(inv.paidAmount).toNumber(),
-        isGrouped: false,
+        dueDate: earliestDue,
+        totalAmount: totalOverdue.toNumber(),
+        remainingAmount: totalRemaining.toNumber(),
+        isGrouped: overdueInvoices.length > 1,
+        invoiceCount: overdueInvoices.length,
         statusClass: "bg-rose-50 text-rose-700 border-rose-200",
         statusLabel: "Overdue",
         textColor: "text-rose-600 font-bold",
-        isPartial: new Decimal(inv.paidAmount).greaterThan(0) && new Decimal(inv.amount).minus(inv.paidAmount).greaterThan(0),
-        isPaid: new Decimal(inv.amount).minus(inv.paidAmount).lessThanOrEqualTo(0),
-        reminder: inv.reminder,
-        reminderAmount: inv.reminderAmount,
-        description: inv.description || undefined
+        isPartial: anyPartial,
+        isPaid: allPaid,
+        reminder: anyReminder,
+        reminderAmount: totalReminderAmount > 0 ? totalReminderAmount : undefined
       })
-    })
+    }
 
     upcomingInvs.forEach(inv => {
       const due = new Date(inv.dueDate)
@@ -1189,9 +1234,9 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
           totalAmount: total,
           remainingAmount: remaining,
           isGrouped: false,
-          statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-purple-50 text-purple-700 border-purple-200",
+          statusClass: isOverdue ? "bg-rose-50 text-rose-700 border-rose-200" : isToday ? "bg-orange-50 text-orange-700 border-orange-200" : "bg-amber-50 text-amber-700 border-amber-200",
           statusLabel: isOverdue ? "Overdue" : isToday ? "Due Today" : "Upcoming Expense",
-          textColor: "text-purple-700 font-semibold",
+          textColor: "text-amber-700 font-semibold",
           isExpense: true,
           isPartial: isPartial,
           reminder: e.reminder || false,
@@ -1210,9 +1255,9 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
   const weekRowsList = upcomingRows.filter(r => !isBefore(startOfDay(r.dueDate), today) && isBefore(startOfDay(r.dueDate), sevenDaysFromNow));
   const weekFilteredTotal = weekRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
 
-  const thirtyDaysFromNow = addDays(today, 30);
-  const monthRowsList = upcomingRows.filter(r => !isBefore(startOfDay(r.dueDate), today) && isBefore(startOfDay(r.dueDate), thirtyDaysFromNow));
-  const monthFilteredTotal = monthRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
+  const customDaysFromNow = addDays(today, customDays);
+  const customRowsList = upcomingRows.filter(r => !isBefore(startOfDay(r.dueDate), today) && isBefore(startOfDay(r.dueDate), customDaysFromNow));
+  const customFilteredTotal = customRowsList.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
 
   const allFilteredTotal = upcomingRows.reduce((sum, r) => sum.plus(new Decimal(r.remainingAmount)), new Decimal(0)).toNumber();
 
@@ -1221,8 +1266,8 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
     filteredRows = overdueRowsList;
   } else if (timeFilter === 'week') {
     filteredRows = weekRowsList;
-  } else if (timeFilter === 'month') {
-    filteredRows = monthRowsList;
+  } else if (timeFilter === 'custom') {
+    filteredRows = customRowsList;
   }
 
   const finalRows = showSelectedOnly ? filteredRows.filter(r => r.reminder) : filteredRows;
@@ -1293,10 +1338,22 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                 dotColor: 'bg-amber-500'
               },
               {
-                key: 'month' as const,
-                label: 'Next 30 Days',
-                amount: monthFilteredTotal,
-                count: monthRowsList.length,
+                key: 'custom' as const,
+                label: (
+                  <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+                    <span>Next</span>
+                    <input 
+                      type="number"
+                      value={customDays}
+                      onChange={e => setCustomDays(Number(e.target.value) || 0)}
+                      className="w-12 px-1 py-0.5 text-center border border-slate-300 rounded text-slate-900 bg-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-bold normal-case"
+                      min="1"
+                    />
+                    <span>Days</span>
+                  </div>
+                ),
+                amount: customFilteredTotal,
+                count: customRowsList.length,
                 activeClass: 'border-emerald-500 bg-emerald-50/40 text-emerald-900 shadow-sm shadow-emerald-500/5 ring-1 ring-emerald-500/20',
                 inactiveClass: 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/30 text-slate-600',
                 dotColor: 'bg-emerald-500'
@@ -1304,15 +1361,17 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
             ].map(card => {
               const isActive = timeFilter === card.key;
               return (
-                <button
+                <div
                   key={card.key}
                   onClick={() => setTimeFilter(card.key)}
-                  className={`flex flex-col p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none ${
+                  role="button"
+                  tabIndex={0}
+                  className={`flex flex-col p-4 rounded-xl border text-left transition-all duration-200 focus:outline-none cursor-pointer ${
                     isActive ? card.activeClass : card.inactiveClass
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2 w-full">
-                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">{card.label}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-70 flex items-center h-6">{card.label}</span>
                     <span className={`w-2 h-2 rounded-full ${card.dotColor}`} />
                   </div>
                   <div className="flex items-baseline gap-1.5 flex-wrap">
@@ -1320,10 +1379,10 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                       <FormatCurrency amount={card.amount} />
                     </span>
                     <span className="text-[11px] opacity-60 font-medium">
-                      (${card.count})
+                      ({card.count})
                     </span>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -1346,17 +1405,24 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                   <tr key={row.id} className={`hover:bg-slate-50/50 transition-colors`}>
                     <td className={`px-6 py-4 font-medium ${row.textColor}`}>
                       {row.isExpense ? (
-                        <span className="text-purple-700 font-bold">{row.supplierName}</span>
+                        <span className="text-amber-700 font-bold">{row.supplierName}</span>
                       ) : (
-                        <button 
-                          onClick={() => {
-                            const s = suppliers.find(sup => sup.name === row.supplierName);
-                            if (s && onSupplierClick) onSupplierClick(s);
-                          }}
-                          className="hover:underline transition-colors text-left"
-                        >
-                          {row.supplierName}
-                        </button>
+                        <div className="flex items-center gap-2 flex-nowrap">
+                          <button 
+                            onClick={() => {
+                              const s = suppliers.find(sup => sup.name === row.supplierName);
+                              if (s && onSupplierClick) onSupplierClick(s);
+                            }}
+                            className="hover:underline transition-colors text-left whitespace-nowrap"
+                          >
+                            {row.supplierName}
+                          </button>
+                          {row.isGrouped && row.invoiceCount && row.invoiceCount > 1 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200 whitespace-nowrap flex-shrink-0">
+                              {row.invoiceCount} invoices
+                            </span>
+                          )}
+                        </div>
                       )}
                       {row.description && (() => {
                         const match = row.description.match(/\[Postponed from (.*?) to ([^\]:]+)/);
@@ -1365,7 +1431,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                           const cleanTo = match[2].replace(/,\s*\d{4}/, '').trim();
                           return (
                             <div className="mt-1 flex flex-wrap gap-1">
-                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-100/60 shadow-sm">
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-100 shadow-sm">
                                 ⏳ {cleanFrom} → {cleanTo}
                               </span>
                             </div>
@@ -1389,18 +1455,32 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                             <CheckCircle className={`w-5 h-5 mx-auto ${row.reminder ? 'text-emerald-500 fill-current' : 'text-slate-200'}`} />
                           </div>
                         )
-                      ) : (user?.role === "admin" || user?.permissions?.invoices?.reminder) && row.invoiceId ? (
+                      ) : (user?.role === "admin" || user?.permissions?.invoices?.reminder) && (row.invoiceId || row.isGrouped) ? (
                         <div className="flex flex-col items-center gap-1">
                           <button onClick={() => {
-                            if (!row.reminder) {
-                              setReminderModal({ isOpen: true, id: row.invoiceId!, remaining: row.remainingAmount });
+                            if (row.isGrouped) {
+                              if (!row.reminder) {
+                                const supplierId = parseInt(row.id.replace('inv-overdue-', ''));
+                                setReminderModal({ isOpen: true, id: -supplierId, remaining: row.remainingAmount });
+                              } else {
+                                const supplierId = parseInt(row.id.replace('inv-overdue-', ''));
+                                const overdueInvs = invoices.filter(inv => 
+                                  inv.supplierId === supplierId && 
+                                  isBefore(startOfDay(new Date(inv.dueDate)), today)
+                                );
+                                overdueInvs.forEach(inv => onToggleReminder!(inv.id, false));
+                              }
                             } else {
-                              onToggleReminder!(row.invoiceId!, false);
+                              if (!row.reminder) {
+                                setReminderModal({ isOpen: true, id: row.invoiceId!, remaining: row.remainingAmount });
+                              } else {
+                                onToggleReminder!(row.invoiceId!, false);
+                              }
                             }
                           }} className={`transition-colors ${row.reminder ? 'text-emerald-500 hover:text-emerald-600' : 'text-slate-300 hover:text-emerald-400'}`}>
                             <CheckCircle className={`w-5 h-5 ${row.reminder ? 'fill-current text-emerald-500' : ''}`} />
                           </button>
-                          {row.reminder && row.reminderAmount && <span className="text-[10px] font-bold text-emerald-600">{row.reminderAmount} JOD</span>}
+                          {row.reminder && row.reminderAmount && parseFloat(String(row.reminderAmount)) > 0 && <span className="text-[10px] font-bold text-emerald-600">{parseFloat(String(row.reminderAmount)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} JOD</span>}
                         </div>
                       ) : row.reminder ? (
                         <div className="flex flex-col items-center gap-1">
@@ -1451,6 +1531,16 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                                 const expId = parseInt(row.id.replace('exp-', ''));
                                 const exp = expenses.find(e => e.id === expId);
                                 if (exp) onQuickPay(exp, true);
+                              } else if (row.isGrouped) {
+                                const supplierId = parseInt(row.id.replace('inv-overdue-', ''));
+                                const virtualInv = {
+                                  id: null,
+                                  supplierId,
+                                  amount: row.totalAmount,
+                                  paidAmount: row.totalAmount - row.remainingAmount,
+                                  reminderAmount: row.reminderAmount || row.remainingAmount
+                                };
+                                onQuickPay(virtualInv);
                               } else {
                                 const inv = invoices.find(i => i.id === row.invoiceId);
                                 if (inv) onQuickPay(inv);
@@ -1480,7 +1570,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                             }}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-bold transition-all border border-slate-200"
                           >
-                            <Clock className="w-3.5 h-3.5 text-purple-600" />
+                            <Clock className="w-3.5 h-3.5 text-slate-500" />
                             Postpone
                           </button>
                         )}
@@ -1547,8 +1637,28 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
         isOpen={reminderModal.isOpen} 
         onClose={() => setReminderModal({ ...reminderModal, isOpen: false })} 
         remainingAmount={reminderModal.remaining} 
-        onConfirm={(amount) => {
-          onToggleReminder!(reminderModal.id, true, amount)
+        onConfirm={async (amount) => {
+          if (reminderModal.id < 0) {
+            const supplierId = Math.abs(reminderModal.id);
+            const overdueInvs = invoices.filter(inv => 
+              inv.supplierId === supplierId && 
+              isBefore(startOfDay(new Date(inv.dueDate)), today)
+            ).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+            
+            let remainingInput = amount;
+            for (const inv of overdueInvs) {
+              const invRemaining = new Decimal(inv.amount).minus(inv.paidAmount).toNumber();
+              if (remainingInput > 0) {
+                const allocated = Math.min(remainingInput, invRemaining);
+                await onToggleReminder!(inv.id, true, allocated);
+                remainingInput -= allocated;
+              } else {
+                await onToggleReminder!(inv.id, false);
+              }
+            }
+          } else {
+            onToggleReminder!(reminderModal.id, true, amount)
+          }
           setReminderModal({ ...reminderModal, isOpen: false })
         }} 
       />
@@ -1565,26 +1675,23 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
 
 
   const [newSupplierName, setNewSupplierName] = useState('')
-  const [newSupplierPriority, setNewSupplierPriority] = useState(1)
   const [newSupplierPaymentTerms, setNewSupplierPaymentTerms] = useState(0)
   const [editSupplierId, setEditSupplierId] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   
   const filteredSuppliers = suppliers.filter(s => 
-    searchTerm === '' || s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.priority.toString().includes(searchTerm)
+    searchTerm === '' || s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEditClick = (supplier: Supplier) => {
     setEditSupplierId(supplier.id)
     setNewSupplierName(supplier.name)
-    setNewSupplierPriority(supplier.priority)
     setNewSupplierPaymentTerms(supplier.paymentTermDays)
   }
 
   const handleCancelEdit = () => {
     setEditSupplierId(null)
     setNewSupplierName('')
-    setNewSupplierPriority(1)
     setNewSupplierPaymentTerms(0)
   }
 
@@ -1598,7 +1705,7 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
       const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newSupplierName, priority: newSupplierPriority, paymentTermDays: newSupplierPaymentTerms })
+        body: JSON.stringify({ name: newSupplierName, paymentTermDays: newSupplierPaymentTerms })
       })
       const data = await res.json()
       if (setSuppliers) {
@@ -1716,20 +1823,9 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
             <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
             <input required type="text" value={newSupplierName} onChange={e => setNewSupplierName(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
-              <input required type="number" value={newSupplierPriority} onChange={e => setNewSupplierPriority(parseInt(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms (Days)</label>
-              <select required value={newSupplierPaymentTerms} onChange={e => setNewSupplierPaymentTerms(parseInt(e.target.value))} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500">
-                <option value={0}>Cash (0 days)</option>
-                <option value={30}>Net 30</option>
-                <option value={45}>Net 45</option>
-                <option value={60}>Net 60</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms (Days)</label>
+            <input required type="number" min="0" value={newSupplierPaymentTerms} onChange={e => setNewSupplierPaymentTerms(parseInt(e.target.value) || 0)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
           </div>
           <div className="flex items-center gap-3">
             {((user?.permissions?.suppliers?.[editSupplierId ? 'edit' : 'create'])) ? (
@@ -1775,7 +1871,6 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
               <th className="px-6 py-4">ID</th>
               <th className="px-6 py-4">Name</th>
               <th className="px-6 py-4 whitespace-nowrap">Terms</th>
-              <th className="px-6 py-4">Priority</th>
               <th className="px-6 py-4 whitespace-nowrap text-right">Actions</th>
             </tr>
           </thead>
@@ -1796,7 +1891,6 @@ function SuppliersTab({ suppliers, invoices, payments, accounts, onRefresh, onDe
                     {supplier.paymentTermDays === 0 ? 'Cash' : `Net ${supplier.paymentTermDays}`}
                   </span>
                 </td>
-                <td className="px-6 py-4">{supplier.priority}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   {(user?.role === 'admin' || user?.permissions?.suppliers?.edit) && <button onClick={() => handleEditClick(supplier)} className="text-sky-600 hover:text-sky-900 font-medium mr-3">Edit</button>}
                   {(user?.role === 'admin' || user?.permissions?.suppliers?.delete) && <button onClick={() => onDelete(supplier.id)} className="text-rose-600 hover:text-rose-900 font-medium">Delete</button>}
@@ -1835,6 +1929,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
   const [newInvoiceSupplierId, setNewInvoiceSupplierId] = useState('')
   const [newInvoiceAmount, setNewInvoiceAmount] = useState('')
   const [newInvoiceDate, setNewInvoiceDate] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [newInvoicePaymentDays, setNewInvoicePaymentDays] = useState<number>(0)
   const [newInvoiceDescription, setNewInvoiceDescription] = useState('')
   const [editInvoiceId, setEditInvoiceId] = useState<number | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
@@ -1856,6 +1951,11 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
     setNewInvoiceSupplierId(inv.supplierId.toString())
     setNewInvoiceAmount(inv.amount.toString())
     setNewInvoiceDate(format(new Date(inv.invoiceDate), 'yyyy-MM-dd'))
+    const invDate = new Date(inv.invoiceDate);
+    const dueDateObj = new Date(inv.dueDate);
+    const diffMs = dueDateObj.getTime() - invDate.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+    setNewInvoicePaymentDays(diffDays >= 0 ? diffDays : 0)
     setNewInvoiceDescription(inv.description || '')
     setFormError(null)
   }
@@ -1865,6 +1965,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
     setNewInvoiceSupplierId('')
     setNewInvoiceAmount('')
     setNewInvoiceDate(format(new Date(), 'yyyy-MM-dd'))
+    setNewInvoicePaymentDays(0)
     setNewInvoiceDescription('')
     setFormError(null)
   }
@@ -1884,6 +1985,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
           supplierId: newInvoiceSupplierId, 
           amount: newInvoiceAmount,
           invoiceDate: newInvoiceDate,
+          dueDate: (() => { const d = new Date(newInvoiceDate); d.setDate(d.getDate() + newInvoicePaymentDays); return format(d, 'yyyy-MM-dd'); })(),
           description: newInvoiceDescription
         })
       })
@@ -1925,10 +2027,21 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
           </div>
         )}
         <form onSubmit={handleAddInvoice} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Supplier</label>
-              <select required disabled={!!editInvoiceId} value={newInvoiceSupplierId} onChange={e => setNewInvoiceSupplierId(e.target.value)} className={`w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500 ${editInvoiceId ? 'bg-slate-100' : ''}`}>
+              <select required disabled={!!editInvoiceId} value={newInvoiceSupplierId} onChange={e => {
+                const suppId = e.target.value;
+                setNewInvoiceSupplierId(suppId);
+                if (!editInvoiceId) {
+                  const supp = suppliers.find(s => s.id === parseInt(suppId));
+                  if (supp) {
+                    setNewInvoicePaymentDays(supp.paymentTermDays ?? 0);
+                  } else {
+                    setNewInvoicePaymentDays(0);
+                  }
+                }
+              }} className={`w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500 ${editInvoiceId ? 'bg-slate-100' : ''}`}>
                 <option value="">Select Supplier</option>
                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
@@ -1939,7 +2052,20 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Invoice Date</label>
-              <input required type="date" value={newInvoiceDate} onChange={e => setNewInvoiceDate(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+              <input required type="date" value={newInvoiceDate} onChange={e => {
+                const newDate = e.target.value;
+                setNewInvoiceDate(newDate);
+
+              }} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Payment Terms (Days from Invoice Date)</label>
+              <input required type="number" min="0" value={newInvoicePaymentDays} onChange={e => setNewInvoicePaymentDays(parseInt(e.target.value) || 0)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-amber-500 border-amber-300" />
+              {newInvoiceSupplierId && (() => {
+                const supp = suppliers.find(s => s.id === parseInt(newInvoiceSupplierId));
+                const def = supp?.paymentTermDays ?? 0;
+                return <p className="mt-1 text-xs text-slate-400">Supplier default: <span className="font-semibold text-slate-600">{def === 0 ? 'Cash (0 days)' : `${def} days`}</span></p>;
+              })()}
             </div>
           </div>
           <div>
@@ -3526,6 +3652,36 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
   const [formError, setFormError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [editingExpenseId, setEditingExpenseId] = useState(null)
+  const [generating, setGenerating] = useState(false)
+  const [genAccountId, setGenAccountId] = useState('')
+  const [genMonth, setGenMonth] = useState(() => {
+    const next = new Date();
+    next.setMonth(next.getMonth() + 1);
+    return next.toISOString().slice(0, 7); // "YYYY-MM"
+  })
+  const [genSuccess, setGenSuccess] = useState<string | null>(null)
+
+  const handleGenerateMonthly = async () => {
+    if (!genAccountId) { alert('Please select an account first'); return; }
+    setGenerating(true);
+    setGenSuccess(null);
+    try {
+      const res = await apiFetch(`${API_URL}/expenses/generate-monthly`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accountId: genAccountId, targetMonth: genMonth })
+      });
+      if (!res.ok) throw new Error('Failed to generate');
+      const data = await res.json();
+      setGenSuccess(`تم إنشاء ${data.created.length} مصروفات لشهر ${genMonth} بنجاح!`);
+      onRefresh();
+    } catch (err: any) {
+      alert('Error: ' + err.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -3533,8 +3689,10 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
     if (submitting) return
     setSubmitting(true)
     try {
-      const res = await apiFetch(`${API_URL}/expenses`, {
-        method: 'POST',
+      const url = editingExpenseId ? `${API_URL}/expenses/${editingExpenseId}` : `${API_URL}/expenses`;
+      const method = editingExpenseId ? 'PATCH' : 'POST';
+      const res = await apiFetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, amount: parseFloat(amount), accountId, date, note })
       })
@@ -3543,6 +3701,7 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
       setAmount('')
       setAccountId('')
       setNote('')
+      setEditingExpenseId(null)
       onRefresh()
     } catch (err: any) {
       setFormError(err.message)
@@ -3556,13 +3715,43 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
     exp.note?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const categories = ['Rent', 'Fuel', 'Salary', 'Maintenance', 'Electricity', 'Water', 'Internet', 'Office Supplies', 'Marketing', 'Taxes', 'Other']
+  const categories = ['إيجار', 'محروقات', 'رواتب', 'صيانة', 'كهرباء', 'مياه', 'إنترنت', 'مستلزمات مكتبية', 'تسويق', 'ضرائب', 'الضمان الاجتماعي', 'أخرى']
 
   return (
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Expenses</h1>
       </header>
+
+      {(user?.role === 'admin' || user?.permissions?.expenses?.create) && (
+        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 max-w-4xl flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-slate-700">Generate Monthly Expenses</p>
+            <p className="text-xs text-slate-400 mt-0.5">رواتب · ضمان اجتماعي · كهرباء · إنترنت</p>
+          </div>
+          {genSuccess && (
+            <p className="text-xs text-emerald-600 font-medium w-full">{genSuccess}</p>
+          )}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Month</label>
+            <input type="month" value={genMonth} onChange={e => setGenMonth(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-sky-500" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Account</label>
+            <select value={genAccountId} onChange={e => setGenAccountId(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 min-w-36">
+              <option value="">Select Account</option>
+              {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+            </select>
+          </div>
+          <button
+            onClick={handleGenerateMonthly}
+            disabled={generating}
+            className="bg-sky-600 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-sky-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            {generating ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</> : <><Clock className="w-3.5 h-3.5" />Generate</>}
+          </button>
+        </div>
+      )}
 
       {(user?.role === 'admin' || user?.permissions?.expenses?.create) && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-4xl">
@@ -3611,7 +3800,7 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
                     Recording...
                   </>
                 ) : (
-                  'Record Expense'
+                  editingExpenseId ? 'Update Expense' : 'Record Expense'
                 )}
               </button>
             </div>
@@ -3675,6 +3864,16 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
+                    {(user?.role === 'admin' || user?.permissions?.expenses?.edit) && (
+                      <button onClick={() => {
+                        setEditingExpenseId(expense.id);
+                        setCategory(expense.category);
+                        setAmount(expense.amount.toString());
+                        setAccountId(expense.accountId.toString());
+                        setDate(format(new Date(expense.date), 'yyyy-MM-dd'));
+                        setNote(expense.note || '');
+                      }} className="text-sky-400 hover:text-sky-600 ml-2"><Edit className="w-4 h-4 inline" /></button>
+                    )}
                     {(user?.role === 'admin' || user?.permissions?.expenses?.delete) && (
                       <button onClick={() => onDelete(expense.id)} className="text-rose-400 hover:text-rose-600 ml-2"><AlertCircle className="w-4 h-4 inline" /></button>
                     )}

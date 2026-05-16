@@ -1,17 +1,17 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../prisma';
 import { requireAuth, requirePermission } from '../middleware/auth';
 
 const router = Router();
-const prisma = new PrismaClient();
+
 
 router.use(requireAuth);
 
 router.post('/', requirePermission('suppliers', 'create'), async (req: Request, res: Response, next) => {
   try {
-    const { name, priority, paymentTermDays } = req.body;
+    const { name, paymentTermDays } = req.body;
     const supplier = await prisma.supplier.create({
-      data: { name, priority, paymentTermDays: paymentTermDays ? parseInt(paymentTermDays) : 0 },
+      data: { name, paymentTermDays: paymentTermDays ? parseInt(paymentTermDays) : 0 },
     });
     res.status(201).json(supplier);
   } catch (error) {
@@ -47,8 +47,8 @@ router.get('/:id', requirePermission('suppliers', 'view'), async (req: Request, 
 router.put('/:id', requirePermission('suppliers', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
-    const { name, priority, paymentTermDays } = req.body;
-    const data: any = { name, priority };
+    const { name, paymentTermDays } = req.body;
+    const data: any = { name };
     if (paymentTermDays !== undefined) data.paymentTermDays = parseInt(paymentTermDays);
     const supplier = await prisma.supplier.update({
       where: { id: parseInt(id) },
