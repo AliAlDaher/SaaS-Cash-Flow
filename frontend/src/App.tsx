@@ -1540,7 +1540,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                                   paidAmount: row.totalAmount - row.remainingAmount,
                                   reminderAmount: row.reminderAmount || row.remainingAmount
                                 };
-                                onQuickPay(virtualInv);
+                                onQuickPay(virtualInv as any);
                               } else {
                                 const inv = invoices.find(i => i.id === row.invoiceId);
                                 if (inv) onQuickPay(inv);
@@ -3652,7 +3652,7 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
   const [formError, setFormError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [editingExpenseId, setEditingExpenseId] = useState(null)
+  const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
   const [generating, setGenerating] = useState(false)
   const [genAccountId, setGenAccountId] = useState('')
   const [genMonth, setGenMonth] = useState(() => {
