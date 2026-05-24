@@ -2705,12 +2705,12 @@ function AccountsTab({ accounts, payments, collections, suppliers, expenses, onR
     }));
 
     
-    const accountExpenses = expenses.filter(e => e.accountId === selectedAccount.id).map(e => ({
+    const accountExpenses = expenses.filter(e => e.accountId === selectedAccount.id && e.paidAmount > 0).map(e => ({
       id: `exp-${e.id}`,
       date: new Date(e.date),
       type: 'Outgoing' as const,
       description: e.category + (e.note ? `: ${e.note}` : ''),
-      amount: e.amount
+      amount: e.paidAmount
     }));
 
     const accountCollections = collections.filter(c => c.accountId === selectedAccount.id).map(c => ({
