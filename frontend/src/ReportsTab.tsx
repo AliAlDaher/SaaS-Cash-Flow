@@ -104,7 +104,7 @@ export function ReportsTab({ invoices, payments, collections, suppliers, account
             <tbody className="divide-y divide-slate-100">
               {filteredCollections.map((c: any) => (
                 <tr key={c.id}>
-                  <td className="px-6 py-4">{format(new Date(c.receivedDate), 'MMM dd, yyyy')}</td>
+                  <td className="px-6 py-4">{format(new Date(c.receivedDate), 'yyyy-MM-dd')}</td>
                   <td className="px-6 py-4">{c.note} {c.status === 'expected' ? '(Expected)' : ''}</td>
                   <td className="px-6 py-4 text-right font-bold text-emerald-600"><FormatCurrency amount={c.amountInBase} /></td>
                 </tr>
@@ -130,7 +130,7 @@ export function ReportsTab({ invoices, payments, collections, suppliers, account
             <tbody className="divide-y divide-slate-100">
               {filteredPayments.map((p: any) => (
                 <tr key={p.id}>
-                  <td className="px-6 py-4">{format(new Date(p.paymentDate), 'MMM dd, yyyy')}</td>
+                  <td className="px-6 py-4">{format(new Date(p.paymentDate), 'yyyy-MM-dd')}</td>
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => {
@@ -177,7 +177,7 @@ export function ReportsTab({ invoices, payments, collections, suppliers, account
             <tbody className="divide-y divide-slate-100">
               {filteredInvoices.map((i: any) => (
                 <tr key={i.id}>
-                  <td className="px-6 py-4">{format(new Date(i.invoiceDate), 'MMM dd, yyyy')}</td>
+                  <td className="px-6 py-4">{format(new Date(i.invoiceDate), 'yyyy-MM-dd')}</td>
                   <td className="px-6 py-4">
                     <button 
                       onClick={() => {

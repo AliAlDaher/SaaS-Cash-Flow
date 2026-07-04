@@ -28,22 +28,6 @@ router.get('/', requirePermission('suppliers', 'view'), async (req: Request, res
   }
 });
 
-router.get('/:id', requirePermission('suppliers', 'view'), async (req: Request, res: Response, next) => {
-  try {
-    const { id } = req.params;
-    const supplier = await prisma.supplier.findUnique({
-      where: { id: parseInt(id) },
-    });
-    if (supplier) {
-      res.json(supplier);
-    } else {
-      res.status(404).json({ error: 'Supplier not found' });
-    }
-  } catch (error) {
-    next(error);
-  }
-});
-
 router.put('/:id', requirePermission('suppliers', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;

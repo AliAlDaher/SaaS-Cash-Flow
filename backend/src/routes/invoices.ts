@@ -12,6 +12,10 @@ router.post('/', requirePermission('invoices', 'create'), async (req: Request, r
   try {
     const { supplierId, amount, invoiceDate, description, dueDate: customDueDate } = req.body;
     
+    if (!supplierId || amount === undefined || amount === null || isNaN(Number(amount)) || Number(amount) <= 0) {
+      return res.status(400).json({ error: 'supplierId and a positive amount are required' });
+    }
+    
     const supplier = await prisma.supplier.findUnique({
       where: { id: parseInt(supplierId) }
     });
@@ -88,18 +92,49 @@ router.put('/:id', requirePermission('invoices', 'edit'), async (req: Request, r
 
 router.get('/', requirePermission('invoices', 'view'), async (req: Request, res: Response, next) => {
   try {
-    const invoices = await prisma.invoice.findMany({ orderBy: { id: "desc" }, include: { supplier: true } });
-    res.json(invoices);
-  } catch (error: any) {
-    next(error);
-  }
-});
+    const page = req.query.page ? parseInt(req.query.page as string) : undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const search = req.query.search ? (req.query.search as string) : undefined;
+    const supplierId = req.query.supplierId ? parseInt(req.query.supplierId as string) : undefined;
 
-router.get('/:supplierId', requirePermission('invoices', 'view'), async (req: Request, res: Response, next) => {
-  try {
-    const { supplierId } = req.params;
-    const invoices = await prisma.invoice.findMany({ where: { supplierId: parseInt(supplierId) }, orderBy: { id: "desc" } });
-    res.json(invoices);
+    const whereClause: any = {};
+    if (supplierId) {
+      whereClause.supplierId = supplierId;
+    }
+    if (search) {
+      whereClause.OR = [
+        { description: { contains: search, mode: 'insensitive' } },
+        { supplier: { name: { contains: search, mode: 'insensitive' } } },
+      ];
+    }
+
+    if (page !== undefined && limit !== undefined) {
+      const skip = (page - 1) * limit;
+      const [invoices, totalCount] = await Promise.all([
+        prisma.invoice.findMany({
+          where: whereClause,
+          skip,
+          take: limit,
+          orderBy: { id: "desc" },
+          include: { supplier: true }
+        }),
+        prisma.invoice.count({ where: whereClause })
+      ]);
+
+      res.json({
+        invoices,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        currentPage: page
+      });
+    } else {
+      const invoices = await prisma.invoice.findMany({
+        where: whereClause,
+        orderBy: { id: "desc" },
+        include: { supplier: true }
+      });
+      res.json(invoices);
+    }
   } catch (error: any) {
     next(error);
   }
@@ -124,8 +159,7 @@ router.delete('/:id', requirePermission('invoices', 'delete'), async (req: Reque
   }
 });
 
-
-router.patch('/:id/reminder', requirePermission('invoices', 'reminder'), async (req: Request, res: Response, next) => {
+router.patch('/:id/reminder', requirePermission('invoices', 'edit'), async (req: Request, res: Response, next) => {
   try {
     const { id } = req.params;
     const { reminder, reminderAmount } = req.body;
@@ -152,39 +186,6 @@ router.patch('/:id/reminder', requirePermission('invoices', 'reminder'), async (
     res.json(invoice);
   } catch (error: any) {
     res.status(400).json({ error: 'Error updating invoice reminder', details: error.message || String(error) });
-  }
-});
-
-router.patch('/:id/postpone', requirePermission('cheques', 'create'), async (req: Request, res: Response, next) => {
-  try {
-    const { id } = req.params;
-    const { postponeDate, reason } = req.body;
-
-    const existing = await prisma.invoice.findUnique({ where: { id: parseInt(id) } });
-    if (!existing) return res.status(404).json({ error: 'Invoice not found' });
-
-
-    const originalDateStr = new Date(existing.dueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
-    const updatedDescription = existing.description 
-      ? existing.description + " " + postponementLog
-      : postponementLog;
-
-    const invoice = await prisma.invoice.update({
-      where: { id: parseInt(id) },
-      data: {
-        dueDate: new Date(postponeDate),
-        reminder: false, // Automatically clears the manager reminder!
-        reminderAmount: null,
-        reminderBaseline: 0,
-        description: updatedDescription
-      }
-    });
-
-    res.json(invoice);
-  } catch (error: any) {
-    res.status(400).json({ error: 'Error postponing invoice', details: error.message || String(error) });
   }
 });
 

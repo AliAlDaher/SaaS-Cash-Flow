@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
+import { expandPermissions } from '../utils/permissions';
 
 const router = Router();
 
@@ -24,42 +25,7 @@ router.post('/login', async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    let parsedPerms: any = {};
-    if (user.role === 'admin') {
-      parsedPerms = 
-{
-  dashboard: { view: true },
-  reports: { view: true },
-  invoices: { view: true, create: true, edit: true, delete: true },
-  payments: { view: true, create: true, edit: true, delete: true },
-  cheques: { view: true, create: true, edit: true, delete: true },
-  expenses: { view: true, create: true, edit: true, delete: true },
-  collections: { view: true, create: true, edit: true, delete: true },
-  suppliers: { view: true, create: true, edit: true, delete: true },
-  accounts: { view: true, create: true, edit: true, delete: true },
-  users: { view: true, create: true, edit: true, delete: true }
-}
-;
-    } else {
-      try {
-        const flatPerms = user.permissions ? JSON.parse(user.permissions) : {};
-        if (!flatPerms.invoices && (flatPerms.canManageInvoices !== undefined || flatPerms.canViewDashboard !== undefined)) {
-           parsedPerms = {
-             dashboard: { view: !!flatPerms.canViewDashboard },
-             invoices: { view: !!flatPerms.canManageInvoices, create: !!flatPerms.canManageInvoices, edit: !!flatPerms.canManageInvoices, delete: !!flatPerms.canDelete },
-             payments: { view: !!flatPerms.canManagePayments, create: !!flatPerms.canManagePayments, edit: !!flatPerms.canManagePayments, delete: !!flatPerms.canDelete },
-             collections: { view: !!flatPerms.canManageCollections, create: !!flatPerms.canManageCollections, edit: !!flatPerms.canManageCollections, delete: !!flatPerms.canDelete },
-             suppliers: { view: !!flatPerms.canManageSuppliers, create: !!flatPerms.canManageSuppliers, edit: !!flatPerms.canManageSuppliers, delete: !!flatPerms.canDelete },
-             accounts: { view: !!flatPerms.canManageAccounts, create: !!flatPerms.canManageAccounts, edit: !!flatPerms.canManageAccounts, delete: !!flatPerms.canDelete },
-             users: { view: !!flatPerms.canManageUsers, create: !!flatPerms.canManageUsers, edit: !!flatPerms.canManageUsers, delete: !!flatPerms.canManageUsers }
-           };
-        } else {
-           parsedPerms = flatPerms;
-        }
-      } catch(e) {
-        parsedPerms = {};
-      }
-    }
+    const parsedPerms = expandPermissions(user.role, user.permissions);
 
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, permissions: parsedPerms },

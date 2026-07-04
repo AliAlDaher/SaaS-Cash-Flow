@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Router } from 'express';
 import prisma from '../prisma';
 import { requireAuth, requirePermission } from '../middleware/auth';
@@ -37,7 +39,19 @@ router.post('/generate-monthly', requireAuth, requirePermission('expenses', 'cre
     
     const monthLabel = targetDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' });
     
-    const recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+    let recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+    const categoriesFilePath = path.join(__dirname, '../../categories.json');
+    if (fs.existsSync(categoriesFilePath)) {
+      try {
+        const fileData = fs.readFileSync(categoriesFilePath, 'utf-8');
+        const parsed = JSON.parse(fileData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          recurringCategories = parsed;
+        }
+      } catch (e) {
+        console.error('Failed to read categories.json in generate-monthly', e);
+      }
+    }
     
     const created = [];
     for (const category of recurringCategories) {
@@ -61,24 +75,46 @@ router.post('/generate-monthly', requireAuth, requirePermission('expenses', 'cre
   }
 });
 
-// Add new expense (created as Unpaid with paidAmount = 0, no bank account deduction on creation)
+// Add new expense (handling Paid/Unpaid status toggles and account deductions)
 router.post('/', requireAuth, requirePermission('expenses', 'create'), async (req, res) => {
-  const { category, amount, accountId, date, note } = req.body;
+  const { category, amount, accountId, date, note, status } = req.body;
   try {
-    const expense = await prisma.expense.create({
-      data: {
-        category,
-        amount,
-        paidAmount: 0, // Unpaid by default
-        accountId: parseInt(accountId),
-        date: new Date(date),
-        note
+    const parsedAmount = parseFloat(amount);
+    const parsedAccountId = parseInt(accountId);
+    
+    if (!category || amount === undefined || amount === null || isNaN(parsedAmount) || parsedAmount <= 0 || accountId === undefined || accountId === null || isNaN(parsedAccountId) || !date || isNaN(Date.parse(date))) {
+      return res.status(400).json({ error: 'category, positive amount, accountId, and a valid date are required' });
+    }
+    
+    const isPaid = status === 'paid';
+    
+    const expense = await prisma.$transaction(async (tx) => {
+      // 1. Deduct from account balance immediately if Paid
+      if (isPaid && parsedAmount > 0) {
+        await tx.account.update({
+          where: { id: parsedAccountId },
+          data: { balance: { decrement: parsedAmount } }
+        });
       }
+
+      // 2. Create the expense record
+      const created = await tx.expense.create({
+        data: {
+          category,
+          amount: parsedAmount,
+          paidAmount: isPaid ? parsedAmount : 0, // Unpaid or Paid
+          accountId: parsedAccountId,
+          date: new Date(date),
+          note
+        }
+      });
+      return created;
     });
-    res.json(expense);
-  } catch (err) {
+    
+    res.status(201).json(expense);
+  } catch (err: any) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to create expense' });
+    res.status(500).json({ error: err.message || 'Failed to create expense' });
   }
 });
 
@@ -121,110 +157,87 @@ router.patch('/:id/reminder', requireAuth, requirePermission('expenses', 'edit')
   }
 });
 
-// Pay/clear a planned expense (supports partial payments, deducts chosen bank account balance)
-router.patch('/:id/pay', requireAuth, requirePermission('expenses', 'edit'), async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { accountId, amount } = req.body;
-    
-    const result = await prisma.$transaction(async (tx) => {
-      const expense = await tx.expense.findUnique({ where: { id } });
-      if (!expense) throw new Error('Expense not found');
-      
-      const remaining = Number(expense.amount) - Number(expense.paidAmount);
-      if (remaining <= 0) throw new Error('Expense is already fully paid');
-      
-      // Default payment amount is the remaining balance
-      const paymentAmount = amount !== undefined ? Number(amount) : remaining;
-      if (paymentAmount <= 0) throw new Error('Payment amount must be greater than 0');
-      if (paymentAmount > remaining) throw new Error('Payment amount cannot exceed remaining amount');
-      
-      const parsedAccountId = parseInt(accountId);
-      
-      // 1. Deduct from the selected payment account balance
-      await tx.account.update({
-        where: { id: parsedAccountId },
-        data: { balance: { decrement: paymentAmount } }
-      });
-      
-      // 2. Increment paidAmount on the expense, update accountId, date, and set reminder to false if fully paid
-      const isFullyPaid = (Number(expense.paidAmount) + paymentAmount) >= Number(expense.amount);
-      
-      const updated = await tx.expense.update({
-        where: { id },
-        data: {
-          accountId: parsedAccountId,
-          paidAmount: { increment: paymentAmount },
-          date: new Date(), // Set date to actual payment execution date
-          reminder: isFullyPaid ? false : expense.reminder // Clear reminder checkmark only when fully paid
-        }
-      });
-      
-      return updated;
-    });
-    
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-router.patch('/:id(\\d+)/postpone', requireAuth, requirePermission('cheques', 'create'), async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { postponeDate, reason } = req.body;
-
-    const existing = await prisma.expense.findUnique({ where: { id } });
-    if (!existing) return res.status(404).json({ error: 'Expense not found' });
-
-
-    const originalDateStr = new Date(existing.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-    const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
-    const updatedNote = existing.note 
-      ? existing.note + " " + postponementLog
-      : postponementLog;
-
-    const expense = await prisma.expense.update({
-      where: { id },
-      data: {
-        date: new Date(postponeDate),
-        reminder: false, // Automatically clears the manager reminder!
-        note: updatedNote
-      }
-    });
-
-    res.json(expense);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-// Edit expense details (amount, note, etc.)
+// Edit expense details (handling Paid/Unpaid changes and adjusting account balances)
 router.patch('/:id(\\d+)', requireAuth, requirePermission('expenses', 'edit'), async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { category, amount, accountId, date, note } = req.body;
+    const { category, amount, accountId, date, note, status } = req.body;
     
-    const expense = await prisma.expense.findUnique({ where: { id } });
-    if (!expense) return res.status(404).json({ error: 'Expense not found' });
-    
-    if (amount !== undefined && parseFloat(amount) < Number(expense.paidAmount)) {
-      return res.status(400).json({ error: 'New amount cannot be less than the already paid amount' });
-    }
-    
-    const updated = await prisma.expense.update({
-      where: { id },
-      data: {
-        category,
-        amount: amount !== undefined ? parseFloat(amount) : undefined,
-        accountId: accountId !== undefined ? parseInt(accountId) : undefined,
-        date: date ? new Date(date) : undefined,
-        note
+    const updated = await prisma.$transaction(async (tx) => {
+      const expense = await tx.expense.findUnique({ where: { id } });
+      if (!expense) throw new Error('Expense not found');
+      
+      const oldAmount = Number(expense.amount);
+      const oldPaid = Number(expense.paidAmount);
+      const oldAccountId = expense.accountId;
+      
+      const newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
+      const newAccountId = accountId !== undefined ? parseInt(accountId) : oldAccountId;
+      
+      const isPaid = status !== undefined ? status === 'paid' : (oldPaid >= oldAmount);
+      const newPaid = isPaid ? newAmount : 0;
+      
+      // 1. Revert the old payment from the old account
+      if (oldPaid > 0) {
+        await tx.account.update({
+          where: { id: oldAccountId },
+          data: { balance: { increment: oldPaid } }
+        });
       }
+      
+      // 2. Apply the new payment to the new account
+      if (newPaid > 0) {
+        await tx.account.update({
+          where: { id: newAccountId },
+          data: { balance: { decrement: newPaid } }
+        });
+      }
+      
+      const updatedExpense = await tx.expense.update({
+        where: { id },
+        data: {
+          category,
+          amount: newAmount,
+          paidAmount: newPaid,
+          accountId: newAccountId,
+          date: date ? new Date(date) : undefined,
+          note
+        }
+      });
+      return updatedExpense;
     });
+    
     res.json(updated);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+const categoriesFilePath = path.join(__dirname, '../../categories.json');
+const defaultCategoriesList = ['إيجار', 'محروقات', 'رواتب', 'صيانة', 'كهرباء', 'مياه', 'إنترنت', 'مستلزمات مكتبية', 'تسويق', 'ضرائب', 'الضمان الاجتماعي', 'أخرى'];
+
+router.get('/categories', requireAuth, (req, res) => {
+  try {
+    if (fs.existsSync(categoriesFilePath)) {
+      const data = fs.readFileSync(categoriesFilePath, 'utf-8');
+      return res.json(JSON.parse(data));
+    }
+    res.json(defaultCategoriesList);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/categories', requireAuth, requirePermission('expenses', 'edit'), (req, res) => {
+  try {
+    const { categories } = req.body;
+    if (!Array.isArray(categories)) {
+      return res.status(400).json({ error: 'categories must be an array' });
+    }
+    fs.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+    res.json({ success: true, categories });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

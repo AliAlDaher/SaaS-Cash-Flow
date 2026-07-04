@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import cron from 'node-cron';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
@@ -15,6 +17,11 @@ import prisma from './prisma';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
+
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL ERROR: JWT_SECRET is not defined in the environment variables!');
+  process.exit(1);
+}
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -64,14 +71,44 @@ app.get('/health', (req: Request, res: Response) => {
 cron.schedule('0 0 1 * *', async () => {
   console.log('Running monthly expenses generation...');
   try {
-    const account = await prisma.account.findFirst();
+    const now = new Date();
+    // Idempotency check: prevent duplicate generation if cron runs twice or server restarts on the 1st
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    const existingCount = await prisma.expense.count({
+      where: {
+        note: { startsWith: 'Automated monthly expense for' },
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
+      }
+    });
+    if (existingCount > 0) {
+      console.log('Monthly expenses already generated for this month. Skipping.');
+      return;
+    }
+
+    // Deterministic account: Order by ID asc to ensure consistency across restarts
+    const account = await prisma.account.findFirst({ orderBy: { id: 'asc' } });
     if (!account) {
       console.log('No accounts found. Skipping monthly expenses.');
       return;
     }
 
-    const categories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
-    const now = new Date();
+    let categories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+    const categoriesFilePath = path.join(__dirname, '../categories.json');
+    if (fs.existsSync(categoriesFilePath)) {
+      try {
+        const fileData = fs.readFileSync(categoriesFilePath, 'utf-8');
+        const parsed = JSON.parse(fileData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          categories = parsed;
+        }
+      } catch (e) {
+        console.error('Failed to read categories.json in cron', e);
+      }
+    }
     
     for (const cat of categories) {
       await prisma.expense.create({

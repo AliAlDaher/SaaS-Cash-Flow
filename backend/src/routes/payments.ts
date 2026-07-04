@@ -169,7 +169,7 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
         effectiveBalance = effectiveBalance.plus(oldAmount);
       }
 
-      console.log(`Updating Payment ${id}: Old Account=${oldPayment.accountId}, New Account=${newAccountId}, Old Amount=${oldAmount}, New Amount=${newAmount}, Current Balance=${targetAccount.balance}, Effective Balance=${effectiveBalance}`);
+      // (debug log removed)
 
       if (effectiveBalance.lessThan(newAmount)) {
         throw new Error(`Insufficient balance in selected account (Available: ${effectiveBalance}, Required: ${newAmount})`);
@@ -201,7 +201,7 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
         data: {
           supplierId: newSupplierId,
           amount: newAmount,
-          paymentDate: new Date(paymentDate),
+          paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
           accountId: newAccountId,
           invoiceId: invoiceId ? parseInt(invoiceId) : null
         }
