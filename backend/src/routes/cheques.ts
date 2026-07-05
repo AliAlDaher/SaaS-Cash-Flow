@@ -1,3 +1,4 @@
+import { recalculateFIFO } from '../utils/fifo';
 import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -56,18 +57,37 @@ router.post('/', requirePermission('cheques', 'create'), async (req, res, next) 
       }
     }
 
-    const cheque = await prisma.cheque.create({
-      data: {
-        amount: new Decimal(amount),
-        chequeDate: new Date(chequeDate),
-        accountId: parsedAccountId,
-        supplierId: supplierId ? parseInt(supplierId) : null,
-        invoiceId: invoiceId ? parseInt(invoiceId) : null,
-        status: 'Pending',
-        note: note || null
+    const { deductFromBalance } = req.body;
+    const result = await prisma.$transaction(async (tx) => {
+      const cheque = await tx.cheque.create({
+        data: {
+          amount: new Decimal(amount),
+          chequeDate: new Date(chequeDate),
+          accountId: parsedAccountId,
+          supplierId: supplierId ? parseInt(supplierId) : null,
+          invoiceId: invoiceId ? parseInt(invoiceId) : null,
+          status: 'Pending',
+          note: note || null,
+          deductFromBalance: Boolean(deductFromBalance)
+        }
+      });
+
+      if (deductFromBalance && supplierId) {
+        await tx.payment.create({
+          data: {
+            supplierId: parseInt(supplierId),
+            amount: new Decimal(amount),
+            paymentDate: new Date(chequeDate),
+            accountId: parsedAccountId,
+            invoiceId: invoiceId ? parseInt(invoiceId) : null,
+            chequeId: cheque.id
+          }
+        });
+        await recalculateFIFO(tx, parseInt(supplierId));
       }
-    });
-    res.status(201).json(cheque);
+      return cheque;
+    }, { timeout: 30000 });
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }
@@ -103,7 +123,7 @@ router.patch('/:id/status', requirePermission('cheques', 'edit'), async (req, re
       });
       
       return updated;
-    });
+    }, { timeout: 30000 });
 
     res.json(result);
   } catch (error) {
@@ -115,7 +135,7 @@ router.patch('/:id/status', requirePermission('cheques', 'edit'), async (req, re
 router.put('/:id', requirePermission('cheques', 'edit'), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { amount, chequeDate, accountId, supplierId, invoiceId, note, status } = req.body;
+    const { amount, chequeDate, accountId, supplierId, invoiceId, note, status, deductFromBalance } = req.body;
 
     if (!accountId) {
       return res.status(400).json({ error: 'Account is required.' });
@@ -145,12 +165,18 @@ router.put('/:id', requirePermission('cheques', 'edit'), async (req, res, next) 
 
     const chequeId = parseInt(id);
     const result = await prisma.$transaction(async (tx) => {
-      const oldCheque = await tx.cheque.findUnique({ where: { id: chequeId } });
+      const oldCheque = await tx.cheque.findUnique({
+        where: { id: chequeId },
+        include: { payment: true }
+      });
       if (!oldCheque) throw new Error('Cheque not found');
 
       const targetStatus = status !== undefined ? status : oldCheque.status;
       const targetAmount = amount !== undefined ? new Decimal(amount) : oldCheque.amount;
       const targetAccountId = parsedAccountId;
+      const targetSupplierId = supplierId ? parseInt(supplierId) : null;
+      const targetInvoiceId = invoiceId ? parseInt(invoiceId) : null;
+      const targetDeductFromBalance = deductFromBalance !== undefined ? Boolean(deductFromBalance) : oldCheque.deductFromBalance;
 
       // Handle account balance adjustments if the cheque is Cleared
       if (oldCheque.status === 'Cleared') {
@@ -167,20 +193,67 @@ router.put('/:id', requirePermission('cheques', 'edit'), async (req, res, next) 
         });
       }
 
+      // Handle linked payment updates
+      if (oldCheque.payment) {
+        if (targetDeductFromBalance && targetSupplierId) {
+          await tx.payment.update({
+            where: { id: oldCheque.payment.id },
+            data: {
+              supplierId: targetSupplierId,
+              amount: targetAmount,
+              paymentDate: chequeDate ? new Date(chequeDate) : oldCheque.chequeDate,
+              accountId: targetAccountId,
+              invoiceId: targetInvoiceId
+            }
+          });
+
+          if (oldCheque.supplierId !== targetSupplierId) {
+            if (oldCheque.supplierId) {
+              await recalculateFIFO(tx, oldCheque.supplierId);
+            }
+            await recalculateFIFO(tx, targetSupplierId);
+          } else {
+            await recalculateFIFO(tx, targetSupplierId);
+          }
+        } else {
+          await tx.payment.delete({
+            where: { id: oldCheque.payment.id }
+          });
+          if (oldCheque.supplierId) {
+            await recalculateFIFO(tx, oldCheque.supplierId);
+          }
+        }
+      } else {
+        if (targetDeductFromBalance && targetSupplierId) {
+          await tx.payment.create({
+            data: {
+              supplierId: targetSupplierId,
+              amount: targetAmount,
+              paymentDate: chequeDate ? new Date(chequeDate) : oldCheque.chequeDate,
+              accountId: targetAccountId,
+              invoiceId: targetInvoiceId,
+              chequeId: chequeId
+            }
+          });
+          await recalculateFIFO(tx, targetSupplierId);
+        }
+      }
+
       const updated = await tx.cheque.update({
         where: { id: chequeId },
         data: {
           amount: targetAmount,
           chequeDate: chequeDate ? new Date(chequeDate) : oldCheque.chequeDate,
           accountId: targetAccountId,
-          supplierId: supplierId ? parseInt(supplierId) : null,
-          invoiceId: invoiceId ? parseInt(invoiceId) : null,
+          supplierId: targetSupplierId,
+          invoiceId: targetInvoiceId,
           note: note !== undefined ? note : oldCheque.note,
-          status: targetStatus
+          status: targetStatus,
+          deductFromBalance: targetDeductFromBalance
         }
       });
       return updated;
-    });
+    }, { timeout: 30000 });
 
     res.json(result);
   } catch (error: any) {
@@ -193,8 +266,18 @@ router.delete('/:id', requirePermission('cheques', 'delete'), async (req, res, n
   try {
     const { id } = req.params;
     await prisma.$transaction(async (tx) => {
-      const cheque = await tx.cheque.findUnique({ where: { id: parseInt(id) } });
+      const cheque = await tx.cheque.findUnique({
+        where: { id: parseInt(id) },
+        include: { payment: true }
+      });
       if (!cheque) throw new Error('Cheque not found');
+
+      if (cheque.payment) {
+        await tx.payment.delete({ where: { id: cheque.payment.id } });
+        if (cheque.supplierId) {
+          await recalculateFIFO(tx, cheque.supplierId);
+        }
+      }
       
       if (cheque.status === 'Cleared') {
         await tx.account.update({
@@ -203,7 +286,7 @@ router.delete('/:id', requirePermission('cheques', 'delete'), async (req, res, n
         });
       }
       await tx.cheque.delete({ where: { id: parseInt(id) } });
-    });
+    }, { timeout: 30000 });
     res.status(204).send();
   } catch (error) {
     next(error);

@@ -8,18 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../prisma"));
 const library_1 = require("@prisma/client/runtime/library");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
 router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, type, balance } = req.body;
-        const account = yield prisma.account.create({
+        const account = yield prisma_1.default.account.create({
             data: {
                 name,
                 type,
@@ -34,7 +36,7 @@ router.post('/', (0, auth_1.requirePermission)('accounts', 'create'), (req, res,
 }));
 router.get('/', (0, auth_1.requirePermission)('accounts', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const accounts = yield prisma.account.findMany({ orderBy: { id: "desc" } });
+        const accounts = yield prisma_1.default.account.findMany({ orderBy: { id: "desc" }, include: { adjustments: true } });
         res.json(accounts);
     }
     catch (error) {
@@ -45,7 +47,7 @@ router.patch('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accoun
     const { adjustmentId } = req.params;
     const { note } = req.body;
     try {
-        const updated = yield prisma.accountAdjustment.update({
+        const updated = yield prisma_1.default.accountAdjustment.update({
             where: { id: parseInt(adjustmentId) },
             data: { note }
         });
@@ -58,7 +60,7 @@ router.patch('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accoun
 router.delete('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accounts', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { adjustmentId } = req.params;
     try {
-        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const adjustment = yield tx.accountAdjustment.findUnique({
                 where: { id: parseInt(adjustmentId) }
             });
@@ -83,7 +85,7 @@ router.delete('/adjustments/:adjustmentId', (0, auth_1.requirePermission)('accou
 }));
 router.get('/:id', (0, auth_1.requirePermission)('accounts', 'view'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const account = yield prisma.account.findUnique({
+        const account = yield prisma_1.default.account.findUnique({
             where: { id: parseInt(req.params.id) },
             include: { adjustments: { orderBy: { createdAt: 'desc' } } }
         });
@@ -101,7 +103,7 @@ router.delete('/:id', (0, auth_1.requirePermission)('accounts', 'delete'), (req,
         return res.status(400).json({ error: 'Invalid account ID' });
     }
     try {
-        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const paymentCount = yield tx.payment.count({ where: { accountId: id } });
             const collectionCount = yield tx.collection.count({ where: { accountId: id } });
             const adjustmentCount = yield tx.accountAdjustment.count({ where: { accountId: id } });
@@ -132,7 +134,7 @@ router.post('/:id/reconcile', (0, auth_1.requirePermission)('accounts', 'edit'),
         const { id } = req.params;
         const { actualBalance, note } = req.body;
         const accountId = parseInt(id);
-        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const account = yield tx.account.findUnique({ where: { id: accountId } });
             if (!account)
                 throw new Error('Account not found');

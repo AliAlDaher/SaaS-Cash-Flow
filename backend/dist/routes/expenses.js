@@ -8,16 +8,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../prisma"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 // Get all expenses
 router.get('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'view'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const expenses = yield prisma.expense.findMany({
+        const expenses = yield prisma_1.default.expense.findMany({
             include: { account: true },
             orderBy: { date: 'desc' }
         });
@@ -27,32 +31,100 @@ router.get('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'v
         res.status(500).json({ error: 'Failed to fetch expenses' });
     }
 }));
-// Add new expense (created as Unpaid with paidAmount = 0, no bank account deduction on creation)
-router.post('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { category, amount, accountId, date, note } = req.body;
+// Generate monthly recurring expenses on demand (e.g. before the month starts)
+router.post('/generate-monthly', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const expense = yield prisma.expense.create({
-            data: {
-                category,
-                amount,
-                paidAmount: 0, // Unpaid by default
-                accountId: parseInt(accountId),
-                date: new Date(date),
-                note
+        const { accountId, targetMonth } = req.body; // targetMonth: "2026-06" (YYYY-MM)
+        if (!accountId)
+            return res.status(400).json({ error: 'accountId is required' });
+        // Parse target month or default to next month
+        let targetDate;
+        if (targetMonth) {
+            targetDate = new Date(targetMonth + '-01');
+        }
+        else {
+            const now = new Date();
+            targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        }
+        const monthLabel = targetDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' });
+        let recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+        const categoriesFilePath = path_1.default.join(__dirname, '../../categories.json');
+        if (fs_1.default.existsSync(categoriesFilePath)) {
+            try {
+                const fileData = fs_1.default.readFileSync(categoriesFilePath, 'utf-8');
+                const parsed = JSON.parse(fileData);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    recurringCategories = parsed;
+                }
             }
-        });
-        res.json(expense);
+            catch (e) {
+                console.error('Failed to read categories.json in generate-monthly', e);
+            }
+        }
+        const created = [];
+        for (const category of recurringCategories) {
+            const expense = yield prisma_1.default.expense.create({
+                data: {
+                    category,
+                    amount: 0,
+                    paidAmount: 0,
+                    accountId: parseInt(accountId),
+                    date: targetDate,
+                    note: 'مصروف شهري - ' + monthLabel
+                }
+            });
+            created.push(expense);
+        }
+        res.json({ success: true, created });
     }
     catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Failed to create expense' });
+        res.status(500).json({ error: err.message });
+    }
+}));
+// Add new expense (handling Paid/Unpaid status toggles and account deductions)
+router.post('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { category, amount, accountId, date, note, status } = req.body;
+    try {
+        const parsedAmount = parseFloat(amount);
+        const parsedAccountId = parseInt(accountId);
+        if (!category || amount === undefined || amount === null || isNaN(parsedAmount) || parsedAmount <= 0 || accountId === undefined || accountId === null || isNaN(parsedAccountId) || !date || isNaN(Date.parse(date))) {
+            return res.status(400).json({ error: 'category, positive amount, accountId, and a valid date are required' });
+        }
+        const isPaid = status === 'paid';
+        const expense = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+            // 1. Deduct from account balance immediately if Paid
+            if (isPaid && parsedAmount > 0) {
+                yield tx.account.update({
+                    where: { id: parsedAccountId },
+                    data: { balance: { decrement: parsedAmount } }
+                });
+            }
+            // 2. Create the expense record
+            const created = yield tx.expense.create({
+                data: {
+                    category,
+                    amount: parsedAmount,
+                    paidAmount: isPaid ? parsedAmount : 0, // Unpaid or Paid
+                    accountId: parsedAccountId,
+                    date: new Date(date),
+                    note
+                }
+            });
+            return created;
+        }));
+        res.status(201).json(expense);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message || 'Failed to create expense' });
     }
 }));
 // Delete expense (restores any actually paid amount back to the account balance)
 router.delete('/:id', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'delete'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = parseInt(req.params.id);
-        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const expense = yield tx.expense.findUnique({ where: { id } });
             if (!expense)
                 throw new Error('Expense not found');
@@ -76,7 +148,7 @@ router.patch('/:id/reminder', auth_1.requireAuth, (0, auth_1.requirePermission)(
     try {
         const id = parseInt(req.params.id);
         const { reminder } = req.body;
-        const updated = yield prisma.expense.update({
+        const updated = yield prisma_1.default.expense.update({
             where: { id },
             data: { reminder: Boolean(reminder) }
         });
@@ -86,74 +158,80 @@ router.patch('/:id/reminder', auth_1.requireAuth, (0, auth_1.requirePermission)(
         res.status(500).json({ error: err.message });
     }
 }));
-// Pay/clear a planned expense (supports partial payments, deducts chosen bank account balance)
-router.patch('/:id/pay', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Edit expense details (handling Paid/Unpaid changes and adjusting account balances)
+router.patch('/:id(\\d+)', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const id = parseInt(req.params.id);
-        const { accountId, amount } = req.body;
-        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const { category, amount, accountId, date, note, status } = req.body;
+        const updated = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const expense = yield tx.expense.findUnique({ where: { id } });
             if (!expense)
                 throw new Error('Expense not found');
-            const remaining = Number(expense.amount) - Number(expense.paidAmount);
-            if (remaining <= 0)
-                throw new Error('Expense is already fully paid');
-            // Default payment amount is the remaining balance
-            const paymentAmount = amount !== undefined ? Number(amount) : remaining;
-            if (paymentAmount <= 0)
-                throw new Error('Payment amount must be greater than 0');
-            if (paymentAmount > remaining)
-                throw new Error('Payment amount cannot exceed remaining amount');
-            const parsedAccountId = parseInt(accountId);
-            // 1. Deduct from the selected payment account balance
-            yield tx.account.update({
-                where: { id: parsedAccountId },
-                data: { balance: { decrement: paymentAmount } }
-            });
-            // 2. Increment paidAmount on the expense, update accountId, date, and set reminder to false if fully paid
-            const isFullyPaid = (Number(expense.paidAmount) + paymentAmount) >= Number(expense.amount);
-            const updated = yield tx.expense.update({
+            const oldAmount = Number(expense.amount);
+            const oldPaid = Number(expense.paidAmount);
+            const oldAccountId = expense.accountId;
+            const newAmount = amount !== undefined ? parseFloat(amount) : oldAmount;
+            const newAccountId = accountId !== undefined ? parseInt(accountId) : oldAccountId;
+            const isPaid = status !== undefined ? status === 'paid' : (oldPaid >= oldAmount);
+            const newPaid = isPaid ? newAmount : 0;
+            // 1. Revert the old payment from the old account
+            if (oldPaid > 0) {
+                yield tx.account.update({
+                    where: { id: oldAccountId },
+                    data: { balance: { increment: oldPaid } }
+                });
+            }
+            // 2. Apply the new payment to the new account
+            if (newPaid > 0) {
+                yield tx.account.update({
+                    where: { id: newAccountId },
+                    data: { balance: { decrement: newPaid } }
+                });
+            }
+            const updatedExpense = yield tx.expense.update({
                 where: { id },
                 data: {
-                    accountId: parsedAccountId,
-                    paidAmount: { increment: paymentAmount },
-                    date: new Date(), // Set date to actual payment execution date
-                    reminder: isFullyPaid ? false : expense.reminder // Clear reminder checkmark only when fully paid
+                    category,
+                    amount: newAmount,
+                    paidAmount: newPaid,
+                    accountId: newAccountId,
+                    date: date ? new Date(date) : undefined,
+                    note
                 }
             });
-            return updated;
+            return updatedExpense;
         }));
-        res.json(result);
+        res.json(updated);
     }
     catch (err) {
         res.status(500).json({ error: err.message });
     }
 }));
-router.patch('/:id/postpone', auth_1.requireAuth, (0, auth_1.requirePermission)('cheques', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const categoriesFilePath = path_1.default.join(__dirname, '../../categories.json');
+const defaultCategoriesList = ['إيجار', 'محروقات', 'رواتب', 'صيانة', 'كهرباء', 'مياه', 'إنترنت', 'مستلزمات مكتبية', 'تسويق', 'ضرائب', 'الضمان الاجتماعي', 'أخرى'];
+router.get('/categories', auth_1.requireAuth, (req, res) => {
     try {
-        const id = parseInt(req.params.id);
-        const { postponeDate, reason } = req.body;
-        const existing = yield prisma.expense.findUnique({ where: { id } });
-        if (!existing)
-            return res.status(404).json({ error: 'Expense not found' });
-        const originalDateStr = new Date(existing.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-        const targetDateStr = new Date(postponeDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-        const postponementLog = "[Postponed from " + originalDateStr + " to " + targetDateStr + (reason ? ": " + reason : "") + "]";
-        const updatedNote = existing.note
-            ? existing.note + " " + postponementLog
-            : postponementLog;
-        const expense = yield prisma.expense.update({
-            where: { id },
-            data: {
-                date: new Date(postponeDate),
-                reminder: false, // Automatically clears the manager reminder!
-                note: updatedNote
-            }
-        });
-        res.json(expense);
+        if (fs_1.default.existsSync(categoriesFilePath)) {
+            const data = fs_1.default.readFileSync(categoriesFilePath, 'utf-8');
+            return res.json(JSON.parse(data));
+        }
+        res.json(defaultCategoriesList);
     }
     catch (err) {
         res.status(500).json({ error: err.message });
     }
-}));
+});
+router.post('/categories', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'edit'), (req, res) => {
+    try {
+        const { categories } = req.body;
+        if (!Array.isArray(categories)) {
+            return res.status(400).json({ error: 'categories must be an array' });
+        }
+        fs_1.default.writeFileSync(categoriesFilePath, JSON.stringify(categories, null, 2), 'utf-8');
+        res.json({ success: true, categories });
+    }
+    catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 exports.default = router;

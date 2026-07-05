@@ -1,3 +1,4 @@
+import { recalculateFIFO } from '../utils/fifo';
 import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../prisma';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -8,75 +9,7 @@ const router = Router();
 
 router.use(requireAuth);
 
-async function recalculateFIFO(tx: any, supplierId: number) {
-  // Reset all invoices paidAmount to 0
-  await tx.invoice.updateMany({
-    where: { supplierId },
-    data: { paidAmount: 0 }
-  });
 
-  const invoices = await tx.invoice.findMany({
-    where: { supplierId },
-    orderBy: { createdAt: 'asc' }
-  });
-
-  const payments = await tx.payment.findMany({
-    where: { supplierId },
-    orderBy: [{ paymentDate: 'asc' }, { createdAt: 'asc' }]
-  });
-
-  const invoicePaidAmounts: Record<number, Decimal> = {};
-  invoices.forEach((inv: any) => invoicePaidAmounts[inv.id] = new Decimal(0));
-
-  let unlinkedPaymentsTotal = new Decimal(0);
-
-  for (const p of payments) {
-    const amount = new Decimal(p.amount);
-    if (p.invoiceId && invoicePaidAmounts[p.invoiceId] !== undefined) {
-      invoicePaidAmounts[p.invoiceId] = invoicePaidAmounts[p.invoiceId].plus(amount);
-    } else {
-      unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(amount);
-    }
-  }
-
-  for (const inv of invoices) {
-    const invAmount = new Decimal(inv.amount);
-    let specificPaid = invoicePaidAmounts[inv.id];
-    let remainingAmount = invAmount.minus(specificPaid);
-    
-    if (remainingAmount.isNegative()) {
-      unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(remainingAmount.abs());
-      specificPaid = invAmount;
-      remainingAmount = new Decimal(0);
-    }
-
-    let fifoApplied = new Decimal(0);
-    if (unlinkedPaymentsTotal.greaterThan(0) && remainingAmount.greaterThan(0)) {
-      fifoApplied = Decimal.min(remainingAmount, unlinkedPaymentsTotal);
-      unlinkedPaymentsTotal = unlinkedPaymentsTotal.minus(fifoApplied);
-    }
-
-    const newPaidAmount = specificPaid.plus(fifoApplied);
-    const updateData: any = { paidAmount: newPaidAmount };
-    
-    if (inv.reminder) {
-      const baseline = new Decimal(inv.reminderBaseline || 0);
-      const requested = inv.reminderAmount ? new Decimal(inv.reminderAmount) : new Decimal(inv.amount).minus(baseline);
-      const target = baseline.plus(requested);
-      
-      if (newPaidAmount.greaterThanOrEqualTo(target)) {
-        updateData.reminder = false;
-        updateData.reminderAmount = null;
-        updateData.reminderBaseline = 0;
-      }
-    }
-
-    await tx.invoice.update({
-      where: { id: inv.id },
-      data: updateData
-    });
-  }
-}
 
 router.post('/', requirePermission('payments', 'create'), async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -153,6 +86,9 @@ router.put('/:id', requirePermission('payments', 'edit'), async (req: Request, r
     const updated = await prisma.$transaction(async (tx) => {
       const oldPayment = await tx.payment.findUnique({ where: { id: parseInt(id) } });
       if (!oldPayment) throw new Error('Payment not found');
+      if (oldPayment.chequeId) {
+        throw new Error('Cannot modify a payment linked to a cheque. Please manage it via the Cheques tab.');
+      }
 
       const newAmount = new Decimal(amount);
       const oldAmount = new Decimal(oldPayment.amount);
@@ -259,6 +195,9 @@ router.delete('/:id', requirePermission('payments', 'delete'), async (req: Reque
     await prisma.$transaction(async (tx) => {
       const payment = await tx.payment.findUnique({ where: { id: parseInt(id) } });
       if (!payment) throw new Error('Payment not found');
+      if (payment.chequeId) {
+        throw new Error('Cannot delete a payment linked to a cheque. Please manage it via the Cheques tab.');
+      }
 
       await tx.account.update({
         where: { id: payment.accountId },

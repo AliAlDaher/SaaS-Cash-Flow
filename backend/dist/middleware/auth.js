@@ -11,7 +11,7 @@ const requireAuth = (req, res, next) => {
         return res.status(401).json({ error: 'Unauthorized: No token provided' });
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+        const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
     }

@@ -19,81 +19,24 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const fifo_1 = require("../utils/fifo");
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../prisma"));
 const library_1 = require("@prisma/client/runtime/library");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
-function recalculateFIFO(tx, supplierId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Reset all invoices paidAmount to 0
-        yield tx.invoice.updateMany({
-            where: { supplierId },
-            data: { paidAmount: 0 }
-        });
-        const invoices = yield tx.invoice.findMany({
-            where: { supplierId },
-            orderBy: { createdAt: 'asc' }
-        });
-        const payments = yield tx.payment.findMany({
-            where: { supplierId },
-            orderBy: [{ paymentDate: 'asc' }, { createdAt: 'asc' }]
-        });
-        const invoicePaidAmounts = {};
-        invoices.forEach((inv) => invoicePaidAmounts[inv.id] = new library_1.Decimal(0));
-        let unlinkedPaymentsTotal = new library_1.Decimal(0);
-        for (const p of payments) {
-            const amount = new library_1.Decimal(p.amount);
-            if (p.invoiceId && invoicePaidAmounts[p.invoiceId] !== undefined) {
-                invoicePaidAmounts[p.invoiceId] = invoicePaidAmounts[p.invoiceId].plus(amount);
-            }
-            else {
-                unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(amount);
-            }
-        }
-        for (const inv of invoices) {
-            const invAmount = new library_1.Decimal(inv.amount);
-            let specificPaid = invoicePaidAmounts[inv.id];
-            let remainingAmount = invAmount.minus(specificPaid);
-            if (remainingAmount.isNegative()) {
-                unlinkedPaymentsTotal = unlinkedPaymentsTotal.plus(remainingAmount.abs());
-                specificPaid = invAmount;
-                remainingAmount = new library_1.Decimal(0);
-            }
-            let fifoApplied = new library_1.Decimal(0);
-            if (unlinkedPaymentsTotal.greaterThan(0) && remainingAmount.greaterThan(0)) {
-                fifoApplied = library_1.Decimal.min(remainingAmount, unlinkedPaymentsTotal);
-                unlinkedPaymentsTotal = unlinkedPaymentsTotal.minus(fifoApplied);
-            }
-            const newPaidAmount = specificPaid.plus(fifoApplied);
-            const updateData = { paidAmount: newPaidAmount };
-            if (inv.reminder) {
-                const baseline = new library_1.Decimal(inv.reminderBaseline || 0);
-                const requested = inv.reminderAmount ? new library_1.Decimal(inv.reminderAmount) : new library_1.Decimal(inv.amount).minus(baseline);
-                const target = baseline.plus(requested);
-                if (newPaidAmount.greaterThanOrEqualTo(target)) {
-                    updateData.reminder = false;
-                    updateData.reminderAmount = null;
-                    updateData.reminderBaseline = 0;
-                }
-            }
-            yield tx.invoice.update({
-                where: { id: inv.id },
-                data: updateData
-            });
-        }
-    });
-}
 router.post('/', (0, auth_1.requirePermission)('payments', 'create'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { supplierId, amount, paymentDate, accountId, invoiceId, allocations } = req.body;
         if (!accountId) {
             return res.status(400).json({ error: 'accountId is required' });
         }
-        const result = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const result = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const baseDate = paymentDate ? new Date(paymentDate) : new Date();
             const parsedAccountId = parseInt(accountId);
             const totalAmount = new library_1.Decimal(amount);
@@ -135,9 +78,9 @@ router.post('/', (0, auth_1.requirePermission)('payments', 'create'), (req, res,
                 where: { id: parsedAccountId },
                 data: { balance: { decrement: totalAmount } }
             });
-            yield recalculateFIFO(tx, parseInt(supplierId));
+            yield (0, fifo_1.recalculateFIFO)(tx, parseInt(supplierId));
             return { message: 'Payment processed successfully' };
-        }));
+        }), { timeout: 30000 });
         res.status(201).json(result);
     }
     catch (error) {
@@ -151,10 +94,13 @@ router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res,
         if (!accountId) {
             return res.status(400).json({ error: 'accountId is required' });
         }
-        const updated = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const updated = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const oldPayment = yield tx.payment.findUnique({ where: { id: parseInt(id) } });
             if (!oldPayment)
                 throw new Error('Payment not found');
+            if (oldPayment.chequeId) {
+                throw new Error('Cannot modify a payment linked to a cheque. Please manage it via the Cheques tab.');
+            }
             const newAmount = new library_1.Decimal(amount);
             const oldAmount = new library_1.Decimal(oldPayment.amount);
             const newAccountId = parseInt(accountId);
@@ -168,7 +114,7 @@ router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res,
             if (oldPayment.accountId === newAccountId) {
                 effectiveBalance = effectiveBalance.plus(oldAmount);
             }
-            console.log(`Updating Payment ${id}: Old Account=${oldPayment.accountId}, New Account=${newAccountId}, Old Amount=${oldAmount}, New Amount=${newAmount}, Current Balance=${targetAccount.balance}, Effective Balance=${effectiveBalance}`);
+            // (debug log removed)
             if (effectiveBalance.lessThan(newAmount)) {
                 throw new Error(`Insufficient balance in selected account (Available: ${effectiveBalance}, Required: ${newAmount})`);
             }
@@ -198,19 +144,19 @@ router.put('/:id', (0, auth_1.requirePermission)('payments', 'edit'), (req, res,
                 data: {
                     supplierId: newSupplierId,
                     amount: newAmount,
-                    paymentDate: new Date(paymentDate),
+                    paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
                     accountId: newAccountId,
                     invoiceId: invoiceId ? parseInt(invoiceId) : null
                 }
             });
             if (!oldAmount.equals(newAmount) || oldPayment.supplierId !== newSupplierId || oldPayment.invoiceId !== (invoiceId ? parseInt(invoiceId) : null)) {
                 if (oldPayment.supplierId !== newSupplierId) {
-                    yield recalculateFIFO(tx, oldPayment.supplierId);
+                    yield (0, fifo_1.recalculateFIFO)(tx, oldPayment.supplierId);
                 }
-                yield recalculateFIFO(tx, newSupplierId);
+                yield (0, fifo_1.recalculateFIFO)(tx, newSupplierId);
             }
             return updatedPayment;
-        }));
+        }), { timeout: 30000 });
         res.json(updated);
     }
     catch (error) {
@@ -221,7 +167,7 @@ router.get('/', (0, auth_1.requirePermission)('payments', 'view'), (req, res, ne
     var _a, _b, _c, _d;
     try {
         const hasAccountsView = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'admin' || ((_d = (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b.permissions) === null || _c === void 0 ? void 0 : _c.accounts) === null || _d === void 0 ? void 0 : _d.view);
-        const payments = yield prisma.payment.findMany({
+        const payments = yield prisma_1.default.payment.findMany({
             orderBy: { id: "desc" },
             include: {
                 account: true,
@@ -247,17 +193,20 @@ router.get('/', (0, auth_1.requirePermission)('payments', 'view'), (req, res, ne
 router.delete('/:id', (0, auth_1.requirePermission)('payments', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const payment = yield tx.payment.findUnique({ where: { id: parseInt(id) } });
             if (!payment)
                 throw new Error('Payment not found');
+            if (payment.chequeId) {
+                throw new Error('Cannot delete a payment linked to a cheque. Please manage it via the Cheques tab.');
+            }
             yield tx.account.update({
                 where: { id: payment.accountId },
                 data: { balance: { increment: payment.amount } }
             });
             yield tx.payment.delete({ where: { id: parseInt(id) } });
-            yield recalculateFIFO(tx, payment.supplierId);
-        }));
+            yield (0, fifo_1.recalculateFIFO)(tx, payment.supplierId);
+        }), { timeout: 30000 });
         res.status(204).send();
     }
     catch (error) {

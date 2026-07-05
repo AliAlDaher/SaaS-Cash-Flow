@@ -19,13 +19,15 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const client_1 = require("@prisma/client");
+const prisma_1 = __importDefault(require("../prisma"));
 const library_1 = require("@prisma/client/runtime/library");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
-const prisma = new client_1.PrismaClient();
 router.use(auth_1.requireAuth);
 const getExchangeRate = (currency) => {
     if (currency === 'SAR')
@@ -39,7 +41,7 @@ router.post('/', (0, auth_1.requirePermission)('collections', 'create'), (req, r
         // Ignore any exchangeRate sent from frontend
         const exchangeRate = getExchangeRate(currency);
         const amountInBase = new library_1.Decimal(amount).div(exchangeRate);
-        const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const collection = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const newCollection = yield tx.collection.create({
                 data: {
                     amount: new library_1.Decimal(amount),
@@ -76,7 +78,7 @@ router.put('/:id', (0, auth_1.requirePermission)('collections', 'edit'), (req, r
         // Ignore any exchangeRate sent from frontend
         const exchangeRate = getExchangeRate(currency);
         const newAmountInBase = new library_1.Decimal(amount).div(exchangeRate);
-        const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const collection = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const existing = yield tx.collection.findUnique({ where: { id: parseInt(id) } });
             if (!existing)
                 throw new Error('Collection not found');
@@ -122,7 +124,7 @@ router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res,
     var _a, _b, _c, _d;
     try {
         const hasAccountsView = ((_a = req.user) === null || _a === void 0 ? void 0 : _a.role) === 'admin' || ((_d = (_c = (_b = req.user) === null || _b === void 0 ? void 0 : _b.permissions) === null || _c === void 0 ? void 0 : _c.accounts) === null || _d === void 0 ? void 0 : _d.view);
-        const collections = yield prisma.collection.findMany({
+        const collections = yield prisma_1.default.collection.findMany({
             orderBy: { id: "desc" },
             include: { account: true }
         });
@@ -145,7 +147,7 @@ router.get('/', (0, auth_1.requirePermission)('collections', 'view'), (req, res,
 router.delete('/:id', (0, auth_1.requirePermission)('collections', 'delete'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const collection = yield tx.collection.findUnique({ where: { id: parseInt(id) } });
             if (!collection)
                 throw new Error('Collection not found');
@@ -168,7 +170,7 @@ router.delete('/:id', (0, auth_1.requirePermission)('collections', 'delete'), (r
 router.patch('/:id/status', (0, auth_1.requirePermission)('collections', 'edit'), (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const collection = yield prisma.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+        const collection = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
             const existing = yield tx.collection.findUnique({ where: { id: parseInt(id) } });
             if (!existing)
                 throw new Error('Collection not found');

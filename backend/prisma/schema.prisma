@@ -54,9 +54,11 @@ model Payment {
   paymentDate DateTime @default(now())
   accountId   Int
   invoiceId   Int?
+  chequeId    Int?     @unique
   account     Account  @relation(fields: [accountId], references: [id])
   supplier    Supplier @relation(fields: [supplierId], references: [id])
   invoice     Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  cheque      Cheque?  @relation(fields: [chequeId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -107,11 +109,13 @@ model Cheque {
   supplierId  Int?
   invoiceId   Int?
   note        String?
+  deductFromBalance Boolean @default(false)
   createdAt   DateTime @default(now())
   
   account     Account   @relation(fields: [accountId], references: [id])
   supplier    Supplier? @relation(fields: [supplierId], references: [id])
   invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
+  payment     Payment?
 }
 model Expense {
   id          Int      @id @default(autoincrement())

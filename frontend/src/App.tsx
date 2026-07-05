@@ -120,6 +120,7 @@ type Cheque = {
   supplier?: Supplier
   invoice?: Invoice
   note?: string
+  deductFromBalance?: boolean
   createdAt: string
 }
 
@@ -1266,7 +1267,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                         const pages = [];
                         const maxButtons = 5;
                         let start = Math.max(1, chequePage - Math.floor(maxButtons / 2));
-                        let end = Math.min(totalChequePages, start + maxButtons - 1);
+                        const end = Math.min(totalChequePages, start + maxButtons - 1);
                         if (end - start + 1 < maxButtons) {
                           start = Math.max(1, end - maxButtons + 1);
                         }
@@ -1415,7 +1416,7 @@ function DashboardTab({ suppliers, invoices, accounts, collections, cheques, exp
                         const pages = [];
                         const maxButtons = 5;
                         let start = Math.max(1, upcomingPage - Math.floor(maxButtons / 2));
-                        let end = Math.min(totalUpcomingPages, start + maxButtons - 1);
+                        const end = Math.min(totalUpcomingPages, start + maxButtons - 1);
                         if (end - start + 1 < maxButtons) {
                           start = Math.max(1, end - maxButtons + 1);
                         }
@@ -2105,7 +2106,7 @@ function InvoicesTab({ suppliers, invoices, onRefresh, onDelete, onSupplierClick
               const pages = [];
               const maxButtons = 5;
               let start = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-              let end = Math.min(totalPages, start + maxButtons - 1);
+              const end = Math.min(totalPages, start + maxButtons - 1);
               if (end - start + 1 < maxButtons) {
                 start = Math.max(1, end - maxButtons + 1);
               }
@@ -2433,23 +2434,36 @@ function PaymentsTab({ suppliers, payments, accounts, invoices, onRefresh, onDel
                   </td>
                   <td className="px-6 py-4 text-slate-500">{accountName}</td>
                   <td className="px-6 py-4">
-                    {payment.invoiceId ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100">
-                        Invoice #{payment.invoiceId}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                        Auto (FIFO)
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {payment.invoiceId ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100 w-fit">
+                          Invoice #{payment.invoiceId}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200 w-fit">
+                          Auto (FIFO)
+                        </span>
+                      )}
+                      {(payment as any).chequeId && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 w-fit">
+                          Linked to Cheque #{(payment as any).chequeId}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right font-bold text-rose-600">
                     <FormatCurrency amount={payment.amount} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{payment.paymentDate ? format(new Date(payment.paymentDate), 'yyyy-MM-dd') : '-'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    {(user?.role === 'admin' || user?.permissions?.payments?.edit) && <button onClick={() => handleEditClick(payment)} className="text-sky-600 hover:text-sky-900 font-medium mr-3">Edit</button>}
-                    {(user?.role === 'admin' || user?.permissions?.payments?.delete) && <button onClick={() => onDelete(payment.id)} className="text-rose-600 hover:text-rose-900 font-medium">Delete</button>}
+                    {(payment as any).chequeId ? (
+                      <span className="text-xs text-slate-400 font-normal italic">Managed via Cheques tab</span>
+                    ) : (
+                      <>
+                        {(user?.role === 'admin' || user?.permissions?.payments?.edit) && <button onClick={() => handleEditClick(payment)} className="text-sky-600 hover:text-sky-900 font-medium mr-3">Edit</button>}
+                        {(user?.role === 'admin' || user?.permissions?.payments?.delete) && <button onClick={() => onDelete(payment.id)} className="text-rose-600 hover:text-rose-900 font-medium">Delete</button>}
+                      </>
+                    )}
                   </td>
                 </tr>
               )
@@ -3470,6 +3484,7 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
   const [supplierId, setSupplierId] = useState('')
   const [invoiceId, setInvoiceId] = useState('')
   const [chequeNumber, setChequeNumber] = useState('')
+  const [deductFromBalance, setDeductFromBalance] = useState(false)
   const [editingCheque, setEditingCheque] = useState<Cheque | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -3489,7 +3504,8 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
           accountId, 
           supplierId: supplierId || null, 
           invoiceId: invoiceId || null,
-          note: formatNoteWithChequeNumber("", chequeNumber)
+          note: formatNoteWithChequeNumber("", chequeNumber),
+          deductFromBalance
         })
       })
       if (!res.ok) throw new Error('Failed to create cheque')
@@ -3498,6 +3514,7 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
       setSupplierId('')
       setInvoiceId('')
       setChequeNumber('')
+      setDeductFromBalance(false)
       onRefresh()
     } catch (err: any) {
       setFormError(err.message)
@@ -3579,6 +3596,10 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
               <label className="block text-sm font-medium text-slate-700 mb-1">Invoice ID (Optional)</label>
               <input type="number" value={invoiceId} onChange={e => setInvoiceId(e.target.value)} className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:ring-2 focus:ring-sky-500" placeholder="" />
             </div>
+            <div className="flex items-center gap-2 lg:col-span-3 mb-2">
+              <input type="checkbox" id="deductFromBalance" checked={deductFromBalance} onChange={e => setDeductFromBalance(e.target.checked)} className="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500" />
+              <label htmlFor="deductFromBalance" className="text-sm font-medium text-slate-700 select-none">Deduct from Outstanding Balance</label>
+            </div>
             <div className="flex items-end lg:col-span-3">
               <button 
                 type="submit" 
@@ -3616,6 +3637,7 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
               <th className="px-6 py-4">Supplier</th>
               <th className="px-6 py-4">Account</th>
               <th className="px-6 py-4 text-right">Amount</th>
+              <th className="px-6 py-4 text-center">Deduct Balance</th>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
@@ -3645,6 +3667,13 @@ function ChequesTab({ suppliers, accounts, cheques, onRefresh, onDelete }: { sup
                   </td>
                   <td className="px-6 py-4 text-slate-500">{account?.name || '-'}</td>
                   <td className="px-6 py-4 text-right font-bold text-slate-900"><FormatCurrency amount={cheque.amount} /></td>
+                  <td className="px-6 py-4 text-center">
+                    {cheque.deductFromBalance ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">Yes</span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-400 border border-slate-200">No</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                       cheque.status === 'Pending' ? 'bg-amber-50 text-amber-700 border-amber-200' :
@@ -4196,6 +4225,7 @@ function EditChequeModal({ isOpen, onClose, cheque, accounts, suppliers, onConfi
   const [invoiceId, setInvoiceId] = useState(cheque.invoiceId?.toString() || '')
   const [chequeNumber, setChequeNumber] = useState(getChequeNumber(cheque.note))
   const [cleanNote, setCleanNote] = useState(cleanNoteOfChequeNumber(cheque.note))
+  const [deductFromBalance, setDeductFromBalance] = useState(cheque.deductFromBalance || false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -4211,7 +4241,8 @@ function EditChequeModal({ isOpen, onClose, cheque, accounts, suppliers, onConfi
         accountId: parseInt(accountId),
         supplierId: supplierId ? parseInt(supplierId) : null,
         invoiceId: invoiceId ? parseInt(invoiceId) : null,
-        note: formattedNote
+        note: formattedNote,
+        deductFromBalance
       })
       onClose()
     } catch (err: any) {
@@ -4279,6 +4310,10 @@ function EditChequeModal({ isOpen, onClose, cheque, accounts, suppliers, onConfi
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Note (Optional)</label>
             <input type="text" value={cleanNote} onChange={e => setCleanNote(e.target.value)} className="w-full border border-slate-200 rounded-xl p-2.5 outline-none focus:ring-2 focus:ring-sky-500" placeholder="Postponement/payment details" />
+          </div>
+          <div className="flex items-center gap-2 pt-1 mb-2">
+            <input type="checkbox" id="edit-deductFromBalance" checked={deductFromBalance} onChange={e => setDeductFromBalance(e.target.checked)} className="w-4 h-4 text-sky-600 border-slate-300 rounded focus:ring-sky-500" />
+            <label htmlFor="edit-deductFromBalance" className="text-sm font-medium text-slate-700 select-none">Deduct from Outstanding Balance</label>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
