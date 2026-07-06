@@ -660,9 +660,18 @@ export default function LandingPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'subdomain') {
-      const cleanValue = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+    if (name === 'companyName') {
+      const generatedSlug = value
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      setFormData(prev => ({ 
+        ...prev, 
+        companyName: value,
+        subdomain: generatedSlug 
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -1570,33 +1579,6 @@ export default function LandingPage() {
                       className={`w-full ${lang === 'AR' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-sm focus:bg-white transition-colors font-medium`}
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                    {t.modalSubdomainLabel}
-                  </label>
-                  <div className="flex items-center bg-slate-50 border border-slate-200 rounded-xl focus-within:border-blue-600 focus-within:bg-white transition-colors">
-                    <div className="pl-4 pr-1 text-slate-400 text-sm font-semibold select-none flex items-center gap-1.5">
-                      <Globe className="w-4 h-4" />
-                      https://
-                    </div>
-                    <input 
-                      type="text" 
-                      name="subdomain"
-                      required
-                      placeholder={t.modalSubdomainPlaceholder}
-                      value={formData.subdomain}
-                      onChange={handleInputChange}
-                      className="flex-1 py-3 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none text-sm font-semibold"
-                    />
-                    <div className="pr-4 pl-2 text-slate-400 text-xs font-mono select-none">
-                      .{getDomainBase()}
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-slate-400 block mt-1.5 font-medium">
-                    {t.modalSubdomainHelp} <strong className="text-blue-600 font-semibold font-mono">{formData.subdomain || 'your-company'}.{getDomainBase()}</strong>
-                  </span>
                 </div>
 
                 <div>
