@@ -44,6 +44,9 @@ model Invoice {
   supplier    Supplier @relation(fields: [supplierId], references: [id])
   payments    Payment[]
   cheques     Cheque[]
+
+  @@index([supplierId])
+  @@index([dueDate])
 }
 
 model Payment {
@@ -59,6 +62,10 @@ model Payment {
   supplier    Supplier @relation(fields: [supplierId], references: [id])
   invoice     Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   cheque      Cheque?  @relation(fields: [chequeId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@index([accountId])
+  @@index([invoiceId])
 }
 
 model Account {
@@ -83,6 +90,8 @@ model AccountAdjustment {
   note            String?
   createdAt       DateTime @default(now())
   account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
 }
 
 model Collection {
@@ -98,6 +107,8 @@ model Collection {
   status       String    @default("received")
   createdAt    DateTime  @default(now())
   account      Account   @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
 }
 
 model Cheque {
@@ -116,16 +127,39 @@ model Cheque {
   supplier    Supplier? @relation(fields: [supplierId], references: [id])
   invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
   payment     Payment?
+
+  @@index([accountId])
+  @@index([supplierId])
+  @@index([invoiceId])
 }
 model Expense {
   id          Int      @id @default(autoincrement())
   category    String
   amount      Decimal 
-  paidAmount  Decimal  @default(0)
+  paidAmount  Decimal  @default(0) 
   accountId   Int
   account     Account  @relation(fields: [accountId], references: [id])
   date        DateTime
   note        String?
   reminder    Boolean  @default(false)
   createdAt   DateTime @default(now())
+
+  @@index([accountId])
 }
+
+model Tenant {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  subdomain          String   @unique
+  subscriptionCode   String?  @unique
+  dbConnectionString String
+  createdAt          DateTime @default(now())
+}
+
+model TenantUser {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  subdomain String
+  createdAt DateTime @default(now())
+}
+

@@ -1,4 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+[dir="rtl"], [dir="rtl"] * {
+  font-family: 'Cairo', 'Inter', sans-serif !important;
+}
+
 
 @theme {
   --color-sky-50: #f4fafd;
@@ -65,4 +75,72 @@
   .tab-strip-wrapper::after {
     display: none;
   }
+}
+
+/* ── RTL Layout Overrides ─────────────────────────────── */
+
+/* Flip the tab-strip gradient in RTL */
+[dir="rtl"] .tab-strip-wrapper::after {
+  right: auto;
+  left: 0;
+  background: linear-gradient(to left, transparent, white);
+}
+
+/* Input icons: flip padding side and icon position */
+[dir="rtl"] .input-icon-left {
+  padding-left: 1rem;
+  padding-right: 2.5rem;
+}
+[dir="rtl"] .input-icon-left ~ .icon-left {
+  left: auto;
+  right: 0.75rem;
+}
+
+/* Flip left-positioned absolute icons inside relative containers */
+[dir="rtl"] .relative > .absolute.left-0,
+[dir="rtl"] .relative > .absolute.left-3,
+[dir="rtl"] .relative > .absolute.left-4 {
+  left: auto;
+  right: 0;
+}
+[dir="rtl"] .relative > input.pl-10 {
+  padding-left: 1rem;
+  padding-right: 2.5rem;
+}
+[dir="rtl"] .relative > input.pl-12 {
+  padding-left: 1rem;
+  padding-right: 3rem;
+}
+
+/* Table text alignment */
+[dir="rtl"] table th,
+[dir="rtl"] table td {
+  text-align: right;
+}
+[dir="rtl"] table th.text-right,
+[dir="rtl"] table td.text-right {
+  text-align: left;
+}
+
+/* Flip space-x margins for nav tabs */
+[dir="rtl"] .space-x-6 > * + *,
+[dir="rtl"] .space-x-8 > * + * {
+  margin-left: 0;
+  margin-right: 1.5rem;
+}
+
+/* Stat cards: flip icon side */
+[dir="rtl"] .flex.items-start.justify-between {
+  flex-direction: row-reverse;
+}
+
+/* Pagination: keep numbers LTR */
+[dir="rtl"] .pagination-numbers {
+  direction: ltr;
+}
+
+/* Notification toasts: flip side */
+[dir="rtl"] .fixed.bottom-8.right-8 {
+  right: auto;
+  left: 2rem;
 }

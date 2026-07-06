@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Decimal } from 'decimal.js'
 import { FileText, CheckCircle, AlertCircle, Clock, CreditCard, AlertTriangle, Landmark, TrendingUp, Wallet, ArrowLeft, Search, Edit } from 'lucide-react'
-import logo from './assets/slcash_logo.png'
+import logo from './assets/yotax_logo.png'
 import { format, startOfDay, addDays, isBefore, isEqual } from 'date-fns'
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom'
-import Login from './Login'
-import { ReportsTab } from './ReportsTab'
+const Login = React.lazy(() => import('./Login'))
+const ReportsTab = React.lazy(() => import('./ReportsTab').then(m => ({ default: m.ReportsTab })))
+const LandingPage = React.lazy(() => import('./LandingPage'))
+import { LanguageProvider, useLanguage } from './i18n/LanguageContext'
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: any) {
@@ -195,7 +197,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
-    return <Navigate to="/" />;
+    return <Navigate to="/app" />;
   }
   return <>{children}</>;
 }
@@ -204,11 +206,34 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
 
+// Helper function to extract subdomain in frontend
+export function getSubdomain(): string | null {
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  
+  if (parts.length > 1) {
+    const lastPart = parts[parts.length - 1];
+    // Check if localhost or local loopback subdomain (e.g. acme.localhost)
+    if (lastPart.startsWith('localhost') || parts.includes('localhost')) {
+      return parts[0] !== 'localhost' ? parts[0] : null;
+    }
+    // Production domain subdomain (e.g. acme.yotax.com -> parts = ['acme', 'yotax', 'com'])
+    return parts.length > 2 ? parts[0] : null;
+  }
+  return null;
+}
+
 const apiFetch = async (url: string, options: RequestInit = {}) => {
   const token = localStorage.getItem('token');
   const headers = new Headers(options.headers || {});
   if (token) headers.set('Authorization', 'Bearer ' + token);
   if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  
+  // Inject subdomain header automatically on all api requests
+  const subdomain = localStorage.getItem('tenantSubdomain') || getSubdomain();
+  if (subdomain) {
+    headers.set('X-Tenant-Subdomain', subdomain);
+  }
   
   const res = await fetch(url, { ...options, headers });
   if (res.status === 401) {
@@ -244,15 +269,43 @@ export const showError = (rawMsg: string) => {
   }
 };
 
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="animate-pulse flex flex-col items-center">
+        <div className="h-12 w-12 bg-sky-500 rounded-full mb-4"></div>
+        <p className="text-slate-500 text-lg">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center p-12 w-full h-64">
+      <div className="animate-pulse flex flex-col items-center">
+        <div className="h-8 w-8 bg-sky-500 rounded-full mb-4"></div>
+        <p className="text-slate-500">Loading section...</p>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-        <Route path="*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
-        </Routes>
-    </BrowserRouter>
+      <LanguageProvider>
+        <BrowserRouter>
+          <React.Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/app/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </React.Suspense>
+        </BrowserRouter>
+      </LanguageProvider>
     </ErrorBoundary>
   )
 }
@@ -310,7 +363,7 @@ function MainLayout() {
 
   const handleSupplierClick = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
-    navigate("/suppliers");
+    navigate("/app/suppliers");
   };
 
 
@@ -462,12 +515,16 @@ function MainLayout() {
     fetchData()
   }, [])
 
+  // Single hook call for language — must be before early returns (React rules of hooks)
+  const { t, lang, setLang } = useLanguage();
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center">
           <div className="h-12 w-12 bg-sky-500 rounded-full mb-4"></div>
-          <p className="text-slate-500 text-lg">Loading dashboard...</p>
+          <p className="text-slate-500 text-lg">{t('app.loading')}</p>
         </div>
       </div>
     )
@@ -478,33 +535,46 @@ function MainLayout() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full mx-4 sm:mx-auto text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Error</h2>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('app.error')}</h2>
           <p className="text-slate-600 mb-6">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
             className="bg-sky-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-sky-700 transition-colors"
           >
-            Retry
+            {t('btn.retry')}
           </button>
         </div>
       </div>
     )
   }
 
+
     const tabs = [];
-  if (user?.role === "admin" || user?.permissions?.dashboard?.view) tabs.push({ name: 'Dashboard', path: '/' });
-  if (user?.role === "admin" || user?.permissions?.reports?.view) tabs.push({ name: 'Reports', path: '/reports' });
-  if (user?.role === "admin" || user?.permissions?.accounts?.view) tabs.push({ name: 'Accounts', path: '/accounts' });
-  if (user?.role === "admin" || user?.permissions?.collections?.view) tabs.push({ name: 'Collections', path: '/collections' });
-  if (user?.role === "admin" || user?.permissions?.suppliers?.view) tabs.push({ name: 'Suppliers', path: '/suppliers' });
-  if (user?.role === "admin" || user?.permissions?.invoices?.view) tabs.push({ name: 'Invoices', path: '/invoices' });
-  if (user?.role === "admin" || user?.permissions?.payments?.view) tabs.push({ name: 'Payments', path: '/payments' });
-  if (user?.role === "admin" || user?.permissions?.cheques?.view) tabs.push({ name: 'Cheques', path: '/cheques' });
-  if (user?.role === "admin" || user?.permissions?.expenses?.view) tabs.push({ name: 'Expenses', path: '/expenses' });
-  if (user?.role === "admin" || user?.permissions?.users?.view) tabs.push({ name: 'Users', path: '/users' });
+  if (user?.role === "admin" || user?.permissions?.dashboard?.view) tabs.push({ name: t('nav.dashboard'), path: '/app' });
+  if (user?.role === "admin" || user?.permissions?.reports?.view) tabs.push({ name: t('nav.reports'), path: '/app/reports' });
+  if (user?.role === "admin" || user?.permissions?.accounts?.view) tabs.push({ name: t('nav.accounts'), path: '/app/accounts' });
+  if (user?.role === "admin" || user?.permissions?.collections?.view) tabs.push({ name: t('nav.collections'), path: '/app/collections' });
+  if (user?.role === "admin" || user?.permissions?.suppliers?.view) tabs.push({ name: t('nav.suppliers'), path: '/app/suppliers' });
+  if (user?.role === "admin" || user?.permissions?.invoices?.view) tabs.push({ name: t('nav.invoices'), path: '/app/invoices' });
+  if (user?.role === "admin" || user?.permissions?.payments?.view) tabs.push({ name: t('nav.payments'), path: '/app/payments' });
+  if (user?.role === "admin" || user?.permissions?.cheques?.view) tabs.push({ name: t('nav.cheques'), path: '/app/cheques' });
+  if (user?.role === "admin" || user?.permissions?.expenses?.view) tabs.push({ name: t('nav.expenses'), path: '/app/expenses' });
+  if (user?.role === "admin" || user?.permissions?.users?.view) tabs.push({ name: t('nav.users'), path: '/app/users' });
+
+  // Language toggle button shared in nav
+  const LangToggle = () => (
+    <button
+      onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
+      title={lang === 'en' ? 'Switch to Arabic' : 'Switch to English'}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+    >
+      <span className="text-base leading-none">{lang === 'en' ? '🇸🇦' : '🇬🇧'}</span>
+      <span className="hidden sm:inline text-xs">{lang === 'en' ? 'عربي' : 'EN'}</span>
+    </button>
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-12">
+    <div className="min-h-screen bg-slate-50 font-sans pb-12" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       {isDeleting && <div className="fixed inset-0 z-[9999] cursor-wait bg-slate-900/5 pointer-events-auto" />}
       {/* Top Navigation */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
@@ -513,19 +583,19 @@ function MainLayout() {
             {/* Logo and Mobile Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <img src={logo} alt="SLCASH Logo" className="h-14 md:h-20 w-auto object-contain" />
+                <img src={logo} alt="Yotax Logo" className="h-8 md:h-10 w-auto object-contain" />
               </div>
               
-              {/* Logout Button (mobile layout) */}
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
-                className="md:hidden inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors"
-              >
-                Logout
-              </button>
+              {/* Mobile: lang toggle + logout */}
+              <div className="flex items-center gap-2 md:hidden">
+                <LangToggle />
+                <button
+                  onClick={() => { localStorage.clear(); navigate('/login'); }}
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors"
+                >
+                  {t('nav.logout')}
+                </button>
+              </div>
             </div>
             
             {/* Scrollable Tabs Wrapper */}
@@ -537,7 +607,7 @@ function MainLayout() {
                     <Link
                       key={tab.name}
                       to={tab.path}
-                      onClick={() => { if(tab.name === "Suppliers") setSelectedSupplier(null); if(tab.name === "Accounts") setSelectedAccount(null); }}
+                      onClick={() => { if(location.pathname === '/suppliers') setSelectedSupplier(null); if(location.pathname === '/accounts') setSelectedAccount(null); }}
                       className={`inline-flex items-center pb-2 md:py-4 border-b-2 text-sm font-medium transition-all ${
                         isActive
                           ? 'border-sky-500 text-sky-600 font-semibold'
@@ -550,37 +620,39 @@ function MainLayout() {
                 })}
               </div>
               
-              {/* Logout Button (desktop layout) */}
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  navigate('/login');
-                }}
-                className="hidden md:inline-flex items-center px-3.5 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors ml-6 self-center"
-              >
-                Logout
-              </button>
+              {/* Desktop: lang toggle + logout */}
+              <div className="hidden md:flex items-center gap-2 ms-6 self-center">
+                <LangToggle />
+                <button
+                  onClick={() => { localStorage.clear(); navigate('/login'); }}
+                  className="inline-flex items-center px-3.5 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 transition-colors"
+                >
+                  {t('nav.logout')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-8">
-        <Routes>
-          <Route path="/expenses" element={(user?.role === "admin" || user?.permissions?.expenses?.view) ? <ExpensesTab accounts={accounts} expenses={expenses} onRefresh={async () => { await refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'expenses', 'Expense')} /> : <AccessDenied />} />
-          <Route path="/" element={(user?.role === "admin" || user?.permissions?.dashboard?.view) ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} cheques={cheques} expenses={expenses} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/reports" element={(user?.role === "admin" || user?.permissions?.reports?.view) ? <ReportsTab invoices={invoices} payments={payments} collections={collections} suppliers={suppliers} accounts={accounts} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/accounts" element={(user?.role === "admin" || user?.permissions?.accounts?.view) ? <AccountsTab accounts={accounts} payments={payments} collections={collections} suppliers={suppliers} expenses={expenses} onRefresh={refreshAccounts} onDelete={(id) => openDeleteModal(id, "accounts", "Account")} openDeleteModal={openDeleteModal} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} setAccounts={setAccounts} /> : <AccessDenied />} />
-          <Route path="/collections" element={(user?.role === "admin" || user?.permissions?.collections?.view) ? <CollectionsTab accounts={accounts} collections={collections} onRefresh={async () => { await refreshCollections(),
-        refreshCheques(),
-        refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'collections', 'Collection')}  /> : <AccessDenied />} />
-          <Route path="/suppliers" element={(user?.role === "admin" || user?.permissions?.suppliers?.view) ? <SuppliersTab suppliers={suppliers} invoices={invoices} payments={payments} accounts={accounts} onRefresh={refreshSuppliers} onToggleReminder={handleToggleReminder} setSuppliers={setSuppliers} onDelete={(id) => openDeleteModal(id, "suppliers", "Supplier")} selectedSupplier={selectedSupplier} setSelectedSupplier={setSelectedSupplier} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/invoices" element={(user?.role === "admin" || user?.permissions?.invoices?.view) ? <InvoicesTab suppliers={suppliers} invoices={invoices} onRefresh={refreshInvoices} onToggleReminder={handleToggleReminder} setInvoices={setInvoices} onDelete={(id) => openDeleteModal(id, "invoices", "Invoice")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/payments" element={(user?.role === "admin" || user?.permissions?.payments?.view) ? <PaymentsTab suppliers={suppliers} payments={payments} accounts={accounts} invoices={invoices} onRefresh={async () => { await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]); }} onDelete={(id) => openDeleteModal(id, "payments", "Payment")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
-          <Route path="/cheques" element={(user?.role === "admin" || user?.permissions?.cheques?.view) ? <ChequesTab suppliers={suppliers} accounts={accounts} cheques={cheques} onRefresh={async () => { await refreshCheques(),
-        refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'cheques', 'Cheque')} /> : <AccessDenied />} />
-          <Route path="/users" element={(user?.role === "admin" || user?.permissions?.users?.view) ? <UsersTab /> : <AccessDenied />} />
+        <React.Suspense fallback={<SectionLoadingFallback />}>
+          <Routes>
+            <Route path="/expenses" element={(user?.role === "admin" || user?.permissions?.expenses?.view) ? <ExpensesTab accounts={accounts} expenses={expenses} onRefresh={async () => { await refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'expenses', 'Expense')} /> : <AccessDenied />} />
+            <Route path="/" element={(user?.role === "admin" || user?.permissions?.dashboard?.view) ? <DashboardTab suppliers={suppliers} invoices={invoices} accounts={accounts} collections={collections} cheques={cheques} expenses={expenses} onToggleReminder={handleToggleReminder} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+            <Route path="/reports" element={(user?.role === "admin" || user?.permissions?.reports?.view) ? <ReportsTab invoices={invoices} payments={payments} collections={collections} suppliers={suppliers} accounts={accounts} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+            <Route path="/accounts" element={(user?.role === "admin" || user?.permissions?.accounts?.view) ? <AccountsTab accounts={accounts} payments={payments} collections={collections} suppliers={suppliers} expenses={expenses} onRefresh={refreshAccounts} onDelete={(id) => openDeleteModal(id, "accounts", "Account")} openDeleteModal={openDeleteModal} selectedAccount={selectedAccount} setSelectedAccount={setSelectedAccount} setAccounts={setAccounts} /> : <AccessDenied />} />
+            <Route path="/collections" element={(user?.role === "admin" || user?.permissions?.collections?.view) ? <CollectionsTab accounts={accounts} collections={collections} onRefresh={async () => { await refreshCollections(),
+          refreshCheques(),
+          refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'collections', 'Collection')}  /> : <AccessDenied />} />
+            <Route path="/suppliers" element={(user?.role === "admin" || user?.permissions?.suppliers?.view) ? <SuppliersTab suppliers={suppliers} invoices={invoices} payments={payments} accounts={accounts} onRefresh={refreshSuppliers} onToggleReminder={handleToggleReminder} setSuppliers={setSuppliers} onDelete={(id) => openDeleteModal(id, "suppliers", "Supplier")} selectedSupplier={selectedSupplier} setSelectedSupplier={setSelectedSupplier} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+            <Route path="/invoices" element={(user?.role === "admin" || user?.permissions?.invoices?.view) ? <InvoicesTab suppliers={suppliers} invoices={invoices} onRefresh={refreshInvoices} onToggleReminder={handleToggleReminder} setInvoices={setInvoices} onDelete={(id) => openDeleteModal(id, "invoices", "Invoice")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+            <Route path="/payments" element={(user?.role === "admin" || user?.permissions?.payments?.view) ? <PaymentsTab suppliers={suppliers} payments={payments} accounts={accounts} invoices={invoices} onRefresh={async () => { await Promise.all([refreshPayments(), refreshInvoices(), refreshAccounts()]); }} onDelete={(id) => openDeleteModal(id, "payments", "Payment")} onSupplierClick={handleSupplierClick} /> : <AccessDenied />} />
+            <Route path="/cheques" element={(user?.role === "admin" || user?.permissions?.cheques?.view) ? <ChequesTab suppliers={suppliers} accounts={accounts} cheques={cheques} onRefresh={async () => { await refreshCheques(),
+          refreshExpenses(); await refreshAccounts(); }} onDelete={(id) => openDeleteModal(id, 'cheques', 'Cheque')} /> : <AccessDenied />} />
+            <Route path="/users" element={(user?.role === "admin" || user?.permissions?.users?.view) ? <UsersTab /> : <AccessDenied />} />
           </Routes>
+        </React.Suspense>
       </main>
 
       
@@ -621,8 +693,8 @@ function MainLayout() {
                   <AlertTriangle className="w-5 h-5 text-rose-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-rose-700">Payment Error</p>
-                  <p className="text-xs text-rose-500 mt-0.5">Action could not be completed</p>
+                  <p className="text-sm font-bold text-rose-700">{t('error.title')}</p>
+                  <p className="text-xs text-rose-500 mt-0.5">{t('error.actionFailed')}</p>
                 </div>
                 <button
                   onClick={() => setErrorMessage(null)}

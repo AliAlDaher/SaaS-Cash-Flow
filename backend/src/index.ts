@@ -4,6 +4,7 @@ import cron from 'node-cron';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import compression from 'compression';
 import suppliersRouter from './routes/suppliers';
 import invoicesRouter from './routes/invoices';
 import paymentsRouter from './routes/payments';
@@ -13,7 +14,10 @@ import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import chequesRouter from './routes/cheques';
 import expensesRouter from './routes/expenses';
-import prisma from './prisma';
+import onboardingRouter from './routes/onboarding';
+import prisma, { centralPrisma, tenantStorage } from './prisma';
+import { getPrismaClientForTenant } from './prismaManager';
+import { tenantMiddleware } from './middleware/tenantMiddleware';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -26,25 +30,41 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const port = process.env.PORT || 3001;
 
-
-const allowedOrigins = [process.env.FRONTEND_URL || 'http://localhost:5173'];
+// CORS configured to dynamically accept subdomains of localhost:5173 or production domain
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  }
+    if (!origin) return callback(null, true);
+    try {
+      const url = new URL(origin);
+      const hostname = url.hostname;
+      if (
+        hostname === 'localhost' ||
+        hostname.endsWith('.localhost') ||
+        origin === process.env.FRONTEND_URL
+      ) {
+        return callback(null, true);
+      }
+    } catch (e) {}
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
 }));
+
 app.use(express.json());
+app.use(compression());
+
+// Public onboarding and authentication endpoints (without tenant middleware)
+app.use("/onboarding", onboardingRouter);
+app.use("/auth", authRouter);
+
+// Apply tenant context middleware to protect and isolate cash flow endpoints
+app.use(tenantMiddleware);
 
 app.use("/suppliers", suppliersRouter);
 app.use("/invoices", invoicesRouter);
 app.use("/payments", paymentsRouter);
 app.use("/accounts", accountsRouter);
 app.use("/collections", collectionsRouter);
-app.use("/auth", authRouter);
 app.use("/users", usersRouter);
 app.use("/cheques", chequesRouter);
 app.use("/expenses", expensesRouter);
@@ -67,64 +87,79 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 
-// Automated monthly expenses generation
+// Automated monthly expenses generation across all tenant databases
 cron.schedule('0 0 1 * *', async () => {
-  console.log('Running monthly expenses generation...');
+  console.log('[Cron] Running monthly expenses generation across all tenants...');
   try {
-    const now = new Date();
-    // Idempotency check: prevent duplicate generation if cron runs twice or server restarts on the 1st
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    const existingCount = await prisma.expense.count({
-      where: {
-        note: { startsWith: 'Automated monthly expense for' },
-        date: {
-          gte: startOfMonth,
-          lte: endOfMonth
-        }
-      }
-    });
-    if (existingCount > 0) {
-      console.log('Monthly expenses already generated for this month. Skipping.');
-      return;
-    }
-
-    // Deterministic account: Order by ID asc to ensure consistency across restarts
-    const account = await prisma.account.findFirst({ orderBy: { id: 'asc' } });
-    if (!account) {
-      console.log('No accounts found. Skipping monthly expenses.');
-      return;
-    }
-
-    let categories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
-    const categoriesFilePath = path.join(__dirname, '../categories.json');
-    if (fs.existsSync(categoriesFilePath)) {
-      try {
-        const fileData = fs.readFileSync(categoriesFilePath, 'utf-8');
-        const parsed = JSON.parse(fileData);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          categories = parsed;
-        }
-      } catch (e) {
-        console.error('Failed to read categories.json in cron', e);
-      }
-    }
+    // Fetch all active registered tenants from the Central DB
+    const tenants = await centralPrisma.tenant.findMany();
     
-    for (const cat of categories) {
-      await prisma.expense.create({
-        data: {
-          category: cat,
-          amount: 0, // Default to 0, user will modify
-          paidAmount: 0,
-          date: now,
-          accountId: account.id,
-          note: `Automated monthly expense for ${now.toLocaleString('default', { month: 'long', year: 'numeric' })}`
-        }
-      });
+    for (const tenant of tenants) {
+      console.log(`[Cron] Seeding expenses for company subdomain: "${tenant.subdomain}"`);
+      try {
+        const tenantClient = getPrismaClientForTenant(tenant.subdomain, tenant.dbConnectionString);
+        
+        // Execute the seeding logic in the context of this tenant's database connection
+        await tenantStorage.run(tenantClient, async () => {
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+          
+          const existingCount = await prisma.expense.count({
+            where: {
+              note: { startsWith: 'Automated monthly expense for' },
+              date: {
+                gte: startOfMonth,
+                lte: endOfMonth
+              }
+            }
+          });
+          
+          if (existingCount > 0) {
+            console.log(`[Cron] Monthly expenses already generated for "${tenant.subdomain}". Skipping.`);
+            return;
+          }
+
+          const account = await prisma.account.findFirst({ orderBy: { id: 'asc' } });
+          if (!account) {
+            console.log(`[Cron] No bank accounts found for "${tenant.subdomain}". Skipping.`);
+            return;
+          }
+
+          let categories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
+          const categoriesFilePath = path.join(__dirname, '../categories.json');
+          if (fs.existsSync(categoriesFilePath)) {
+            try {
+              const fileData = fs.readFileSync(categoriesFilePath, 'utf-8');
+              const parsed = JSON.parse(fileData);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                categories = parsed;
+              }
+            } catch (e) {
+              console.error(`[Cron] Failed to read categories.json for "${tenant.subdomain}"`, e);
+            }
+          }
+          
+          for (const cat of categories) {
+            await prisma.expense.create({
+              data: {
+                category: cat,
+                amount: 0,
+                paidAmount: 0,
+                date: now,
+                accountId: account.id,
+                note: `Automated monthly expense for ${now.toLocaleString('default', { month: 'long', year: 'numeric' })}`
+              }
+            });
+          }
+          console.log(`[Cron] Monthly expenses successfully generated for "${tenant.subdomain}".`);
+        });
+      } catch (tenantError) {
+        console.error(`[Cron] Failed expense generation for tenant "${tenant.subdomain}":`, tenantError);
+      }
     }
-    console.log('Monthly expenses generated successfully.');
   } catch (error) {
-    console.error('Error generating monthly expenses:', error);
+    console.error('[Cron] Fatal error in monthly expenses cron job:', error);
   }
 });
 
