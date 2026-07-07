@@ -1546,6 +1546,24 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* Floating WhatsApp Contact Button */}
+      <div className="fixed bottom-6 end-6 z-50">
+        <a 
+          href="https://wa.me/962790620675" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 p-3 sm:p-3.5 rounded-full bg-[#25D366] text-white shadow-lg shadow-green-500/20 hover:shadow-xl hover:shadow-green-500/30 hover:-translate-y-0.5 transition-all duration-200 group outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
+          title={lang === 'EN' ? 'Chat on WhatsApp' : 'تواصل معنا عبر واتساب'}
+        >
+          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-out whitespace-nowrap text-sm font-bold select-none leading-none">
+            {lang === 'EN' ? 'Chat on WhatsApp' : 'تواصل معنا عبر واتساب'}
+          </span>
+          <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-current shrink-0" xmlns="http://www.w3.org/2000/svg">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.42 9.864-9.864.002-2.637-1.03-5.114-2.909-6.993-1.878-1.879-4.352-2.912-6.99-2.914-5.443 0-9.866 4.423-9.87 9.867-.001 1.714.453 3.39 1.31 4.877L1.93 21.055l4.717-1.901zM17.56 14.78c-.302-.15-1.785-.88-2.062-.98-.277-.1-.478-.15-.678.15-.2.3-.775.98-.95 1.18-.175.2-.35.225-.652.075-.302-.15-1.276-.47-2.43-1.499-.899-.8-1.505-1.79-1.682-2.09-.177-.3-.019-.462.13-.612.135-.135.302-.35.453-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.678-1.635-.93-2.245-.245-.59-.494-.51-.678-.52-.175-.01-.375-.01-.575-.01-.2 0-.525.075-.8.375-.278.3-1.06 1.038-1.06 2.532 0 1.495 1.09 2.94 1.24 3.14.15.2 2.14 3.268 5.19 4.582.723.313 1.288.5 1.728.64.727.23 1.39.198 1.91.12.58-.087 1.785-.73 2.037-1.435.252-.705.252-1.31.176-1.435-.076-.125-.277-.2-.58-.35z"/>
+          </svg>
+        </a>
+      </div>
+
       {/* Onboarding Registration Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
