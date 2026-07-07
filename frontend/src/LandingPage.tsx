@@ -614,7 +614,19 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
 
 
 export default function LandingPage() {
-  const [lang, setLang] = useState<'EN' | 'AR'>('EN');
+  const [lang, setLang] = useState<'EN' | 'AR'>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang')?.toLowerCase();
+      if (urlLang === 'ar') return 'AR';
+      if (urlLang === 'en') return 'EN';
+      
+      const browserLang = navigator.language?.substring(0, 2).toLowerCase();
+      return browserLang === 'ar' ? 'AR' : 'EN';
+    } catch {
+      return 'EN';
+    }
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
@@ -629,6 +641,17 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
 
+  const handleLangToggle = (newLang: 'EN' | 'AR') => {
+    setLang(newLang);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', newLang.toLowerCase());
+      window.history.pushState({}, '', url.toString());
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   React.useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 15) {
@@ -640,6 +663,42 @@ export default function LandingPage() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  React.useEffect(() => {
+    // 1. Update HTML language and direction
+    document.documentElement.lang = lang === 'AR' ? 'ar' : 'en';
+    document.documentElement.dir = lang === 'AR' ? 'rtl' : 'ltr';
+
+    // 2. Dynamic SEO Text
+    const seoTitle = lang === 'AR' 
+      ? 'يوتاكس - برنامج بسيط لتتبع الكاش وحسابات البنك' 
+      : 'Yotax - Simple Cash Flow & Financial Tracking';
+    
+    const seoDesc = lang === 'AR'
+      ? 'منصة وحدة تلم حساباتك البنكية، شيكاتك المؤجلة، وفواتيرك. انسى الدفاتر اليدوية والـ Excel، وتابع سيولتك بكل وضوح وبشكل فوري.'
+      : 'A simple cash flow tracking platform for modern businesses. Track bank accounts, schedule post-dated cheques, and manage vendor invoice payments in one clear dashboard.';
+
+    // 3. Update Document Title
+    document.title = seoTitle;
+
+    // 4. Helper to update/create meta tag
+    const updateMetaTag = (attrName: string, attrVal: string, content: string) => {
+      let element = document.querySelector(`meta[${attrName}="${attrVal}"]`);
+      if (!element) {
+        element = document.createElement('meta');
+        element.setAttribute(attrName, attrVal);
+        document.head.appendChild(element);
+      }
+      element.setAttribute('content', content);
+    };
+
+    // 5. Update descriptions
+    updateMetaTag('name', 'description', seoDesc);
+    updateMetaTag('property', 'og:title', seoTitle);
+    updateMetaTag('property', 'og:description', seoDesc);
+    updateMetaTag('name', 'twitter:title', seoTitle);
+    updateMetaTag('name', 'twitter:description', seoDesc);
+  }, [lang]);
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -968,7 +1027,7 @@ export default function LandingPage() {
             {/* Premium Language Switcher with Flags */}
             <button 
               dir={lang === 'AR' ? 'rtl' : 'ltr'}
-              onClick={() => setLang(lang === 'EN' ? 'AR' : 'EN')}
+              onClick={() => handleLangToggle(lang === 'EN' ? 'AR' : 'EN')}
               className={`flex ${lang === 'AR' ? 'flex-row-reverse' : 'flex-row'} items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold text-[13px] shadow-sm select-none`}
               title={lang === 'EN' ? 'العربية' : 'English'}
             >
