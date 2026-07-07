@@ -109,7 +109,7 @@ const translations = {
     aboutTitle: "Built for practical cash management",
     aboutText1: "We started Yotax to solve a simple problem: businesses spend too much time tracking bank balances and cheques in manual ledgers.",
     aboutText2: "We built this tool to simplify day-to-day cash flow management. It tracks purchase invoices, logs cheques, and draws clear cash flow curves dynamically.",
-    aboutText3: "Today, over 150 companies use Yotax to track bank balances, record invoices, and forecast cash positions.",
+    aboutText3: "Today, over 15 companies use Yotax to track bank balances, record invoices, and forecast cash positions.",
     
     stat1: "Companies",
     stat2: "Cash Tracked",
@@ -243,7 +243,7 @@ const translations = {
     aboutTitle: "منصة صممت بأيدي خبراء ماليين لخدمة الشركات",
     aboutText1: "انطلقت يوتاكس لحل مشكلة واقعية يعاني منها أغلب مدراء الشركات: إهدار ساعات طويلة في مراجعة كشوفات الحسابات وتحديث دفاتر الشيكات اليدوية هرباً من مفاجآت السيولة.",
     aboutText2: "قمنا بتطوير هذه المنصة لتبسيط إدارة السيولة اليومية. فهي تتتبع فواتير الشراء، وتسجل الشيكات، وترسم منحنيات تدفق السيولة بوضوح وديناميكية.",
-    aboutText3: "اليوم، تعتمد أكثر من 150 شركة ماليًا على يوتاكس لمتابعة أرصدتها وتوقعات تدفقاتها النقدية بدقة متناهية.",
+    aboutText3: "اليوم، تعتمد أكثر من 15 شركة ماليًا على يوتاكس لمتابعة أرصدتها وتوقعات تدفقاتها النقدية بدقة متناهية.",
 
     stat1: "شركات نشطة",
     stat2: "نقدية متتبعة",
@@ -1353,11 +1353,11 @@ export default function LandingPage() {
               {/* Stat callouts */}
               <div className="grid grid-cols-3 gap-6 mt-10 border-t border-slate-200/80 pt-8">
                 <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">150+</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">15+</span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat1}</span>
                 </div>
                 <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-amber-550 block">$40M+</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-amber-550 block">$4M+</span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat2}</span>
                 </div>
                 <div>
