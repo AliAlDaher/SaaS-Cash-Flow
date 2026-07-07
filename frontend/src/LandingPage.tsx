@@ -743,7 +743,7 @@ export default function LandingPage() {
 
   return (
     <div 
-      className="min-h-screen bg-[#fafafd] text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden relative"
+      className="min-h-screen bg-[#fafafd] text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden relative isolate"
       dir={lang === 'AR' ? 'rtl' : 'ltr'}
     >
       
@@ -903,7 +903,7 @@ export default function LandingPage() {
         aria-hidden="true" 
         className="pointer-events-none absolute inset-0 -z-20" 
         style={{
-          backgroundImage: `linear-gradient(to right, color-mix(in oklab, var(--color-sky-500) 8%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--color-sky-500) 8%, transparent) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, rgba(14, 165, 233, 0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(14, 165, 233, 0.08) 1px, transparent 1px)`,
           backgroundSize: '56px 56px',
           maskImage: 'radial-gradient(ellipse 95% 72% at 50% 0%, black 30%, transparent 76%)',
           WebkitMaskImage: 'radial-gradient(ellipse 95% 72% at 50% 0%, black 30%, transparent 76%)'
@@ -915,7 +915,7 @@ export default function LandingPage() {
         aria-hidden="true" 
         className="pointer-events-none absolute -top-32 -start-40 size-[38rem] rounded-full blur-[110px] opacity-25 -z-10" 
         style={{
-          background: 'radial-gradient(circle, var(--color-sky-500) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)',
           animation: 'blob-a 15s ease-in-out infinite'
         }}
       />
@@ -923,7 +923,7 @@ export default function LandingPage() {
         aria-hidden="true" 
         className="pointer-events-none absolute top-10 -end-44 size-[32rem] rounded-full blur-[110px] opacity-20 -z-10" 
         style={{
-          background: 'radial-gradient(circle, var(--color-sky-200) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, #bae6fd 0%, transparent 70%)',
           animation: 'blob-b 15s ease-in-out infinite',
           animationDelay: '3s'
         }}
