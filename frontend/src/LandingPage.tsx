@@ -1011,15 +1011,15 @@ export default function LandingPage() {
       <section className="relative pt-32 sm:pt-36 pb-20 sm:pb-24 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 w-full overflow-hidden">
         {/* Subtle decorative grid lines background */}
         <div 
-          className="absolute inset-0 -z-20 opacity-[0.55] pointer-events-none" 
+          className="absolute inset-0 -z-20 opacity-[0.25] pointer-events-none" 
           style={{ 
             backgroundImage: `
-              linear-gradient(to right, rgba(14, 165, 233, 0.12) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(14, 165, 233, 0.12) 1px, transparent 1px)
+              linear-gradient(to right, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px)
             `, 
-            backgroundSize: '44px 44px',
-            maskImage: 'radial-gradient(circle at center, black 70%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(circle at center, black 70%, transparent 100%)'
+            backgroundSize: '64px 64px',
+            maskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)',
+            WebkitMaskImage: 'radial-gradient(circle at center, black 50%, transparent 95%)'
           }} 
         />
         
