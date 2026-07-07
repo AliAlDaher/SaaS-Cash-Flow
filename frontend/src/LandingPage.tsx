@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, 
   Layers, 
   ArrowRight, 
   Clock, 
-  Sparkles, 
-  Globe, 
   Building2, 
   Mail, 
   Lock, 
@@ -16,7 +13,6 @@ import {
   FileSpreadsheet,
   CheckCircle,
   FileText,
-  UserCheck,
   Users,
   Compass,
   Zap,
@@ -56,19 +52,19 @@ const translations = {
     problemsSubtext: "Businesses suffer silent cash leaks every day due to outdated tools, delayed bank notifications, and fragile spreadsheet templates.",
     
     // Problem Card 1
-    prob1Title: "Spreadsheet Errors",
-    prob1Text: "A typo in a cell ruins your forecast. This leads to wrong balance calculations and cash flow mistakes.",
-    prob1Foot: "✖ High human error rate",
+    prob1Title: "Overlooked Vendor Invoices",
+    prob1Text: "Outstanding supplier bills get lost in email threads and paperwork. Missing payment deadlines leads to tense relationships, cut credit lines, and delayed shipments.",
+    prob1Foot: "✖ Ruined Supplier Relations",
 
     // Problem Card 2
-    prob2Title: "Post-Dated Cheques",
-    prob2Text: "Cheques sit in drawers. Without due date tracking, your bank account can bounce and cost you fees.",
-    prob2Foot: "✖ Unpredictable bank balances",
+    prob2Title: "Bounced Post-Dated Cheques",
+    prob2Text: "Suppliers cash post-dated cheques without warning. Without cashing due date tracking, you risk low account balances, bouncing penalties, and tarnished banking credit.",
+    prob2Foot: "✖ Bounced Cheques & Bank Fees",
 
     // Problem Card 3
-    prob3Title: "Late Collections",
-    prob3Text: "Forgetting to collect client payments reduces your liquidity. Your books look profitable, but your cash is low.",
-    prob3Foot: "✖ Locked working capital",
+    prob3Title: "Inaccurate Cash Runways",
+    prob3Text: "Manual ledgers hide actual cash availability. You might appear highly profitable on paper, but run out of liquid money in the bank to cover salaries and urgent payouts.",
+    prob3Foot: "✖ Cash Deficit Surprises",
 
     // Bypass / How it works
     bypassBadge: "How Yotax Works",
@@ -76,37 +72,37 @@ const translations = {
     bypassSubtext: "When you launch your workspace, manual record entry is bypassed. Every critical transaction reconciles automatically.",
     
     // Bypass Card 1
-    bypass1Title: "1. Import Your Ledgers",
-    bypass1Text: "Create your company workspace in seconds. Move your bank ledgers in and start tracking cash immediately.",
-    bypass1Foot: "✔ Private Workspace Vault",
+    bypass1Title: "1. Enter Invoices & Cheques",
+    bypass1Text: "Manually log your vendor invoices and post-dated cheques. The system immediately calculates due dates and payment schedules.",
+    bypass1Foot: "✔ Automated Financial Scheduling",
 
     // Bypass Card 2
-    bypass2Title: "2. Auto-Generate Bills",
-    bypass2Text: "Utility bills, rents, and salaries populate automatically on the first of the month to show your baseline cash outflow.",
-    bypass2Foot: "✔ Zero manual clerical setup",
+    bypass2Title: "2. FIFO Payment Allocation",
+    bypass2Text: "Log supplier payments and auto-allocate them to outstanding invoices using FIFO logic to keep ledgers accurate.",
+    bypass2Foot: "✔ Smart AP Allocation",
 
     // Bypass Card 3
-    bypass3Title: "3. Auto-Reconcile Cheques",
-    bypass3Text: "Post-dated cheques clear automatically on their due dates. This keeps your cash flow chart and balance up to date.",
-    bypass3Foot: "✔ Live synchronized liquid status",
+    bypass3Title: "3. Post-Dated Cheque Tracking",
+    bypass3Text: "Manage post-dated cheques in a secure log. Get notifications on upcoming due dates to maintain healthy bank balances.",
+    bypass3Foot: "✔ Bouncing Prevention & Alerts",
 
     // Features Section
     featuresBadge: "Main Modules",
     featuresTitle: "Simple features to manage your cash",
     featuresSubtext: "Discover the built-in modules designed to enforce financial control, secure company assets, and eliminate administrative bottlenecks.",
     
-    feat1Title: "Company Workspaces",
-    feat1Text: "Get a dedicated space for your company financial ledgers and bank accounts.",
-    feat2Title: "Expense Seeding",
-    feat2Text: "Automatically generate recurring bills every month to predict your baseline expenses.",
-    feat3Title: "Cheque Workflows",
-    feat3Text: "Log post-dated cheques, set clearance dates, and record cash updates automatically.",
-    feat4Title: "Supplier Reminders",
-    feat4Text: "Track vendor invoice due dates to pay on time and avoid late payment fees.",
-    feat5Title: "Dedicated URL",
-    feat5Text: "Log into your own company address, like yourcompany.yotax.com.",
-    feat6Title: "User Roles",
-    feat6Text: "Give specific access to accountants, managers, and data entry staff.",
+    feat1Title: "Clear Cash Flow Dashboard",
+    feat1Text: "Visualize cash flow trends, expected collections, and upcoming payments in real time to make data-driven decisions.",
+    feat2Title: "Purchase Invoices & Due Dates",
+    feat2Text: "Log supplier invoices, track remaining balances, and schedule due dates to keep AP relations healthy.",
+    feat3Title: "Custom Supplier Payment Terms",
+    feat3Text: "Customize payment terms for each supplier individually (e.g. 60 or 90 days) to auto-schedule future outflows.",
+    feat4Title: "Post-Dated Cheques Registry",
+    feat4Text: "Register post-dated cheques with cashing dates, and track lifecycle from pending to cleared or bounced.",
+    feat5Title: "24-Hour Cheque Due Alerts",
+    feat5Text: "Receive automatic warnings one day before a cheque is due to cash, ensuring bank liquidity is ready.",
+    feat6Title: "Payment Warning Pop-up",
+    feat6Text: "Get an immediate warning pop-up details on any critical supplier invoice or cheque due for payment today.",
 
     // About Us Section
     aboutBadge: "About Us",
@@ -190,19 +186,19 @@ const translations = {
     problemsSubtext: "تتعرض الشركات لخسائر مالية غير محسوسة يومياً بسبب الاعتماد على جداول البيانات الهشة، وتأخر إشعارات الشيكات والتحصيل.",
 
     // Problem Card 1
-    prob1Title: "أخطاء صياغة جداول البيانات",
-    prob1Text: "خطأ واحد في إدخال خلية أو معادلة إكسل يفسد توقعاتك المالية بالكامل، مما يعرض التزاماتك ورواتب موظفيك للخطر.",
-    prob1Foot: "✖ نسبة خطأ بشري عالية",
+    prob1Title: "نسيان فواتير الموردين المستحقة",
+    prob1Text: "تضيع الفواتير المستحقة بين رسائل البريد والأوراق المتراكمة. فواتير الموردين المنسية تؤدي إلى توتر العلاقات التجارية، وقطع التسهيلات الائتمانية وتأخر الشحنات.",
+    prob1Foot: "✖ تضرر العلاقات مع الموردين",
 
     // Problem Card 2
-    prob2Title: "إهمال متابعة الشيكات المؤجلة",
-    prob2Text: "بقاء الشيكات المؤجلة في الأدراج دون تتبع يعرض حساباتك البنكية للارتجاع المفاجئ وغرامات السحب على المكشوف وتوتر العلاقات مع الموردين.",
-    prob2Foot: "✖ أرصدة بنكية غير متوقعة",
+    prob2Title: "ارتجاع الشيكات المؤجلة المفاجئ",
+    prob2Text: "يقوم الموردون بصرف الشيكات المؤجلة فجأة دون إشعار مسبق. عدم تتبع تواريخ الاستحقاق الدقيقة يؤدي لارتجاع الشيكات بسبب نقص الرصيد وتشويه السمعة الائتمانية للشركة.",
+    prob2Foot: "✖ شيكات مرتجعة وغرامات بنكية",
 
     // Problem Card 3
-    prob3Title: "تراكم المستحقات وتأخر التحصيل",
-    prob3Text: "عدم المتابعة الدورية لفواتير العملاء المستحقة يجمد رأس مال شركتك. تبدو أرباحك ممتازة ورقياً، لكن خزينتك الفعلية فارغة.",
-    prob3Foot: "✖ رأس مال عامل مجمد في الذمم المدينة",
+    prob3Title: "توقعات سيولة نقدية غير دقيقة",
+    prob3Text: "الاعتماد على الدفاتر اليدوية يعطيك تقديراً مضللاً عن السيولة المتوفرة. قد تبدو شركتك رابحة ورقياً، وتفاجأ بخلو الرصيد البنكي لتغطية الرواتب والمدفوعات العاجلة.",
+    prob3Foot: "✖ عجز مفاجئ في السيولة النقدية",
 
     // Bypass / How it works
     bypassBadge: "منهجية يوتاكس الذكية",
@@ -210,37 +206,37 @@ const translations = {
     bypassSubtext: "بمجرد تشغيل منصة يوتاكس، تتخلص تماماً من أعباء الحسابات والمتابعات اليدوية لتسوى جميع تدفقاتك النقدية مؤتمتة بالكامل.",
 
     // Bypass Card 1
-    bypass1Title: "1. استيراد سلس وفوري",
-    bypass1Text: "أنشئ مساحة عمل شركتك في ثوانٍ. انقل دفاتر حساباتك البنكية الحالية وابدأ تتبع حركاتها النقدية فوراً.",
-    bypass1Foot: "✔ مساحة عمل خاصة ومستقلة",
+    bypass1Title: "1. تسجيل الفواتير والشيكات",
+    bypass1Text: "أدخل فواتير الموردين والشيكات المؤجلة يدوياً في ثوانٍ. يبدأ النظام فوراً بحساب تواريخ الاستحقاق وجدول المدفوعات.",
+    bypass1Foot: "✔ جدولة مالية ذكية وتلقائية",
 
     // Bypass Card 2
-    bypass2Title: "2. جدولة المصروفات تلقائياً",
-    bypass2Text: "يتم توليد فواتير الإيجار والمرافق ورواتب فريق العمل تلقائياً بداية كل شهر لتوضيح التزاماتك النقدية الأساسية.",
-    bypass2Foot: "✔ صفر إعدادات يدوية مكررة",
+    bypass2Title: "2. توزيع المدفوعات التلقائي (FIFO)",
+    bypass2Text: "سجل مدفوعات الموردين ووزعها تلقائياً على الفواتير غير المدفوعة بناءً على طريقة الوارد أولاً يصرف أولاً (FIFO).",
+    bypass2Foot: "✔ مطابقة وإدارة مدفوعات ذكية",
 
     // Bypass Card 3
-    bypass3Title: "3. تسوية آلية مستمرة",
-    bypass3Text: "تُسوى الشيكات المؤجلة وتُدرج في رصيدك البنكي تلقائياً فور حلول تاريخ استحقاقها لتحديث منحنى السيولة لحظياً.",
-    bypass3Foot: "✔ تحديث فوري للحالة المالية والسيولة",
+    bypass3Title: "3. تتبع الشيكات المؤجلة",
+    bypass3Text: "أدر الشيكات المؤجلة في سجل آمن، واحصل على تنبيهات الاستحقاق لتجنب الارتجاع والرسوم الإضافية.",
+    bypass3Foot: "✔ حماية الحسابات وتفادي غرامات الارتجاع",
 
     // Features Section
     featuresBadge: "الأقسام والوحدات الأساسية",
     featuresTitle: "ميزات بسيطة لإدارة تدفقاتك المالية",
     featuresSubtext: "اكتشف الوحدات والوحدات البرمجية المصممة لفرض الرقابة المالية وتسهيل العمليات وتقليل المعوقات الإدارية.",
 
-    feat1Title: "مساحات عمل مخصصة للشركات",
-    feat1Text: "احصل على مساحة عمل مستقلة ومخصصة لدفاتر شركتك وحساباتك البنكية.",
-    feat2Title: "توليد المصروفات التلقائي",
-    feat2Text: "أنشئ مصروفاتك الدورية شهرياً بشكل تلقائي لتتوقع إجمالي مدفوعاتك القادمة.",
-    feat3Title: "مسار عمل الشيكات",
-    feat3Text: "سجل الشيكات المؤجلة، وحدد تواريخ استحقاقها، وراقب تأثيراتها على رصيدك النقدية تلقائياً.",
-    feat4Title: "تنبيهات استحقاق الفواتير",
-    feat4Text: "تتبع تواريخ استحقاق فواتير الموردين لتسديدها في الوقت المحدد وتفادي رسوم التأخير.",
-    feat5Title: "رابط مخصص لفريقك",
-    feat5Text: "سجل الدخول عبر عنوان مخصص لشركتك، مثل yourcompany.yotax.com.",
-    feat6Title: "أدوار وصلاحيات المستخدمين",
-    feat6Text: "امنح صلاحيات مخصصة لكل من المحاسبين، المدراء، وموظفي إدخال البيانات.",
+    feat1Title: "لوحة تحكم مالية واضحة",
+    feat1Text: "تابع حركة السيولة النقدية، والتحصيلات المتوقعة، والمدفوعات القادمة لحظة بلحظة عبر واجهة رسومية سهلة القراءة.",
+    feat2Title: "تتبع فواتير الشراء والاستحقاق",
+    feat2Text: "سجل فواتير الشراء للموردين، وتتبع الأرصدة المتبقية وتواريخ الاستحقاق لضمان دقة دفاتر حسابات الدفع.",
+    feat3Title: "تخصيص شروط الدفع للموردين",
+    feat3Text: "حدّد شروط دفع مخصصة ومستقلة لكل مورد (مثل 60 أو 90 يوماً) ليقوم النظام بجدولة تواريخ الاستحقاق آلياً.",
+    feat4Title: "إدارة الشيكات المؤجلة وصرفها",
+    feat4Text: "وثّق الشيكات المؤجلة وتواريخ صرفها، وتابع حركتها من قيد الانتظار إلى التحصيل الفعلي أو الارتجاع.",
+    feat5Title: "تنبيهات الشيكات قبل 24 ساعة",
+    feat5Text: "احصل على إشعار تحذيري تلقائي قبل 24 ساعة من موعد صرف الشيك للتحقق من توفر رصيد كافٍ بالبنك.",
+    feat6Title: "نافذة تنبيهات المدفوعات المستحقة",
+    feat6Text: "تظهر لك نافذة تنبيهات منبثقة فور دخولك لتنبيهك بوجود فواتير أو شيكات مستحقة الدفع في اليوم الحالي لتفادي التأخير.",
 
     // About Us Section
     aboutBadge: "من نحن",
@@ -403,8 +399,8 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
       {/* Inject orbital CSS keyframes */}
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes orbit-spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% { transform: translate(-50%, -50%) rotate(0deg); }
+          100% { transform: translate(-50%, -50%) rotate(360deg); }
         }
         @keyframes orbit-spin-reverse {
           0% { transform: rotate(0deg); }
@@ -426,8 +422,8 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
         }
 
         @keyframes gentle-logo-float-orbit {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
+          0%, 100% { transform: translate(-50%, -50%); }
+          50% { transform: translate(-50%, calc(-50% - 3px)); }
         }
         .animate-gentle-logo-float-orbit {
           animation: gentle-logo-float-orbit 4s ease-in-out infinite;
@@ -444,10 +440,10 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
       ` }} />
 
       {/* Orbit Track Rings (Subtle decorative dotted circles) */}
-      <div className="absolute w-[300px] h-[300px] rounded-full border border-dashed border-slate-100 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border border-dashed border-slate-100 pointer-events-none" />
 
-      {/* Orbit Container (slowly spinning) */}
-      <div className="absolute w-[360px] h-[360px] flex items-center justify-center animate-orbit-container select-none">
+      {/* Orbit Container (slowly spinning, centered) */}
+      <div className="absolute top-1/2 left-1/2 w-[360px] h-[360px] flex items-center justify-center animate-orbit-container select-none">
         
         {/* Render 6 Orbiting Icons */}
         {angles.map((angle, idx) => {
@@ -459,16 +455,16 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
           
           if (isBeingPulled) {
             if (stage === 'pulling') {
-              // Sliding straight to the center
+              // Fade out quickly and collapse to a point — no ghost edge visible
               style = {
-                transform: `rotate(${angle}deg) translate(0px) rotate(-${angle}deg) scale(0.5)`,
+                transform: `rotate(${angle}deg) translate(0px) rotate(-${angle}deg) scale(0.05)`,
                 opacity: 0,
-                transition: 'transform 1.0s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 1.0s ease-in'
+                transition: 'transform 0.5s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.35s ease-in'
               };
             } else {
-              // Processing, hidden at center
+              // Processing — completely invisible at center
               style = {
-                transform: `rotate(${angle}deg) translate(0px) rotate(-${angle}deg) scale(0.2)`,
+                transform: `rotate(${angle}deg) translate(0px) rotate(-${angle}deg) scale(0)`,
                 opacity: 0,
                 transition: 'none'
               };
@@ -500,52 +496,49 @@ function TreasuryAnimation({ lang: _lang }: { lang: 'EN' | 'AR' }) {
           );
         })}
 
-        {/* Render Emerging Output Card (emerges on opposite side) */}
-        {activePullIndex !== null && (stage === 'pushing' || stage === 'done') && (() => {
-          const idx = activePullIndex;
-          const IconComponent = sourceIcons[idx].icon;
-          
-          // Opposite angle (A + 180)
-          const baseAngle = angles[idx];
-          const oppositeAngle = baseAngle + 180;
-
-          // Transition settings
-          let style = {};
-          if (stage === 'pushing') {
-            // Emerging from center
-            style = {
-              transform: `rotate(${oppositeAngle}deg) translate(${R}px) rotate(-${oppositeAngle}deg) scale(1.05)`,
-              opacity: 1,
-              transition: 'transform 1.0s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.8s ease-out'
-            };
-          } else {
-            // Reached opposite side, fading out after 1.5s
-            style = {
-              transform: `rotate(${oppositeAngle}deg) translate(${R}px) rotate(-${oppositeAngle}deg) scale(1.05)`,
-              opacity: 0,
-              transition: 'transform 0.5s ease-in, opacity 1.5s ease-in'
-            };
-          }
-
-          return (
-            <div 
-              className="absolute w-13 h-13 flex items-center justify-center animate-orbit-icon-reverse z-20 pointer-events-none"
-              style={style}
-            >
-              <div className="w-13 h-13 rounded-full bg-blue-50 border border-blue-300 shadow-md flex items-center justify-center text-blue-600 relative">
-                <IconComponent className="w-6.5 h-6.5" />
-                {/* Blue checkmark badge */}
-                <div className="absolute -top-1.5 -right-1.5 w-5.5 h-5.5 rounded-full bg-blue-500 flex items-center justify-center text-white border border-white shadow-sm">
-                  <Check className="w-3.5 h-3.5 font-bold" />
-                </div>
-              </div>
-            </div>
-          );
-        })()}
+        {/* Output card rendered outside the orbit container — see below */}
       </div>
 
+      {/* Output Card: rendered OUTSIDE the spinning orbit container, positioned via trig */}
+      {activePullIndex !== null && (stage === 'pushing' || stage === 'done') && (() => {
+        const idx = activePullIndex;
+        const IconComponent = sourceIcons[idx].icon;
+        const baseAngle = angles[idx];
+        // Appear on the opposite side
+        const angleDeg = baseAngle + 180;
+        const angleRad = (angleDeg * Math.PI) / 180;
+        // Position relative to center of the 380px-tall, full-width container
+        // Center is at 50% / 50%
+        const xOffset = Math.cos(angleRad) * R;
+        const yOffset = Math.sin(angleRad) * R;
+
+        const isAppearing = stage === 'pushing';
+        return (
+          <div
+            key={`output-${idx}`}
+            className="absolute w-13 h-13 flex items-center justify-center z-20 pointer-events-none"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: `translate(calc(-50% + ${xOffset}px), calc(-50% + ${yOffset}px)) scale(${isAppearing ? 1.05 : 1})`,
+              opacity: isAppearing ? 1 : 0,
+              transition: isAppearing
+                ? 'opacity 0.5s ease-out, transform 0.5s ease-out'
+                : 'opacity 1.5s ease-in, transform 0.5s ease-in',
+            }}
+          >
+            <div className="w-13 h-13 rounded-full bg-sky-50 border border-sky-300 shadow-md flex items-center justify-center text-sky-600 relative">
+              <IconComponent className="w-6.5 h-6.5" />
+              <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-sky-500 flex items-center justify-center text-white border border-white shadow-sm">
+                <Check className="w-3 h-3" />
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Central Glassmorphic Yotax Hexagon Hub (Logo Engine) */}
-      <div className="absolute w-[88px] h-[88px] flex items-center justify-center select-none pointer-events-none z-10 animate-gentle-logo-float-orbit">
+      <div className="absolute top-1/2 left-1/2 w-[88px] h-[88px] flex items-center justify-center select-none pointer-events-none z-10 animate-gentle-logo-float-orbit">
         {/* subtle rotating outer ring */}
         <div className="absolute inset-[-22px] rounded-full border border-slate-200/50 border-dashed animate-rotate-outer-ring" />
         
@@ -610,6 +603,19 @@ export default function LandingPage() {
   const [success, setSuccess] = useState(false);
   const [createdSubdomain, setCreatedSubdomain] = useState('');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 15) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleFaq = (index: number) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -713,7 +719,7 @@ export default function LandingPage() {
 
   return (
     <div 
-      className="min-h-screen bg-[#fafafd] text-slate-800 font-sans selection:bg-blue-600 selection:text-white overflow-x-hidden relative"
+      className="min-h-screen bg-[#fafafd] text-slate-800 font-sans selection:bg-sky-600 selection:text-white overflow-x-hidden relative"
       dir={lang === 'AR' ? 'rtl' : 'ltr'}
     >
       
@@ -899,93 +905,118 @@ export default function LandingPage() {
         }}
       />
 
-      {/* Floating Header */}
-      <header className="fixed top-3 sm:top-4 inset-x-0 z-40">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 w-full">
-          <div className="bg-white/90 backdrop-blur-md border border-slate-200/80 rounded-full h-14 pl-3 pr-2 sm:pl-4 sm:pr-3 flex items-center justify-between gap-2 shadow-lg shadow-slate-100/50">
-            <a className="flex items-center min-w-0" aria-label="Yotax" href="/">
+      {/* Premium Full-Width Sticky Header */}
+      <header 
+        dir={lang === 'AR' ? 'rtl' : 'ltr'}
+        className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
+          scrolled 
+            ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm h-16' 
+            : 'bg-transparent border-b border-transparent h-20'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
+          {/* Logo and Navigation Tabs grouped together */}
+          <div className="flex items-center gap-6 sm:gap-8 min-w-0">
+            <a className="flex items-center shrink-0" aria-label="Yotax" href="/">
               <img 
                 src={yotaxLogo} 
                 alt="Yotax Logo" 
                 className="inline-block w-auto select-none h-7 sm:h-8 shrink-0 object-contain" 
               />
             </a>
-            <nav className="flex items-center gap-0.5 sm:gap-1">
-              <a className="hidden md:inline-block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors rounded-full" href="#problems">{t.problem}</a>
-              <a className="hidden md:inline-block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors rounded-full" href="#demo-video">{t.howItWorks}</a>
-              <a className="hidden md:inline-block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors rounded-full" href="#features">{t.features}</a>
-              <a className="hidden md:inline-block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors rounded-full" href="#about">{t.aboutUs}</a>
-              <a className="hidden md:inline-block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors rounded-full" href="#pricing">{t.pricing}</a>
-              
-              <span className="hidden lg:inline text-slate-200 mx-1">|</span>
-
-              {/* Language switcher flag icon */}
-              <div 
-                onClick={() => setLang(lang === 'EN' ? 'AR' : 'EN')}
-                className="w-8 h-8 rounded-full overflow-hidden border border-slate-200/60 flex items-center justify-center shrink-0 shadow-sm bg-slate-50 cursor-pointer hover:border-slate-300 transition-colors"
-                title={lang === 'EN' ? 'العربية' : 'English'}
-              >
-                <span className="text-[14px] select-none">{lang === 'EN' ? '🇸🇦' : '🇬🇧'}</span>
-              </div>
-
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="group/button inline-flex shrink-0 items-center justify-center font-bold whitespace-nowrap transition-all outline-none select-none h-7 gap-1 px-3 text-[0.8rem] rounded-full hover:bg-slate-100 text-slate-700"
-              >
-                {t.login}
-              </button>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="group/button inline-flex shrink-0 items-center justify-center font-bold whitespace-nowrap transition-all outline-none select-none h-7 gap-1 px-3.5 text-[0.8rem] rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/10"
-              >
-                {t.startTrial}
-              </button>
-            </nav>
+            
+            <div className="hidden md:flex items-center gap-1">
+              <a className="relative px-3.5 py-2 text-sm font-semibold text-slate-650 hover:text-sky-600 transition-colors group" href="#problems">
+                {t.problem}
+                <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-650 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-250" />
+              </a>
+              <a className="relative px-3.5 py-2 text-sm font-semibold text-slate-650 hover:text-sky-600 transition-colors group" href="#demo-video">
+                {t.howItWorks}
+                <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-650 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-250" />
+              </a>
+              <a className="relative px-3.5 py-2 text-sm font-semibold text-slate-650 hover:text-sky-600 transition-colors group" href="#features">
+                {t.features}
+                <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-650 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-250" />
+              </a>
+              <a className="relative px-3.5 py-2 text-sm font-semibold text-slate-650 hover:text-sky-600 transition-colors group" href="#about">
+                {t.aboutUs}
+                <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-650 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-250" />
+              </a>
+              <a className="relative px-3.5 py-2 text-sm font-semibold text-slate-650 hover:text-sky-600 transition-colors group" href="#pricing">
+                {t.pricing}
+                <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-sky-650 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-250" />
+              </a>
+            </div>
           </div>
+          
+          {/* Actions / Buttons on the opposite side */}
+          <nav className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Premium Language Switcher with Flags */}
+            <button 
+              dir={lang === 'AR' ? 'rtl' : 'ltr'}
+              onClick={() => setLang(lang === 'EN' ? 'AR' : 'EN')}
+              className={`flex ${lang === 'AR' ? 'flex-row-reverse' : 'flex-row'} items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold text-[13px] shadow-sm select-none`}
+              title={lang === 'EN' ? 'العربية' : 'English'}
+            >
+              <span className="text-base select-none leading-none">
+                {lang === 'EN' ? '🇬🇧' : '🇯🇴'}
+              </span>
+              <span>{lang === 'EN' ? 'EN' : 'العربية'}</span>
+            </button>
+
+            <span className="text-slate-200 mx-0.5 sm:mx-1 select-none">|</span>
+
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="font-bold text-slate-600 hover:text-slate-900 px-3.5 py-2 text-sm transition-colors"
+            >
+              {t.login}
+            </button>
+            
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-2 text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md shadow-sky-500/10 hover:shadow-lg hover:shadow-sky-500/15 hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0"
+            >
+              {t.startTrial}
+            </button>
+          </nav>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-32 sm:pt-36 pb-20 sm:pb-24 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 w-full">
+      <section className="relative pt-32 sm:pt-36 pb-20 sm:pb-24 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 w-full overflow-hidden">
+        {/* Subtle decorative dot-grid background */}
+        <div 
+          className="absolute inset-0 -z-20 opacity-[0.45] pointer-events-none" 
+          style={{ 
+            backgroundImage: 'radial-gradient(var(--color-sky-200) 1.2px, transparent 1.2px)', 
+            backgroundSize: '28px 28px',
+            maskImage: 'radial-gradient(circle at center, black 60%, transparent 95%)',
+            WebkitMaskImage: 'radial-gradient(circle at center, black 60%, transparent 95%)'
+          }} 
+        />
+        
         <div className="max-w-3xl mx-auto text-center space-y-6 sm:space-y-7 z-10 relative">
-          <p className="inline-flex items-center gap-2 text-[11px] sm:text-xs font-bold px-3.5 py-1.5 rounded-full bg-white border border-slate-200 text-blue-700 shadow-sm">
-            <span className="size-1.5 rounded-full bg-blue-500 animate-live-dot" />
-            {t.heroBadge}
-          </p>
           <h1 className="text-[2.75rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.06] text-slate-900 tracking-tight">
             <span className="block">{lang === 'EN' ? "Know your cash flow," : "أدر تدفقاتك النقدية بسهولة،"}</span>
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-sky-700 to-indigo-600">
               {lang === 'EN' ? "Predict your balance." : "وتوقع رصيدك البنكي بدقة."}
             </span>
           </h1>
           <p className="text-base sm:text-lg text-slate-600 leading-[1.7] max-w-2xl mx-auto font-medium">
             {t.heroSubtext}
           </p>
-          <div className="flex flex-wrap gap-2 justify-center pt-1">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              {lang === 'EN' ? "Automatic Seeding" : "توليد تلقائي للمصروفات"}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
-              <CheckCircle className="w-3.5 h-3.5 text-indigo-600" />
-              {lang === 'EN' ? "Cheque Clearance Sync" : "تسوية الشيكات المؤجلة"}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-slate-200 px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
-              <Layers className="w-3.5 h-3.5 text-sky-600" />
-              {lang === 'EN' ? "Unlimited Accounts" : "حسابات بنكية غير محدودة"}
-            </span>
-          </div>
           <div className="flex flex-wrap gap-3 justify-center pt-2">
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-bold transition-all outline-none h-12 sm:h-13 px-8 text-base rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/10 flex gap-2"
+              className="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-bold transition-all outline-none h-12 sm:h-13 px-8 text-base rounded-xl bg-sky-600 text-white hover:bg-sky-700 shadow-lg shadow-sky-500/10 flex gap-2 hover:scale-[1.02] active:scale-95 duration-200"
             >
               {t.createWorkspaceBtn}
-              <ArrowRight className={`w-5 h-5 ${lang === 'AR' ? 'rotate-180' : ''}`} />
+              <ArrowRight className={`w-5 h-5 transition-transform group-hover/button:translate-x-1 ${lang === 'AR' ? 'rotate-180 group-hover/button:-translate-x-1' : ''}`} />
             </button>
             <a 
               href="#demo-video"
-              className="group/button inline-flex shrink-0 items-center justify-center bg-clip-padding font-bold transition-all border border-slate-200 h-12 sm:h-13 px-8 text-base rounded-xl bg-white text-slate-700 hover:bg-slate-50 shadow-sm"
+              className="group/button inline-flex shrink-0 items-center justify-center bg-clip-padding font-bold transition-all border border-slate-200 h-12 sm:h-13 px-8 text-base rounded-xl bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm hover:scale-[1.02] active:scale-95 duration-200"
             >
               {t.seeHowItWorks}
             </a>
@@ -1009,59 +1040,53 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Excel Pain */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col justify-between overflow-hidden relative group hover:shadow-md hover:border-rose-200 transition-all duration-300">
+            {/* Card 1: Overlooked Vendor Invoices */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:shadow-xl hover:border-rose-300/70 hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-6">
-                  <FileSpreadsheet className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100/60 flex items-center justify-center text-rose-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.prob1Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.prob1Text}
                 </p>
                 
-                {/* Visual Loop: Spreadsheet with error shakes */}
-                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 font-mono text-[10px] text-slate-700 border border-slate-200 animate-cell-shake">
-                  {/* Table Normal */}
-                  <div className="absolute inset-0 p-3 flex flex-col justify-between animate-cell-normal">
-                    <div className="flex justify-between text-slate-400 border-b border-slate-100 pb-1">
-                      <span>BUDGET_Q3.XLSX</span>
-                      <span className="text-emerald-500 font-bold">● OK</span>
+                {/* Visual Loop: Overlooked Supplier invoice */}
+                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 font-mono text-[10px] text-slate-700 border border-slate-100 shadow-inner shadow-slate-50 animate-cell-shake">
+                  <div className="flex flex-col justify-between h-full">
+                    <div className="flex justify-between text-slate-400 border-b border-slate-100 pb-1 font-bold">
+                      <span>{lang === 'AR' ? 'فواتير الموردين المستحقة' : 'VENDOR INVOICES'}</span>
+                      <span className="text-rose-500 animate-pulse">● {lang === 'AR' ? 'منسية!' : 'OVERLOOKED!'}</span>
                     </div>
-                    <div className="space-y-1 mt-2">
-                      <div className="flex justify-between"><span>Bank Balance</span><span>$13,500</span></div>
-                      <div className="flex justify-between font-bold text-slate-800"><span>FORECAST</span><span>$15,000</span></div>
-                    </div>
-                  </div>
-                  {/* Table Typo Error */}
-                  <div className="absolute inset-0 p-3 flex flex-col justify-between animate-cell-error opacity-0">
-                    <div className="flex justify-between text-rose-500 border-b border-rose-100 pb-1">
-                      <span>BUDGET_Q3.XLSX</span>
-                      <span className="text-rose-600 font-bold">● TYPO ERROR</span>
-                    </div>
-                    <div className="space-y-1 mt-2">
-                      <div className="flex justify-between text-rose-600"><span>Bank Balance</span><span>13o50</span></div>
-                      <div className="flex justify-between font-bold text-rose-600 bg-rose-50 border border-rose-100 px-1 rounded"><span>FORECAST</span><span>#VALUE!</span></div>
+                    <div className="space-y-1.5 mt-2 text-[9px] font-sans">
+                      <div className="flex justify-between text-slate-700 font-medium">
+                        <span>{lang === 'AR' ? 'شركة توريد الأسمنت' : 'Cement Supply Co.'}</span>
+                        <span className="text-rose-600 font-bold">{lang === 'AR' ? 'متأخرة 15 يوم' : '15 Days Overdue'}</span>
+                      </div>
+                      <div className="flex justify-between text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-1 rounded">
+                        <span>{lang === 'AR' ? 'الوضع الائتماني للمورد' : 'Supplier Credit Line'}</span>
+                        <span>{lang === 'AR' ? 'مـعـلّـق' : 'SUSPENDED'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-rose-600 mt-6 block">{t.prob1Foot}</span>
+              <span className="text-xs font-extrabold text-rose-600 mt-6 block uppercase tracking-wider">{t.prob1Foot}</span>
             </div>
 
-            {/* Card 2: Unmonitored Cheque Clears */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col justify-between overflow-hidden relative group hover:shadow-md hover:border-amber-200 transition-all duration-300">
+            {/* Card 2: Bounced Post-Dated Cheques */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:shadow-xl hover:border-amber-300/70 hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-6">
-                  <Clock className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100/60 flex items-center justify-center text-amber-550 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <AlertTriangle className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.prob2Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.prob2Text}
                 </p>
                 
                 {/* Visual Loop: Sliding cheque and bounce warning */}
-                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 border border-slate-200">
+                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 border border-slate-100 shadow-inner shadow-slate-50">
                   <div className="absolute inset-x-3 top-3 h-0.5 bg-slate-100 rounded">
                     <div className="absolute top-1/2 left-2/3 -translate-y-1/2 w-2 h-2 rounded-full bg-amber-500 border border-white" />
                   </div>
@@ -1069,66 +1094,58 @@ export default function LandingPage() {
                   {/* Sliding Cheque Document */}
                   <div className="absolute left-4 top-8 p-1.5 rounded bg-amber-50 border border-amber-200 text-[9px] font-mono text-slate-700 flex items-center gap-1.5 animate-cheque-flow shadow-sm">
                     <FileText className="w-3.5 h-3.5 text-amber-600" />
-                    <span>Cheque #4029 ($8.5k)</span>
+                    <span>{lang === 'AR' ? 'شيك مؤجل #4029 (8.5k د.أ)' : 'Cheque #4029 ($8.5k)'}</span>
                   </div>
                   
                   {/* Bounced alert banner */}
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded bg-rose-50 border border-rose-200 text-[9px] font-bold text-rose-700 flex items-center gap-1.5 animate-bounce-warn opacity-0 shadow-md">
-                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
-                    <span>BOUNCED! -$45 NSF FEE</span>
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                    <span>{lang === 'AR' ? 'مرتجع! نقص رصيد بنكي' : 'BOUNCED! LOW BALANCE'}</span>
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-amber-600 mt-6 block">{t.prob2Foot}</span>
+              <span className="text-xs font-extrabold text-amber-600 mt-6 block uppercase tracking-wider">{t.prob2Foot}</span>
             </div>
 
-            {/* Card 3: Delayed Invoice Reminders */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-slate-50 border border-slate-200/60 flex flex-col justify-between overflow-hidden relative group hover:shadow-md hover:border-blue-200 transition-all duration-300">
+            {/* Card 3: Misleading Cash Runways */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:shadow-xl hover:border-sky-300/70 hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6">
-                  <AlertTriangle className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100/60 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <FileSpreadsheet className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.prob3Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.prob3Text}
                 </p>
                 
-                {/* Visual Loop: Fading invoice under padlock */}
-                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 flex justify-between items-center border border-slate-200">
-                  {/* Invoice card */}
-                  <div className="w-24 p-2 rounded bg-slate-50 border border-slate-150 text-[8px] font-mono space-y-1.5 animate-invoice-dim">
-                    <div className="h-1 w-8 bg-slate-200" />
-                    <div className="h-1.5 w-16 bg-blue-500" />
-                    <div className="h-1 w-12 bg-slate-300" />
-                    <div className="text-right text-blue-600 font-bold">$12,000</div>
+                {/* Visual Loop: Misleading cash forecasting */}
+                <div className="relative h-28 w-full bg-white rounded-xl overflow-hidden p-3 flex flex-col justify-between border border-slate-100 shadow-inner shadow-slate-50">
+                  <div className="flex justify-between text-slate-400 border-b border-slate-100 pb-1 font-bold text-[9px]">
+                    <span>{lang === 'AR' ? 'حالة السيولة والمركز المالي' : 'LIQUID RUNWAY STATUS'}</span>
+                    <span className="text-rose-500">● {lang === 'AR' ? 'مضلل' : 'MISLEADING'}</span>
                   </div>
-
-                  {/* Hourglass or Clock */}
-                  <div className="w-8 h-8 rounded-full border-2 border-slate-200 relative flex items-center justify-center">
-                    <div className="absolute w-0.5 h-3 bg-slate-400 origin-bottom bottom-1/2 left-[15px] animate-spin" style={{ animationDuration: '3.5s' }} />
-                    <div className="absolute w-0.5 h-2 bg-slate-300 origin-bottom bottom-1/2 left-[15px] animate-spin" style={{ animationDuration: '10s' }} />
-                  </div>
-
-                  {/* Absolute Padlock center */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-lock-pop opacity-0 pointer-events-none">
-                    <div className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-100 text-rose-700 font-extrabold text-[9px] flex items-center gap-1.5 shadow-lg">
-                      <Lock className="w-3.5 h-3.5 text-rose-500 animate-bounce" />
-                      <span>CAPITAL LOCKED</span>
+                  <div className="space-y-1.5 mt-2 text-[9px] font-sans">
+                    <div className="flex justify-between text-slate-650 font-medium">
+                      <span>{lang === 'AR' ? 'أرباح الدفاتر (ورقياً)' : 'Paper Book Profits'}</span>
+                      <span className="text-emerald-600 font-bold">{lang === 'AR' ? '+45,000 د.أ' : '+$45,000.00'}</span>
+                    </div>
+                    <div className="flex justify-between text-rose-600 font-bold bg-rose-50 border border-rose-100 px-2 py-1 rounded">
+                      <span>{lang === 'AR' ? 'رصيد البنك الفعلي' : 'Actual Bank Balance'}</span>
+                      <span className="animate-pulse">{lang === 'AR' ? '-1,200 د.أ (عجز!)' : '-$1,200.00 (Danger!)'}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-blue-600 mt-6 block">{t.prob3Foot}</span>
+              <span className="text-xs font-extrabold text-sky-600 mt-6 block uppercase tracking-wider">{t.prob3Foot}</span>
             </div>
           </div>
         </div>
       </section>
-
       {/* HOW IT WORKS / METHODOLOGY SECTION (Nuqtaty style) */}
       <section id="demo-video" className="py-24 bg-slate-50 border-t border-slate-200/50 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-blue-600 tracking-wider">{t.bypassBadge}</p>
+            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-sky-600 tracking-wider">{t.bypassBadge}</p>
             <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-4">{t.bypassTitle}</h3>
             <p className="text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
               {t.bypassSubtext}
@@ -1136,74 +1153,74 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Import Ledgers */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-blue-300 hover:shadow-md transition-all duration-300">
+            {/* Card 1: Enter Invoices & Cheques */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6">
-                  <Layers className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100/60 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.bypass1Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.bypass1Text}
                 </p>
 
-                {/* Animation: Particles flowing to vault */}
+                {/* Animation: Particles flowing to scheduler */}
                 <div className="relative h-28 w-full bg-slate-50 rounded-xl overflow-hidden p-3 border border-slate-100 flex items-center justify-between">
-                  <FileSpreadsheet className="w-7 h-7 text-emerald-500 shrink-0" />
+                  <FileText className="w-7 h-7 text-emerald-500 shrink-0" />
                   
                   {/* Track path */}
-                  <div className="flex-1 mx-3 h-0.5 bg-slate-200 relative">
-                    <span className="absolute w-2 h-2 rounded-full bg-blue-600 -translate-y-1/2 animate-flow-p1" />
-                    <span className="absolute w-2 h-2 rounded-full bg-blue-600 -translate-y-1/2 animate-flow-p2" />
-                    <span className="absolute w-2 h-2 rounded-full bg-blue-600 -translate-y-1/2 animate-flow-p3" />
+                  <div className="flex-1 mx-3 h-0.5 bg-slate-250 relative">
+                    <span className="absolute w-2 h-2 rounded-full bg-sky-600 -translate-y-1/2 animate-flow-p1" />
+                    <span className="absolute w-2 h-2 rounded-full bg-sky-600 -translate-y-1/2 animate-flow-p2" />
+                    <span className="absolute w-2 h-2 rounded-full bg-sky-600 -translate-y-1/2 animate-flow-p3" />
                   </div>
 
-                  <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0 animate-vault-pulse">
-                    <Lock className="w-4 h-4" />
+                  <div className="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/20 shrink-0 animate-vault-pulse">
+                    <Calendar className="w-4 h-4" />
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-blue-600 mt-6 block">{t.bypass1Foot}</span>
+              <span className="text-xs font-extrabold text-sky-600 mt-6 block uppercase tracking-wider">{t.bypass1Foot}</span>
             </div>
 
-            {/* Card 2: Auto-Seed Expenses */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-blue-300 hover:shadow-md transition-all duration-300">
+            {/* Card 2: FIFO Payment Allocation */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6">
-                  <Clock className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100/60 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.bypass2Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.bypass2Text}
                 </p>
 
                 {/* Animation: Cascade list seeds */}
                 <div className="relative h-28 w-full bg-slate-50 rounded-xl overflow-hidden p-3 border border-slate-100 space-y-1.5 flex flex-col justify-center">
-                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-1">
-                    <span>Rent & Utilities</span>
-                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">SEEDED</span>
+                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-1 shadow-sm">
+                    <span>{lang === 'AR' ? 'فاتورة رقم 1093' : 'Invoice #1093'}</span>
+                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'مدفوعة (FIFO)' : 'PAID (FIFO)'}</span>
                   </div>
-                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-2 opacity-0">
-                    <span>Team Salaries</span>
-                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">SEEDED</span>
+                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-2 opacity-0 shadow-sm">
+                    <span>{lang === 'AR' ? 'فاتورة رقم 1094' : 'Invoice #1094'}</span>
+                    <span className="text-[7px] bg-sky-50 text-sky-700 border border-sky-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'جزئي (FIFO)' : 'PARTIAL (FIFO)'}</span>
                   </div>
-                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-3 opacity-0">
-                    <span>Office Supplies</span>
-                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">SEEDED</span>
+                  <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-3 opacity-0 shadow-sm">
+                    <span>{lang === 'AR' ? 'فاتورة رقم 1095' : 'Invoice #1095'}</span>
+                    <span className="text-[7px] bg-slate-100 text-slate-650 border border-slate-200 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'غير مدفوعة' : 'UNPAID'}</span>
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-blue-600 mt-6 block">{t.bypass2Foot}</span>
+              <span className="text-xs font-extrabold text-sky-600 mt-6 block uppercase tracking-wider">{t.bypass2Foot}</span>
             </div>
 
-            {/* Card 3: Auto-Reconcile Cheques */}
-            <div className="p-7 sm:p-8 rounded-2xl bg-white border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-blue-300 hover:shadow-md transition-all duration-300">
+            {/* Card 3: Post-Dated Cheques Tracking */}
+            <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div>
-                <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-6">
-                  <Sparkles className="w-5.5 h-5.5" />
+                <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100/60 flex items-center justify-center text-amber-500 mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Calendar className="w-5.5 h-5.5" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2.5">{t.bypass3Title}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                <p className="text-slate-500 text-sm leading-relaxed mb-6 font-medium">
                   {t.bypass3Text}
                 </p>
 
@@ -1212,7 +1229,7 @@ export default function LandingPage() {
                   {/* Ledger bar chart */}
                   <div className="flex gap-2 items-end h-full w-20">
                     <div className="w-3 bg-slate-200 rounded-t h-[48%]" />
-                    <div className="w-3 bg-blue-500 rounded-t transition-all duration-500 animate-bar-grow" />
+                    <div className="w-3 bg-sky-500 rounded-t transition-all duration-500 animate-bar-grow" />
                     <div className="w-3 bg-slate-200 rounded-t h-[38%]" />
                   </div>
                   
@@ -1220,13 +1237,13 @@ export default function LandingPage() {
                   <div className="absolute right-4 bottom-4 p-2 rounded bg-white border border-slate-200 text-[8px] font-mono text-slate-800 space-y-1 shadow-md animate-clear-slide">
                     <div className="flex items-center gap-1">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                      <span className="font-sans font-bold">Cheque #1049 Cleared</span>
+                      <span className="font-sans font-bold">{lang === 'AR' ? 'تم تحصيل شيك #1049' : 'Cheque #1049 Cleared'}</span>
                     </div>
-                    <span className="text-emerald-500 font-extrabold font-sans block">+$15,000.00</span>
+                    <span className="text-emerald-500 font-extrabold font-sans block">{lang === 'AR' ? '+15,000.00 د.أ' : '+$15,000.00'}</span>
                   </div>
                 </div>
               </div>
-              <span className="text-xs font-bold text-blue-600 mt-6 block">{t.bypass3Foot}</span>
+              <span className="text-xs font-extrabold text-sky-600 mt-6 block uppercase tracking-wider">{t.bypass3Foot}</span>
             </div>
           </div>
         </div>
@@ -1236,7 +1253,7 @@ export default function LandingPage() {
       <section id="features" className="py-24 border-t border-slate-200/50 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-blue-600 tracking-wider">{t.featuresBadge}</p>
+            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-sky-600 tracking-wider">{t.featuresBadge}</p>
             <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-4">{t.featuresTitle}</h3>
             <p className="text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
               {t.featuresSubtext}
@@ -1244,62 +1261,68 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <ShieldCheck className="w-6 h-6" />
+            {/* Card 1: Dashboard */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <FileSpreadsheet className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat1Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat1Text}
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <Clock className="w-6 h-6" />
+            {/* Card 2: Invoices */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <FileText className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat2Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat2Text}
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <Layers className="w-6 h-6" />
+            {/* Card 3: Custom Supplier Terms */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-amber-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-550 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Calendar className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat3Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat3Text}
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <FileText className="w-6 h-6" />
+            {/* Card 4: Post-Dated Cheques */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Coins className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat4Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat4Text}
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <Globe className="w-6 h-6" />
+            {/* Card 5: 24h Alerts */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-amber-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-550 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Clock className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat5Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat5Text}
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200/40 hover:border-blue-300 hover:bg-white hover:shadow-md transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
-                <UserCheck className="w-6 h-6" />
+            {/* Card 6: Popup alerts */}
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100/50 flex items-center justify-center text-rose-600 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <AlertTriangle className="w-6 h-6" />
               </div>
               <h4 className="text-lg font-bold text-slate-900 mb-2">{t.feat6Title}</h4>
-              <p className="text-slate-500 text-sm leading-relaxed">
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.feat6Text}
               </p>
             </div>
@@ -1308,15 +1331,15 @@ export default function LandingPage() {
       </section>
 
       {/* Expanded "ABOUT US" Section */}
-      <section id="about" className="py-24 border-t border-slate-200/50 bg-slate-50 relative overflow-hidden">
-        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-blue-100/40 blur-[130px] rounded-full pointer-events-none -z-10" />
+      <section id="about" className="py-24 border-t border-slate-200/50 bg-slate-50/70 relative overflow-hidden">
+        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-sky-100/30 blur-[130px] rounded-full pointer-events-none -z-10" />
         
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             
             {/* Story/Copy */}
             <div className="lg:col-span-7 space-y-6">
-              <p className="text-xs sm:text-[13px] font-extrabold uppercase text-blue-600 tracking-wider mb-0">{t.aboutBadge}</p>
+              <p className="text-xs sm:text-[13px] font-extrabold uppercase text-sky-600 tracking-wider mb-0">{t.aboutBadge}</p>
               <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight">
                 {t.aboutTitle}
               </h3>
@@ -1330,15 +1353,15 @@ export default function LandingPage() {
               {/* Stat callouts */}
               <div className="grid grid-cols-3 gap-6 mt-10 border-t border-slate-200/80 pt-8">
                 <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-blue-600 block">150+</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">150+</span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat1}</span>
                 </div>
                 <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-blue-600 block">$40M+</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-amber-550 block">$40M+</span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat2}</span>
                 </div>
                 <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-blue-600 block">99.9%</span>
+                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">99.9%</span>
                   <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat3}</span>
                 </div>
               </div>
@@ -1346,8 +1369,8 @@ export default function LandingPage() {
 
             {/* Core Values */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-100 flex gap-4 hover:shadow-lg transition-shadow">
-                <div className="w-10 h-10 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 shrink-0">
+              <div className="p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 shadow-sm flex gap-4 hover:shadow-md hover:border-sky-200/60 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 shrink-0">
                   <Compass className="w-5 h-5" />
                 </div>
                 <div>
@@ -1358,8 +1381,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-100 flex gap-4 hover:shadow-lg transition-shadow">
-                <div className="w-10 h-10 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 shrink-0">
+              <div className="p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 shadow-sm flex gap-4 hover:shadow-md hover:border-amber-200/60 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100/50 flex items-center justify-center text-amber-550 shrink-0">
                   <Zap className="w-5 h-5" />
                 </div>
                 <div>
@@ -1370,8 +1393,8 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-md shadow-slate-100 flex gap-4 hover:shadow-lg transition-shadow">
-                <div className="w-10 h-10 rounded-xl bg-blue-100/50 flex items-center justify-center text-blue-600 shrink-0">
+              <div className="p-6 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 shadow-sm flex gap-4 hover:shadow-md hover:border-sky-200/60 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 shrink-0">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -1388,18 +1411,18 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 border-t border-slate-200/50 bg-white">
+      <section id="pricing" className="py-24 border-t border-slate-200/50 bg-slate-50/70">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-blue-600 tracking-wider">{t.pricingBadge}</p>
+            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-sky-600 tracking-wider">{t.pricingBadge}</p>
             <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-4">{t.pricingTitle}</h3>
             <p className="text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
               {t.pricingSubtext}
             </p>
           </div>
 
-          <div className="max-w-md mx-auto p-8 rounded-3xl bg-white border-2 border-blue-600 flex flex-col justify-between relative shadow-xl shadow-blue-500/5 hover:-translate-y-1 transition-transform duration-300">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold tracking-wide uppercase">
+          <div className="max-w-md mx-auto p-8 rounded-3xl bg-white border-2 border-sky-600/80 flex flex-col justify-between relative shadow-2xl shadow-sky-500/8 hover:-translate-y-1.5 transition-transform duration-300">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-sky-600 text-white text-[10px] font-extrabold tracking-wide uppercase shadow-md shadow-sky-500/20">
               {lang === 'EN' ? 'All-Inclusive Plan' : 'باقة شاملة المزايا'}
             </div>
             <div>
@@ -1411,39 +1434,39 @@ export default function LandingPage() {
                 <span className="text-slate-500 text-sm font-semibold">{t.planPeriod}</span>
               </div>
               
-              <ul className="space-y-4 text-sm text-slate-600 mb-8 pt-2">
+              <ul className="space-y-3.5 text-sm text-slate-600 mb-8 pt-2">
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat1}</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat2}</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat3}</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat4}</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat5}</span>
                 </li>
                 <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0">
+                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
                     <Check className="w-3 h-3" />
                   </span>
                   <span className="font-semibold">{t.planFeat6}</span>
@@ -1453,7 +1476,7 @@ export default function LandingPage() {
             
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-md shadow-blue-500/10"
+              className="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/15 hover:scale-[1.01] active:scale-95 duration-200"
             >
               {t.planBtn}
             </button>
@@ -1462,37 +1485,45 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="py-24 border-t border-slate-200/50 bg-[#fafafd] relative">
+      <section id="faq" className="py-24 border-t border-slate-200/50 bg-white relative">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
-            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-blue-600 tracking-wider">{t.faqBadge}</p>
+            <p className="text-xs sm:text-[13px] font-extrabold uppercase mb-3 text-sky-600 tracking-wider">{t.faqBadge}</p>
             <h3 className="text-3xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-4">{t.faqTitle}</h3>
             <p className="text-slate-600 font-medium leading-relaxed max-w-2xl mx-auto">
               {t.faqSubtext}
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
             {faqs.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
                 <div 
                   key={index}
-                  className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-300 shadow-sm"
+                  className={`border rounded-2xl overflow-hidden transition-all duration-300 shadow-sm ${
+                    isOpen
+                      ? 'bg-sky-50/40 border-sky-200/70 shadow-md'
+                      : 'bg-white border-slate-200/80 hover:border-slate-300/80 hover:shadow-md'
+                  }`}
                 >
                   <button
                     onClick={() => toggleFaq(index)}
-                    className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-900 hover:text-blue-600 transition-colors"
+                    className="w-full px-6 py-5 flex items-center justify-between text-left font-bold text-slate-900 hover:text-sky-600 transition-colors"
                   >
                     <span className="text-base md:text-lg font-bold">{faq.q}</span>
-                    <span className={`w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180 bg-blue-50 text-blue-600' : ''}`}>
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 shrink-0 ms-4 ${
+                      isOpen
+                        ? 'rotate-180 bg-sky-100 text-sky-600'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}>
                       <ChevronDown className="w-4 h-4" />
                     </span>
                   </button>
                   <div 
-                    className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-40 border-t border-slate-100' : 'max-h-0'}`}
+                    className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-48 border-t border-sky-100/60' : 'max-h-0'}`}
                   >
-                    <div className="p-6 text-slate-600 text-sm md:text-base leading-relaxed font-medium">
+                    <div className="px-6 py-5 text-slate-600 text-sm md:text-base leading-relaxed font-medium">
                       {faq.a}
                     </div>
                   </div>
@@ -1504,12 +1535,12 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/50 py-12 bg-slate-50 text-slate-500">
+      <footer className="border-t border-slate-200/60 py-12 bg-white text-slate-400">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2.5">
-            <img src={yotaxLogo} alt="Yotax Logo" className="h-7 w-auto object-contain" />
+            <img src={yotaxLogo} alt="Yotax Logo" className="h-7 w-auto object-contain opacity-80" />
           </div>
-          <span className="text-xs font-semibold">
+          <span className="text-xs font-semibold tracking-wide">
             {t.copyright}
           </span>
         </div>
@@ -1517,13 +1548,13 @@ export default function LandingPage() {
 
       {/* Onboarding Registration Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
-          <div className="relative w-full max-w-lg overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-2xl p-8 transition-transform duration-300 hover:scale-[1.01]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
+          <div className="relative w-full max-w-lg overflow-hidden bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-8">
             
             {/* Close Button */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-blue-600" />
+                <Building2 className="w-5 h-5 text-sky-600" />
                 <h3 className="text-xl font-bold text-slate-900">{t.modalTitle}</h3>
               </div>
               <button 
@@ -1553,10 +1584,10 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2">Workspace Created Successfully!</h4>
                 <p className="text-sm text-slate-500 mb-6 font-medium">
-                  We have created your private workspace <span className="font-mono text-blue-600 font-semibold">{createdSubdomain}</span>.
+                  We have created your private workspace <span className="font-mono text-sky-600 font-semibold">{createdSubdomain}</span>.
                 </p>
                 <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-bold">
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  <Loader2 className="w-4 h-4 animate-spin text-sky-600" />
                   Redirecting to Workspace Login Page...
                 </div>
               </div>
@@ -1576,7 +1607,7 @@ export default function LandingPage() {
                       placeholder={t.modalCompPlaceholder}
                       value={formData.companyName}
                       onChange={handleInputChange}
-                      className={`w-full ${lang === 'AR' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-600 text-sm focus:bg-white transition-colors font-medium`}
+                      className={`w-full ${lang === 'AR' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-600 text-sm focus:bg-white transition-colors font-medium`}
                     />
                   </div>
                 </div>
@@ -1620,7 +1651,7 @@ export default function LandingPage() {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm transition-all shadow-lg shadow-blue-500/10 flex items-center justify-center gap-2 hover:scale-[1.01] mt-8 disabled:opacity-50"
+                  className="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2 hover:scale-[1.01] mt-8 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
