@@ -913,14 +913,6 @@ export default function LandingPage() {
       {/* Glowing Blur Blobs */}
       <div 
         aria-hidden="true" 
-        className="pointer-events-none absolute -top-32 -start-40 size-[38rem] rounded-full blur-[110px] opacity-25 -z-10" 
-        style={{
-          background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)',
-          animation: 'blob-a 15s ease-in-out infinite'
-        }}
-      />
-      <div 
-        aria-hidden="true" 
         className="pointer-events-none absolute top-10 -end-44 size-[32rem] rounded-full blur-[110px] opacity-20 -z-10" 
         style={{
           background: 'radial-gradient(circle, #bae6fd 0%, transparent 70%)',
@@ -932,10 +924,8 @@ export default function LandingPage() {
       {/* Premium Full-Width Sticky Header */}
       <header 
         dir={lang === 'AR' ? 'rtl' : 'ltr'}
-        className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
-          scrolled 
-            ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-sm h-16' 
-            : 'bg-transparent border-b border-transparent h-20'
+        className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 bg-white border-b border-slate-200/50 shadow-sm ${
+          scrolled ? 'h-16' : 'h-20'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between gap-4">
