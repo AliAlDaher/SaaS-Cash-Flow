@@ -125,15 +125,15 @@ const translations = {
     aboutVal3Text: "Add accountants, managers, and data entry staff to manage your records together.",
 
     // Security Section
-    securityBadge: "Enterprise Security",
-    securityTitle: "Protected by design, secured by default",
-    securitySubtext: "We safeguard your sensitive financial ledgers, bank connections, and cheque details with enterprise-grade data isolation protocols.",
-    sec1Title: "Isolated Tenant Databases",
-    sec1Text: "Every company operates on a fully isolated database partition with dedicated credentials, preventing data leaks completely.",
-    sec2Title: "Banking-Grade Encryption",
-    sec2Text: "All critical parameters, credentials, and cashing dates are encrypted in transit and at rest using the AES-256 standard.",
-    sec3Title: "Automated Daily Backups",
-    sec3Text: "Encrypted point-in-time snapshots of your accounting records are stored in geographically redundant secure cloud vaults.",
+    securityBadge: "Data Protection",
+    securityTitle: "Your financial records, locked down.",
+    securitySubtext: "We secure your balances and cheques with industry-standard protocols.",
+    sec1Title: "Isolated Databases",
+    sec1Text: "Each workspace gets a private, separate database. Your data never mixes with others.",
+    sec2Title: "Bank-Grade Encryption",
+    sec2Text: "All records, transactions, and credentials are encrypted using AES-256 protocols.",
+    sec3Title: "Daily Secure Backups",
+    sec3Text: "Automated daily backups are saved securely in redundant cloud vaults.",
 
     // Pricing Section
     pricingBadge: "Pricing",
@@ -270,15 +270,15 @@ const translations = {
     aboutVal3Text: "أضف المحاسبين والمدراء وموظفي إدخال البيانات لإدارة دفاتركم المالية سوياً.",
 
     // Security Section
-    securityBadge: "حماية وأمن البيانات",
-    securityTitle: "أمان بمستوى الأنظمة البنكية لحماية حساباتك",
-    securitySubtext: "نحن نحمي دفاتر حساباتك الحساسة، أرصدتك البنكية، وتفاصيل شيكاتك بأحدث بروتوكولات حماية وعزل البيانات السحابية.",
-    sec1Title: "قواعد بيانات معزولة بالكامل",
-    sec1Text: "تعمل كل شركة على قاعدة بيانات مستقلة تماماً ومعزولة برابط اتصال مستقل، مما يمنع تسرب البيانات تماماً ويضمن الخصوصية.",
-    sec2Title: "تشفير البيانات العالي AES-256",
-    sec2Text: "يتم تشفير جميع المعاملات وتفاصيل الشيكات والبيانات الحساسة أثناء النقل وعند التخزين وفق أعلى المعايير البنكية العالمية.",
-    sec3Title: "نسخ احتياطي تلقائي مشفر",
-    sec3Text: "يتم أخذ نسخ احتياطية مشفرة وتلقائية لبياناتك بانتظام وتخزينها في خوادم سحابية متعددة لضمان عدم فقدانها مطلقاً.",
+    securityBadge: "حماية البيانات",
+    securityTitle: "سجلاتك المالية في أمان تام",
+    securitySubtext: "نحمي أرصدتك وشيكاتك بأعلى معايير الأمان وعزل البيانات السحابية.",
+    sec1Title: "بيانات معزولة بالكامل",
+    sec1Text: "لكل مساحة عمل قاعدة بيانات مستقلة وخاصة. لا تختلط بياناتك مع الآخرين نهائياً.",
+    sec2Title: "تشفير بمستوى بنكي",
+    sec2Text: "تشفير كامل لجميع السجلات والعمليات المالية باستخدام معيار AES-256 العالمي.",
+    sec3Title: "نسخ احتياطي يومي",
+    sec3Text: "نسخ احتياطي يومي وتلقائي يُحفظ بأمان في خوادم سحابية متعددة.",
 
     // Pricing Section
     pricingBadge: "باقة الاشتراك",
@@ -1355,51 +1355,50 @@ export default function LandingPage() {
       </section>
 
       {/* Enterprise Trust & Security Section */}
-      <section id="security" className="py-24 bg-slate-950 text-white relative overflow-hidden border-t border-slate-900" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-25 pointer-events-none" />
-        <div className="absolute top-1/2 left-1/4 w-[350px] h-[350px] bg-sky-500/10 blur-[130px] rounded-full pointer-events-none" />
+      <section id="security" className="py-24 border-t border-slate-200/50 bg-white relative overflow-hidden" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
+        <div className="absolute top-1/2 right-1/4 w-[400px] h-[400px] bg-sky-50/40 blur-[130px] rounded-full pointer-events-none -z-10" />
         
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <p className="text-xs sm:text-[13px] font-extrabold uppercase text-sky-400 tracking-wider mb-3">
+          <p className="text-xs sm:text-[13px] font-extrabold uppercase text-sky-600 tracking-wider mb-3">
             {t.securityBadge}
           </p>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+          <h2 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
             {t.securityTitle}
           </h2>
-          <p className="text-slate-400 max-w-3xl mx-auto text-base md:text-lg leading-relaxed mt-4 font-medium">
+          <p className="text-slate-500 max-w-3xl mx-auto text-base md:text-lg leading-relaxed mt-4 font-medium">
             {t.securitySubtext}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 text-start">
             {/* Database Isolation */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-white/10 transition-all duration-300 group shadow-2xl relative">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm flex flex-col items-start">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Database className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.sec1Title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{t.sec1Title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.sec1Text}
               </p>
             </div>
 
             {/* Encryption */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-white/10 transition-all duration-300 group shadow-2xl relative">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm flex flex-col items-start">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Lock className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.sec2Title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{t.sec2Title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.sec2Text}
               </p>
             </div>
 
             {/* Automated Backup */}
-            <div className="p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-500/30 hover:bg-white/10 transition-all duration-300 group shadow-2xl relative">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+            <div className="p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group shadow-sm flex flex-col items-start">
+              <div className="w-12 h-12 rounded-xl bg-sky-50 border border-sky-100/50 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
                 <Shield className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3">{t.sec3Title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">{t.sec3Title}</h3>
+              <p className="text-slate-500 text-sm leading-relaxed font-medium">
                 {t.sec3Text}
               </p>
             </div>
