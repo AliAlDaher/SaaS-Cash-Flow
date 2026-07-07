@@ -3991,14 +3991,6 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [editingExpenseId, setEditingExpenseId] = useState<number | null>(null)
-  const [generating, setGenerating] = useState(false)
-  const [genAccountId, setGenAccountId] = useState('')
-  const [genMonth, setGenMonth] = useState(() => {
-    const next = new Date();
-    next.setMonth(next.getMonth() + 1);
-    return next.toISOString().slice(0, 7); // "YYYY-MM"
-  })
-  const [genSuccess, setGenSuccess] = useState<string | null>(null)
   const defaultCategories = ['إيجار', 'محروقات', 'رواتب', 'صيانة', 'كهرباء', 'مياه', 'إنترنت', 'مستلزمات مكتبية', 'تسويق', 'ضرائب', 'الضمان الاجتماعي', 'أخرى']
   const [categories, setCategories] = useState<string[]>(() => {
     const saved = localStorage.getItem('expense_categories')
@@ -4036,26 +4028,6 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
     }
   }
 
-  const handleGenerateMonthly = async () => {
-    if (!genAccountId) { alert('Please select an account first'); return; }
-    setGenerating(true);
-    setGenSuccess(null);
-    try {
-      const res = await apiFetch(`${API_URL}/expenses/generate-monthly`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accountId: genAccountId, targetMonth: genMonth })
-      });
-      if (!res.ok) throw new Error('Failed to generate');
-      const data = await res.json();
-      setGenSuccess(`تم إنشاء ${data.created.length} مصروفات لشهر ${genMonth} بنجاح!`);
-      onRefresh();
-    } catch (err: any) {
-      showError(err.message || 'Failed to generate monthly expenses');
-    } finally {
-      setGenerating(false);
-    }
-  };
 
   const handleAddExpense = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -4099,35 +4071,7 @@ function ExpensesTab({ accounts, expenses, onRefresh, onDelete }: { accounts: Ac
         <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Expenses</h1>
       </header>
 
-      {(user?.role === 'admin' || user?.permissions?.expenses?.create) && (
-        <div className="bg-slate-50 rounded-xl border border-slate-200 p-4 max-w-4xl flex flex-wrap items-end gap-4">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-700">Generate Monthly Expenses</p>
-            <p className="text-xs text-slate-400 mt-0.5">رواتب · ضمان اجتماعي · كهرباء · إنترنت</p>
-          </div>
-          {genSuccess && (
-            <p className="text-xs text-emerald-600 font-medium w-full">{genSuccess}</p>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Month</label>
-            <input type="month" value={genMonth} onChange={e => setGenMonth(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-sky-500" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Account</label>
-            <select value={genAccountId} onChange={e => setGenAccountId(e.target.value)} className="border border-slate-300 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 min-w-36">
-              <option value="">Select Account</option>
-              {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-            </select>
-          </div>
-          <button
-            onClick={handleGenerateMonthly}
-            disabled={generating}
-            className="bg-sky-600 text-white rounded-lg px-5 py-2 text-sm font-medium hover:bg-sky-700 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            {generating ? <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Generating...</> : <><Clock className="w-3.5 h-3.5" />Generate</>}
-          </button>
-        </div>
-      )}
+
 
       {(user?.role === 'admin' || user?.permissions?.expenses?.create) && (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-4xl">

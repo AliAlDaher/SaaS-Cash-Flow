@@ -31,57 +31,6 @@ router.get('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'v
         res.status(500).json({ error: 'Failed to fetch expenses' });
     }
 }));
-// Generate monthly recurring expenses on demand (e.g. before the month starts)
-router.post('/generate-monthly', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { accountId, targetMonth } = req.body; // targetMonth: "2026-06" (YYYY-MM)
-        if (!accountId)
-            return res.status(400).json({ error: 'accountId is required' });
-        // Parse target month or default to next month
-        let targetDate;
-        if (targetMonth) {
-            targetDate = new Date(targetMonth + '-01');
-        }
-        else {
-            const now = new Date();
-            targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        }
-        const monthLabel = targetDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' });
-        let recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
-        const categoriesFilePath = path_1.default.join(__dirname, '../../categories.json');
-        if (fs_1.default.existsSync(categoriesFilePath)) {
-            try {
-                const fileData = fs_1.default.readFileSync(categoriesFilePath, 'utf-8');
-                const parsed = JSON.parse(fileData);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    recurringCategories = parsed;
-                }
-            }
-            catch (e) {
-                console.error('Failed to read categories.json in generate-monthly', e);
-            }
-        }
-        const created = [];
-        for (const category of recurringCategories) {
-            const expense = yield prisma_1.default.expense.create({
-                data: {
-                    category,
-                    amount: 0,
-                    paidAmount: 0,
-                    accountId: parseInt(accountId),
-                    date: targetDate,
-                    note: 'مصروف شهري - ' + monthLabel
-                }
-            });
-            created.push(expense);
-        }
-        res.json({ success: true, created });
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
-    }
-}));
 // Add new expense (handling Paid/Unpaid status toggles and account deductions)
 router.post('/', auth_1.requireAuth, (0, auth_1.requirePermission)('expenses', 'create'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { category, amount, accountId, date, note, status } = req.body;

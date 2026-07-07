@@ -1,53 +1,8 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const node_cron_1 = __importDefault(require("node-cron"));
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
@@ -62,8 +17,6 @@ const users_1 = __importDefault(require("./routes/users"));
 const cheques_1 = __importDefault(require("./routes/cheques"));
 const expenses_1 = __importDefault(require("./routes/expenses"));
 const onboarding_1 = __importDefault(require("./routes/onboarding"));
-const prisma_1 = __importStar(require("./prisma"));
-const prismaManager_1 = require("./prismaManager");
 const tenantMiddleware_1 = require("./middleware/tenantMiddleware");
 const errorHandler_1 = require("./middleware/errorHandler");
 dotenv_1.default.config();
@@ -119,77 +72,6 @@ app.get('/health', (req, res) => {
         timestamp: new Date().toISOString()
     });
 });
-// Automated monthly expenses generation across all tenant databases
-node_cron_1.default.schedule('0 0 1 * *', () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log('[Cron] Running monthly expenses generation across all tenants...');
-    try {
-        // Fetch all active registered tenants from the Central DB
-        const tenants = yield prisma_1.centralPrisma.tenant.findMany();
-        for (const tenant of tenants) {
-            console.log(`[Cron] Seeding expenses for company subdomain: "${tenant.subdomain}"`);
-            try {
-                const tenantClient = (0, prismaManager_1.getPrismaClientForTenant)(tenant.subdomain, tenant.dbConnectionString);
-                // Execute the seeding logic in the context of this tenant's database connection
-                yield prisma_1.tenantStorage.run(tenantClient, () => __awaiter(void 0, void 0, void 0, function* () {
-                    const now = new Date();
-                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-                    const existingCount = yield prisma_1.default.expense.count({
-                        where: {
-                            note: { startsWith: 'Automated monthly expense for' },
-                            date: {
-                                gte: startOfMonth,
-                                lte: endOfMonth
-                            }
-                        }
-                    });
-                    if (existingCount > 0) {
-                        console.log(`[Cron] Monthly expenses already generated for "${tenant.subdomain}". Skipping.`);
-                        return;
-                    }
-                    const account = yield prisma_1.default.account.findFirst({ orderBy: { id: 'asc' } });
-                    if (!account) {
-                        console.log(`[Cron] No bank accounts found for "${tenant.subdomain}". Skipping.`);
-                        return;
-                    }
-                    let categories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
-                    const categoriesFilePath = path_1.default.join(__dirname, '../categories.json');
-                    if (fs_1.default.existsSync(categoriesFilePath)) {
-                        try {
-                            const fileData = fs_1.default.readFileSync(categoriesFilePath, 'utf-8');
-                            const parsed = JSON.parse(fileData);
-                            if (Array.isArray(parsed) && parsed.length > 0) {
-                                categories = parsed;
-                            }
-                        }
-                        catch (e) {
-                            console.error(`[Cron] Failed to read categories.json for "${tenant.subdomain}"`, e);
-                        }
-                    }
-                    for (const cat of categories) {
-                        yield prisma_1.default.expense.create({
-                            data: {
-                                category: cat,
-                                amount: 0,
-                                paidAmount: 0,
-                                date: now,
-                                accountId: account.id,
-                                note: `Automated monthly expense for ${now.toLocaleString('default', { month: 'long', year: 'numeric' })}`
-                            }
-                        });
-                    }
-                    console.log(`[Cron] Monthly expenses successfully generated for "${tenant.subdomain}".`);
-                }));
-            }
-            catch (tenantError) {
-                console.error(`[Cron] Failed expense generation for tenant "${tenant.subdomain}":`, tenantError);
-            }
-        }
-    }
-    catch (error) {
-        console.error('[Cron] Fatal error in monthly expenses cron job:', error);
-    }
-}));
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });

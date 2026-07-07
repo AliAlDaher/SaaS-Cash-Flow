@@ -108,7 +108,7 @@ const translations = {
     aboutBadge: "About Us",
     aboutTitle: "Built for practical cash management",
     aboutText1: "We started Yotax to solve a simple problem: businesses spend too much time tracking bank balances and cheques in manual ledgers.",
-    aboutText2: "We built this tool to automate basic bookkeeping tasks. It logs cheques, generates recurring expenses, and draws clear cash flow curves automatically.",
+    aboutText2: "We built this tool to simplify day-to-day cash flow management. It tracks purchase invoices, logs cheques, and draws clear cash flow curves dynamically.",
     aboutText3: "Today, over 150 companies use Yotax to track bank balances, record invoices, and forecast cash positions.",
     
     stat1: "Companies",
@@ -117,8 +117,8 @@ const translations = {
 
     aboutVal1Title: "Simple Financial Tracking",
     aboutVal1Text: "All bank ledgers, cheque collections, and expenses are tracked in one simple workspace.",
-    aboutVal2Title: "Automated Operations",
-    aboutVal2Text: "Cheques clear and monthly utility categories seed automatically without manual entries.",
+    aboutVal2Title: "Custom Supplier Terms",
+    aboutVal2Text: "Set custom payment terms per supplier (60/90 days) to track and schedule invoice maturities accurately.",
     aboutVal3Title: "Multi-User Access",
     aboutVal3Text: "Add accountants, managers, and data entry staff to manage your records together.",
 
@@ -134,7 +134,7 @@ const translations = {
     planFeat1: "Private Workspace Subdomain",
     planFeat2: "Unlimited Bank Accounts",
     planFeat3: "Post-Dated Cheque Tracking",
-    planFeat4: "Automated Monthly Expense Seeding",
+    planFeat4: "Custom Supplier Payment Terms",
     planFeat5: "Team Member Role Permissions",
     planFeat6: "PDF Financial Reports & Reminders",
     planBtn: "Start Free Trial",
@@ -242,7 +242,7 @@ const translations = {
     aboutBadge: "من نحن",
     aboutTitle: "منصة صممت بأيدي خبراء ماليين لخدمة الشركات",
     aboutText1: "انطلقت يوتاكس لحل مشكلة واقعية يعاني منها أغلب مدراء الشركات: إهدار ساعات طويلة في مراجعة كشوفات الحسابات وتحديث دفاتر الشيكات اليدوية هرباً من مفاجآت السيولة.",
-    aboutText2: "قمنا بتطوير هذه المنصة لأتمتة العمليات الأساسية لحركة الأموال. فهي تسجل الشيكات، وتوقع الفواتير الدورية، وترسم منحنيات تدفق السيولة بوضوح وتلقائية.",
+    aboutText2: "قمنا بتطوير هذه المنصة لتبسيط إدارة السيولة اليومية. فهي تتتبع فواتير الشراء، وتسجل الشيكات، وترسم منحنيات تدفق السيولة بوضوح وديناميكية.",
     aboutText3: "اليوم، تعتمد أكثر من 150 شركة ماليًا على يوتاكس لمتابعة أرصدتها وتوقعات تدفقاتها النقدية بدقة متناهية.",
 
     stat1: "شركات نشطة",
@@ -251,8 +251,8 @@ const translations = {
 
     aboutVal1Title: "تتبع مالي مبسط",
     aboutVal1Text: "يتم تتبع الحسابات البنكية والشيكات والمصروفات بالكامل في واجهة موحدة وسهلة الاستخدام.",
-    aboutVal2Title: "عمليات مالية مؤتمتة",
-    aboutVal2Text: "تتم تسوية الشيكات وتوليد مصروفات الفواتير الدورية تلقائياً دون إدخال بشرى مكرر.",
+    aboutVal2Title: "شروط استحقاق مخصصة",
+    aboutVal2Text: "تخصيص شروط فترات السداد لكل مورد (مثل 60 أو 90 يوماً) لجدولة ومتابعة تواريخ الاستحقاق بدقة متناهية.",
     aboutVal3Title: "صلاحيات متعددة للمستخدمين",
     aboutVal3Text: "أضف المحاسبين والمدراء وموظفي إدخال البيانات لإدارة دفاتركم المالية سوياً.",
 
@@ -268,7 +268,7 @@ const translations = {
     planFeat1: "مساحة عمل خاصة بنطاق فرعي مخصص",
     planFeat2: "حسابات بنكية غير محدودة",
     planFeat3: "تتبع كامل الشيكات المؤجلة",
-    planFeat4: "توليد المصروفات الدورية تلقائياً كل شهر",
+    planFeat4: "شروط دفع مخصصة للموردين",
     planFeat5: "أدوار وصلاحيات غير محدودة للمستخدمين",
     planFeat6: "تقارير مالية وتنبيهات بصيغة PDF",
     planBtn: "ابدأ الفترة التجريبية مجاناً",

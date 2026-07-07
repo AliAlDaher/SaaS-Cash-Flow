@@ -21,59 +21,6 @@ router.get('/', requireAuth, requirePermission('expenses', 'view'), async (req, 
 });
 
 
-// Generate monthly recurring expenses on demand (e.g. before the month starts)
-router.post('/generate-monthly', requireAuth, requirePermission('expenses', 'create'), async (req, res) => {
-  try {
-    const { accountId, targetMonth } = req.body; // targetMonth: "2026-06" (YYYY-MM)
-    
-    if (!accountId) return res.status(400).json({ error: 'accountId is required' });
-    
-    // Parse target month or default to next month
-    let targetDate: Date;
-    if (targetMonth) {
-      targetDate = new Date(targetMonth + '-01');
-    } else {
-      const now = new Date();
-      targetDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    }
-    
-    const monthLabel = targetDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' });
-    
-    let recurringCategories = ['رواتب', 'الضمان الاجتماعي', 'كهرباء', 'إنترنت'];
-    const categoriesFilePath = path.join(__dirname, '../../categories.json');
-    if (fs.existsSync(categoriesFilePath)) {
-      try {
-        const fileData = fs.readFileSync(categoriesFilePath, 'utf-8');
-        const parsed = JSON.parse(fileData);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          recurringCategories = parsed;
-        }
-      } catch (e) {
-        console.error('Failed to read categories.json in generate-monthly', e);
-      }
-    }
-    
-    const created = [];
-    for (const category of recurringCategories) {
-      const expense = await prisma.expense.create({
-        data: {
-          category,
-          amount: 0,
-          paidAmount: 0,
-          accountId: parseInt(accountId),
-          date: targetDate,
-          note: 'مصروف شهري - ' + monthLabel
-        }
-      });
-      created.push(expense);
-    }
-    
-    res.json({ success: true, created });
-  } catch (err: any) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // Add new expense (handling Paid/Unpaid status toggles and account deductions)
 router.post('/', requireAuth, requirePermission('expenses', 'create'), async (req, res) => {
