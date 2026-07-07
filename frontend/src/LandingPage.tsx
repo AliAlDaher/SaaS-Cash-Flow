@@ -1009,14 +1009,17 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 sm:pt-36 pb-20 sm:pb-24 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 w-full overflow-hidden">
-        {/* Subtle decorative dot-grid background */}
+        {/* Subtle decorative grid lines background */}
         <div 
-          className="absolute inset-0 -z-20 opacity-[0.45] pointer-events-none" 
+          className="absolute inset-0 -z-20 opacity-[0.55] pointer-events-none" 
           style={{ 
-            backgroundImage: 'radial-gradient(var(--color-sky-200) 1.2px, transparent 1.2px)', 
-            backgroundSize: '28px 28px',
-            maskImage: 'radial-gradient(circle at center, black 60%, transparent 95%)',
-            WebkitMaskImage: 'radial-gradient(circle at center, black 60%, transparent 95%)'
+            backgroundImage: `
+              linear-gradient(to right, rgba(14, 165, 233, 0.12) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(14, 165, 233, 0.12) 1px, transparent 1px)
+            `, 
+            backgroundSize: '44px 44px',
+            maskImage: 'radial-gradient(circle at center, black 70%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(circle at center, black 70%, transparent 100%)'
           }} 
         />
         
