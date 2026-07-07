@@ -4,4 +4,4 @@ Disallow: /login
 Disallow: /register
 Disallow: /dashboard
 
-Sitemap: https://yotax.com/sitemap.xml
+Sitemap: https://scashflow.netlify.app/sitemap.xml
