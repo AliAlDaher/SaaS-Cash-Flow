@@ -172,7 +172,12 @@ const translations = {
     modalPassLabel: "Admin Password",
     modalPassPlaceholder: "Minimum 6 characters",
     modalSubmitBtn: "Complete Setup & Launch Workspace",
-    modalSubmittingBtn: "Creating your workspace..."
+    modalSubmittingBtn: "Creating your workspace...",
+    loginModalTitle: "Access Your Workspace",
+    loginModalSubdomainLabel: "Workspace Subdomain",
+    loginModalSubdomainPlaceholder: "acme",
+    loginModalSubmitBtn: "Go to Workspace",
+    loginModalError: "Please enter a valid subdomain."
   },
   AR: {
     // Header
@@ -317,7 +322,12 @@ const translations = {
     modalPassLabel: "كلمة مرور المسؤول",
     modalPassPlaceholder: "6 أحرف كحد أدنى",
     modalSubmitBtn: "إنشاء وتجهيز مساحة العمل",
-    modalSubmittingBtn: "جاري إنشاء مساحتك..."
+    modalSubmittingBtn: "جاري إنشاء مساحتك...",
+    loginModalTitle: "الدخول إلى مساحة العمل",
+    loginModalSubdomainLabel: "رابط مساحة العمل الفرعي (Subdomain)",
+    loginModalSubdomainPlaceholder: "acme",
+    loginModalSubmitBtn: "الانتقال لمساحة العمل",
+    loginModalError: "يرجى إدخال نطاق فرعي صحيح."
   }
 };
 
@@ -628,6 +638,15 @@ export default function LandingPage() {
     }
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'register' | 'login'>('register');
+  const [loginSubdomain, setLoginSubdomain] = useState('');
+  
+  const openModal = (mode: 'register' | 'login') => {
+    setModalMode(mode);
+    setIsModalOpen(true);
+    setError(null);
+  };
+
   const [formData, setFormData] = useState({
     companyName: '',
     subdomain: '',
@@ -798,6 +817,28 @@ export default function LandingPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginSubdomain.trim()) {
+      setError(lang === 'EN' ? 'Please enter your workspace subdomain.' : 'يرجى إدخال نطاق مساحة العمل الفرعي.');
+      return;
+    }
+    const slug = loginSubdomain
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
+    if (!slug) {
+      setError(lang === 'EN' ? 'Please enter a valid subdomain.' : 'يرجى إدخال نطاق فرعي صحيح.');
+      return;
+    }
+
+    // Redirect to the subdomain login page
+    window.location.href = `${window.location.protocol}//${slug}.${getDomainBase()}/login`;
   };
 
   return (
@@ -1040,14 +1081,14 @@ export default function LandingPage() {
             <span className="text-slate-200 mx-0.5 sm:mx-1 select-none">|</span>
 
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => openModal('login')}
               className="font-bold text-slate-600 hover:text-slate-900 px-3.5 py-2 text-sm transition-colors"
             >
               {t.login}
             </button>
             
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => openModal('register')}
               className="px-4 py-2 text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md shadow-sky-500/10 hover:shadow-lg hover:shadow-sky-500/15 hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0"
             >
               {t.startTrial}
@@ -1084,7 +1125,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-wrap gap-3 justify-center pt-2">
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => openModal('register')}
               className="group/button inline-flex shrink-0 items-center justify-center border border-transparent bg-clip-padding font-bold transition-all outline-none h-12 sm:h-13 px-8 text-base rounded-xl bg-sky-600 text-white hover:bg-sky-700 shadow-lg shadow-sky-500/10 flex gap-2 hover:scale-[1.02] active:scale-95 duration-200"
             >
               {t.createWorkspaceBtn}
@@ -1603,7 +1644,7 @@ export default function LandingPage() {
             </div>
             
             <button 
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => openModal('register')}
               className="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/15 hover:scale-[1.01] active:scale-95 duration-200"
             >
               {t.planBtn}
@@ -1692,7 +1733,7 @@ export default function LandingPage() {
         </a>
       </div>
 
-      {/* Onboarding Registration Modal */}
+      {/* Onboarding Registration / Login Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
           <div className="relative w-full max-w-lg overflow-hidden bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-8">
@@ -1701,13 +1742,16 @@ export default function LandingPage() {
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-sky-600" />
-                <h3 className="text-xl font-bold text-slate-900">{t.modalTitle}</h3>
+                <h3 className="text-xl font-bold text-slate-900">
+                  {modalMode === 'login' ? t.loginModalTitle : t.modalTitle}
+                </h3>
               </div>
               <button 
                 onClick={() => {
                   setIsModalOpen(false);
                   setSuccess(false);
                   setError(null);
+                  setLoginSubdomain('');
                 }}
                 className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
               >
@@ -1737,6 +1781,56 @@ export default function LandingPage() {
                   Redirecting to Workspace Login Page...
                 </div>
               </div>
+            ) : modalMode === 'login' ? (
+              /* Login Subdomain Form */
+              <form onSubmit={handleLoginSubmit} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                    {t.loginModalSubdomainLabel}
+                  </label>
+                  <div className="relative">
+                    <Building2 className={`absolute ${lang === 'AR' ? 'right-4' : 'left-4'} top-3.5 w-5 h-5 text-slate-400`} />
+                    <input 
+                      type="text" 
+                      name="loginSubdomain"
+                      required
+                      placeholder={t.loginModalSubdomainPlaceholder}
+                      value={loginSubdomain}
+                      onChange={(e) => setLoginSubdomain(e.target.value)}
+                      className={`w-full ${lang === 'AR' ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-sky-600 text-sm focus:bg-white transition-colors font-medium`}
+                    />
+                  </div>
+                  {loginSubdomain && (
+                    <div className="mt-2 text-xs text-slate-400 font-semibold flex items-center gap-1">
+                      <span>{t.modalSubdomainHelp}</span>
+                      <span className="font-mono text-sky-600">
+                        {loginSubdomain.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()}.{getDomainBase()}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <button 
+                  type="submit"
+                  className="w-full py-3.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/10 flex items-center justify-center gap-2 hover:scale-[1.01] mt-8"
+                >
+                  {t.loginModalSubmitBtn}
+                  <ArrowRight className={`w-4 h-4 ${lang === 'AR' ? 'rotate-180' : ''}`} />
+                </button>
+
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalMode('register');
+                      setError(null);
+                    }}
+                    className="text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline"
+                  >
+                    {lang === 'EN' ? "Need a new workspace? Create one here" : "هل تحتاج لمساحة عمل جديدة؟ أنشئها هنا"}
+                  </button>
+                </div>
+              </form>
             ) : (
               /* Registration Form */
               <form onSubmit={handleSubmit} className="space-y-5">
@@ -1811,6 +1905,19 @@ export default function LandingPage() {
                     </>
                   )}
                 </button>
+
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalMode('login');
+                      setError(null);
+                    }}
+                    className="text-xs font-bold text-sky-600 hover:text-sky-700 hover:underline"
+                  >
+                    {lang === 'EN' ? "Already have a workspace? Log in here" : "هل لديك مساحة عمل بالفعل؟ سجل الدخول هنا"}
+                  </button>
+                </div>
               </form>
             )}
 
