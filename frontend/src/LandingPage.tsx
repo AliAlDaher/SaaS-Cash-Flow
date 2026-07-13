@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Layers, 
   ArrowRight, 
@@ -137,21 +138,41 @@ const translations = {
 
     // Pricing Section
     pricingBadge: "PRICING",
-    pricingTitle: "Simple monthly pricing.",
-    pricingSubtext: "One plan with the tools you need to manage your business cash flow. No complicated feature tiers.",
+    pricingTitle: "Choose the right plan for your company",
+    pricingSubtext: "Both plans include all features and unlimited team members. The only difference is the subscription period.",
 
-    planTitle: "Monthly Plan",
-    planDesc: "Everything you need to track your day-to-day cash position.",
-    planPrice: "$30",
-    planPeriod: " / month",
-    planFeat1: "A Workspace for Your Company",
-    planFeat2: "Unlimited Bank Accounts",
-    planFeat3: "Supplier Invoice Tracking",
-    planFeat4: "Post-Dated Cheque Tracking",
-    planFeat5: "Custom Supplier Payment Terms",
-    planFeat6: "Team Member Roles",
-    planFeat7: "Financial Reports and Reminders",
-    planBtn: "Start Free Trial",
+    // Monthly Plan
+    monthlyPlanName: "Monthly Plan",
+    monthlyPlanDesc: "A flexible option for paying month by month.",
+    monthlyPlanPrice: "$30",
+    monthlyPlanPeriod: " / month",
+    monthlyFeat1: "One subscription per company",
+    monthlyFeat2: "Unlimited team members",
+    monthlyFeat3: "All features included",
+    monthlyFeat4: "Tax included",
+    monthlyFeat5: "No automatic renewal",
+    monthlyFeat6: "Activated after payment confirmation",
+    monthlyPlanBtn: "Contact Us to Subscribe",
+    monthlyPaymentNote: "Our team will contact you to confirm the subscription and payment method.",
+
+    // Annual Plan
+    annualPlanBadge: "Save 25%",
+    annualPlanName: "Annual Plan",
+    annualPlanDesc: "Twelve months of access at a lower price.",
+    annualPlanPrice: "$270",
+    annualPlanPeriod: " / 12 months",
+    annualPlanOriginalPrice: "Instead of $360",
+    annualPlanSavingsText: "Save $90 per year",
+    annualFeat1: "One subscription per company",
+    annualFeat2: "Unlimited team members",
+    annualFeat3: "All features included",
+    annualFeat4: "12 months of access",
+    annualFeat5: "Tax included",
+    annualFeat6: "No automatic renewal",
+    annualFeat7: "Payment by bank transfer",
+    annualFeat8: "Activated after the transfer is confirmed",
+    annualPlanBtn: "Choose Annual Plan",
+    annualPaymentNote: "After submitting your request, our team will contact you with the bank-transfer details and confirm your subscription.",
 
     // FAQ Section
     faqBadge: "FREQUENTLY ASKED QUESTIONS",
@@ -305,21 +326,41 @@ const translations = {
 
     // Pricing Section
     pricingBadge: "الأسعار",
-    pricingTitle: "سعر شهري واضح.",
-    pricingSubtext: "باقة واحدة فيها الأدوات اللي تحتاجها لإدارة سيولة شركتك، بدون مستويات معقدة.",
+    pricingTitle: "اختر الخطة المناسبة لشركتك",
+    pricingSubtext: "كل الخطط تشمل نفس المزايا وعددًا غير محدود من أعضاء الفريق. الفرق فقط في مدة الاشتراك.",
 
-    planTitle: "الباقة الشهرية",
-    planDesc: "كل اللي تحتاجه لمتابعة وضع السيولة يومًا بيوم.",
-    planPrice: "$30",
-    planPeriod: " شهريًا",
-    planFeat1: "مساحة خاصة لشركتك",
-    planFeat2: "حسابات بنكية بدون حد",
-    planFeat3: "متابعة فواتير الموردين",
-    planFeat4: "متابعة الشيكات المؤجلة",
-    planFeat5: "شروط دفع مخصصة للموردين",
-    planFeat6: "صلاحيات لأعضاء الفريق",
-    planFeat7: "تقارير وتذكيرات مالية",
-    planBtn: "ابدأ التجربة المجانية",
+    // Monthly Plan
+    monthlyPlanName: "الخطة الشهرية",
+    monthlyPlanDesc: "خيار مرن للدفع شهرًا بشهر.",
+    monthlyPlanPrice: "30 دولارًا",
+    monthlyPlanPeriod: " / شهريًا",
+    monthlyFeat1: "اشتراك واحد لكل شركة",
+    monthlyFeat2: "عدد غير محدود من أعضاء الفريق",
+    monthlyFeat3: "جميع المزايا مشمولة",
+    monthlyFeat4: "السعر شامل الضريبة",
+    monthlyFeat5: "لا يتجدد الاشتراك تلقائيًا",
+    monthlyFeat6: "يتم التفعيل بعد تأكيد الدفع",
+    monthlyPlanBtn: "تواصل معنا للاشتراك",
+    monthlyPaymentNote: "يتم تأكيد الاشتراك وطريقة الدفع بالتواصل مع فريق يوتاكس.",
+
+    // Annual Plan
+    annualPlanBadge: "وفّر 25%",
+    annualPlanName: "الخطة السنوية",
+    annualPlanDesc: "اشتراك لمدة 12 شهرًا بسعر أوفر.",
+    annualPlanPrice: "270 دولارًا",
+    annualPlanPeriod: " / لمدة 12 شهرًا",
+    annualPlanOriginalPrice: "بدلًا من 360 دولارًا",
+    annualPlanSavingsText: "وفّر 90 دولارًا سنويًا",
+    annualFeat1: "اشتراك واحد لكل شركة",
+    annualFeat2: "عدد غير محدود من أعضاء الفريق",
+    annualFeat3: "جميع المزايا مشمولة",
+    annualFeat4: "12 شهرًا من الاستخدام",
+    annualFeat5: "السعر شامل الضريبة",
+    annualFeat6: "لا يتجدد الاشتراك تلقائيًا",
+    annualFeat7: "الدفع عن طريق التحويل البنكي",
+    annualFeat8: "يتم التفعيل بعد تأكيد التحويل",
+    annualPlanBtn: "اشترك بالخطة السنوية",
+    annualPaymentNote: "بعد إرسال طلب الاشتراك، سنتواصل معك لتزويدك بتفاصيل التحويل البنكي وتأكيد التفعيل.",
 
     // FAQ Section
     faqBadge: "الأسئلة الشائعة",
@@ -1648,65 +1689,87 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="max-w-md mx-auto p-8 rounded-3xl bg-white border-2 border-sky-600/80 flex flex-col justify-between relative shadow-2xl shadow-sky-500/8 hover:-translate-y-1.5 transition-transform duration-300">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-sky-600 text-white text-[10px] font-extrabold tracking-wide uppercase shadow-md shadow-sky-500/20">
-              {lang === 'EN' ? 'All-Inclusive Plan' : 'باقة شاملة المزايا'}
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">{t.planTitle}</h3>
-              <p className="text-xs text-slate-500 mb-6 text-center font-medium">{t.planDesc}</p>
-              
-              <div className="flex items-baseline justify-center gap-1 mb-6 border-b border-slate-100 pb-6">
-                <span className="text-5xl font-extrabold text-slate-900">{t.planPrice}</span>
-                <span className="text-slate-500 text-sm font-semibold">{t.planPeriod}</span>
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
+            {/* Monthly Plan */}
+            <div className="p-8 rounded-3xl bg-white border border-slate-200/80 flex flex-col justify-between relative shadow-lg shadow-slate-200/20 hover:-translate-y-1.5 transition-transform duration-300">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">{t.monthlyPlanName}</h3>
+                <p className="text-xs text-slate-500 mb-6 text-center font-medium">{t.monthlyPlanDesc}</p>
+                
+                <div className="flex items-baseline justify-center gap-1 mb-6 border-b border-slate-100 pb-6">
+                  <span className="text-4xl font-extrabold text-slate-900">{t.monthlyPlanPrice}</span>
+                  <span className="text-slate-500 text-sm font-semibold">{t.monthlyPlanPeriod}</span>
+                </div>
+                
+                <ul className="space-y-3.5 text-sm text-slate-600 mb-8 pt-2">
+                  {[t.monthlyFeat1, t.monthlyFeat2, t.monthlyFeat3, t.monthlyFeat4, t.monthlyFeat5, t.monthlyFeat6].map((feat, idx) => (
+                    <li key={idx} className="flex items-center gap-3">
+                      <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
+                        <Check className="w-3 h-3" />
+                      </span>
+                      <span className="font-semibold">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
               
-              <ul className="space-y-3.5 text-sm text-slate-600 mb-8 pt-2">
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat1}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat2}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat3}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat4}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat5}</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
-                    <Check className="w-3 h-3" />
-                  </span>
-                  <span className="font-semibold">{t.planFeat6}</span>
-                </li>
-              </ul>
+              <div>
+                <Link 
+                  to="/contact"
+                  className="w-full py-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm transition-all flex items-center justify-center hover:scale-[1.01] active:scale-95 duration-200"
+                >
+                  {t.monthlyPlanBtn}
+                </Link>
+                <p className="text-[10px] text-slate-500 mt-3 text-center font-semibold leading-relaxed">
+                  {t.monthlyPaymentNote}
+                </p>
+              </div>
             </div>
-            
-            <button 
-              onClick={() => openModal('register')}
-              className="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/15 hover:scale-[1.01] active:scale-95 duration-200"
-            >
-              {t.planBtn}
-            </button>
+
+            {/* Annual Plan */}
+            <div className="p-8 rounded-3xl bg-white border-2 border-sky-600 flex flex-col justify-between relative shadow-2xl shadow-sky-500/8 hover:-translate-y-1.5 transition-transform duration-300">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-sky-600 text-white text-[10px] font-extrabold tracking-wide uppercase shadow-md shadow-sky-500/20">
+                {t.annualPlanBadge}
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">{t.annualPlanName}</h3>
+                <p className="text-xs text-slate-500 mb-6 text-center font-medium">{t.annualPlanDesc}</p>
+                
+                <div className="flex flex-col items-center justify-center mb-6 border-b border-slate-100 pb-6">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-slate-900">{t.annualPlanPrice}</span>
+                    <span className="text-slate-500 text-sm font-semibold">{t.annualPlanPeriod}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-500 font-semibold">
+                    <span className="line-through text-slate-450">{t.annualPlanOriginalPrice}</span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">{t.annualPlanSavingsText}</span>
+                  </div>
+                </div>
+                
+                <ul className="space-y-3.5 text-sm text-slate-600 mb-8 pt-2">
+                  {[t.annualFeat1, t.annualFeat2, t.annualFeat3, t.annualFeat4, t.annualFeat5, t.annualFeat6, t.annualFeat7, t.annualFeat8].map((feat, idx) => (
+                    <li key={idx} className="flex items-center gap-3">
+                      <span className="size-5 rounded-full bg-sky-500/10 flex items-center justify-center text-sky-600 shrink-0">
+                        <Check className="w-3 h-3" />
+                      </span>
+                      <span className="font-semibold">{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <Link 
+                  to="/contact"
+                  className="w-full py-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm transition-all shadow-lg shadow-sky-500/15 flex items-center justify-center hover:scale-[1.01] active:scale-95 duration-200"
+                >
+                  {t.annualPlanBtn}
+                </Link>
+                <p className="text-[10px] text-slate-500 mt-3 text-center font-semibold leading-relaxed">
+                  {t.annualPaymentNote}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
