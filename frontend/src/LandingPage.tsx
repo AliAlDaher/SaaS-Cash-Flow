@@ -1089,10 +1089,10 @@ export default function LandingPage() {
             <button 
               dir={lang === 'AR' ? 'rtl' : 'ltr'}
               onClick={() => handleLangToggle(lang === 'EN' ? 'AR' : 'EN')}
-              className={`flex ${lang === 'AR' ? 'flex-row-reverse' : 'flex-row'} items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold text-[13px] shadow-sm select-none`}
+              className={`flex ${lang === 'AR' ? 'flex-row-reverse' : 'flex-row'} items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all font-semibold text-[11px] sm:text-[13px] shadow-sm select-none`}
               title={lang === 'EN' ? 'العربية' : 'English'}
             >
-              <span className="text-base select-none leading-none">
+              <span className="text-sm sm:text-base select-none leading-none">
                 {lang === 'EN' ? '🇬🇧' : '🇯🇴'}
               </span>
               <span>{lang === 'EN' ? 'EN' : 'العربية'}</span>
@@ -1102,14 +1102,14 @@ export default function LandingPage() {
 
             <button 
               onClick={() => openModal('login')}
-              className="font-bold text-slate-600 hover:text-slate-900 px-3.5 py-2 text-sm transition-colors"
+              className="font-bold text-slate-600 hover:text-slate-900 px-2 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors"
             >
               {t.login}
             </button>
             
             <button 
               onClick={() => openModal('register')}
-              className="px-4 py-2 text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md shadow-sky-500/10 hover:shadow-lg hover:shadow-sky-500/15 hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0"
+              className="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md shadow-sky-500/10 hover:shadow-lg hover:shadow-sky-500/15 hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0"
             >
               {t.startTrial}
             </button>
@@ -1755,8 +1755,8 @@ export default function LandingPage() {
 
       {/* Onboarding Registration / Login Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
-          <div className="relative w-full max-w-lg overflow-hidden bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300" dir={lang === 'AR' ? 'rtl' : 'ltr'}>
+          <div className="relative w-full max-w-lg max-h-[95vh] overflow-y-auto bg-white border border-slate-200/80 rounded-2xl shadow-2xl p-5 sm:p-8">
             
             {/* Close Button */}
             <div className="flex justify-between items-center mb-6">
