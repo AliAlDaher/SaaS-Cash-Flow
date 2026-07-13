@@ -43,9 +43,9 @@ const translations = {
     
     // Hero
     heroBadge: "Simple Cash Flow Management",
-    heroTitle1: "See your cash clearly.",
-    heroTitle2: "Plan what comes next.",
-    heroSubtext: "Keep bank balances, supplier invoices, payments, and post-dated cheques in one place. Know what is due, when it is due, and how upcoming transactions may affect your balance.",
+    heroTitle1: "Every invoice, every payment,",
+    heroTitle2: "and every cheque in one place.",
+    heroSubtext: "Track supplier invoices, payments, post-dated cheques, and account balances from one clear workspace.",
     createWorkspaceBtn: "Start Free Trial",
     seeHowItWorks: "See How It Works",
 
@@ -231,9 +231,9 @@ const translations = {
 
     // Hero
     heroBadge: "متابعة السيولة بشكل بسيط",
-    heroTitle1: "تابع السيولة بوضوح،",
-    heroTitle2: "وخطط للخطوة الجاية.",
-    heroSubtext: "اجمع أرصدة الحسابات، وفواتير الموردين، والمدفوعات، والشيكات المؤجلة في مكان واحد. اعرف ما المستحق ومتى، وشوف كيف ممكن تؤثر العمليات القادمة على رصيدك.",
+    heroTitle1: "كل فاتورة، كل دفعة،",
+    heroTitle2: "وكل شيك بمكان واحد.",
+    heroSubtext: "تابع فواتير الموردين، والدفعات، والشيكات المؤجلة، وأرصدة الحسابات من شاشة واحدة.",
     createWorkspaceBtn: "ابدأ التجربة المجانية",
     seeHowItWorks: "شوف كيف يعمل",
 
@@ -1230,9 +1230,9 @@ export default function LandingPage() {
         
         <div className="max-w-3xl mx-auto text-center space-y-6 sm:space-y-7 z-10 relative">
           <h1 className="text-[2.75rem] sm:text-6xl lg:text-7xl font-extrabold leading-[1.06] text-slate-900 tracking-tight">
-            <span className="block">{lang === 'EN' ? "Know your cash flow," : "أدر تدفقاتك النقدية بسهولة،"}</span>
+            <span className="block">{t.heroTitle1}</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-sky-600 via-sky-700 to-indigo-600">
-              {lang === 'EN' ? "Predict your balance." : "وتوقع رصيدك البنكي بدقة."}
+              {t.heroTitle2}
             </span>
           </h1>
           <p className="text-base sm:text-lg text-slate-600 leading-[1.7] max-w-2xl mx-auto font-medium">
