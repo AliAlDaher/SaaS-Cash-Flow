@@ -305,60 +305,160 @@ export function PrivacyPolicy() {
     <LegalLayout titleEN="Privacy Policy" titleAR="سياسة الخصوصية">
       {(lang) => lang === 'EN' ? (
         <article className="prose prose-slate max-w-none">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <FileText className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">Privacy Policy</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">Last updated: July 14, 2026</p>
+          
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>We at Yotax are committed to protecting your privacy. This policy explains how we handle your business records, email addresses, and workspace credentials.</p>
+            <p>Yotax collects the information needed to create your account, operate your workspace, and provide the features available through the service. This policy explains what information we collect, how we use it, and the choices available to you.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Data We Collect</h3>
-            <p>Yotax is a manual bookkeeping utility. We collect the following information when you register or use your workspace:</p>
-            <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Account Credentials:</strong> Company name, selected subdomain, administrator email, and password.</li>
-              <li><strong>Financial Records (Manually Entered):</strong> Bank accounts and balances, supplier invoices, payment details, and post-dated cheques.</li>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Information We Collect</h3>
+            <p>When you create an account or use Yotax, we may collect the following information:</p>
+            <ul className="list-disc pl-5 space-y-3">
+              <li>
+                <strong>Account information:</strong> This may include your company name, account administrator’s name, email address, selected workspace subdomain, and the login information needed to access your account.
+              </li>
+              <li>
+                <strong>Information added to your workspace:</strong> This may include bank accounts and balances, supplier invoices, payments, post-dated cheques, and due dates. This information is entered by you or your team. Yotax does not retrieve it directly from your bank.
+              </li>
+              <li>
+                <strong>Usage information:</strong> We may collect technical information that helps us operate and protect the service, such as your device and browser type, IP address, login times, and the pages used within the platform.
+              </li>
             </ul>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. How We Use Data</h3>
-            <p>Your manual entries are used strictly to populate your cash positions and run your company dashboard. We do not inspect, sell, or profile your business records.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. How We Use Information</h3>
+            <p>We may use your information to:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Create and manage your account and workspace.</li>
+              <li>Display the balances, invoices, payments, and cheques you enter.</li>
+              <li>Calculate outstanding amounts and show upcoming transactions.</li>
+              <li>Send account notifications and due-date reminders.</li>
+              <li>Provide customer support.</li>
+              <li>Protect accounts and investigate technical or security issues.</li>
+              <li>Improve the performance and usability of the service.</li>
+            </ul>
+            <p>We do not sell your personal information or financial records for advertising purposes.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. Data Separation</h3>
-            <p>Every workspace is isolated into a separate database structure to ensure that your financial entries are kept separate from other companies.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. How Information Is Shared</h3>
+            <p>We may work with trusted service providers that help us operate Yotax, including hosting, email, authentication, backups, customer support, and payment-processing providers. In particular, our infrastructure and databases run on infrastructure services provided by providers such as Netlify and Render.</p>
+            <p>These providers receive only the information needed to provide their services to us.</p>
+            <p>We may also disclose information when required by law or when reasonably necessary to protect our rights, users, or service.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm">
-              <strong>Owner Information Placeholder:</strong> This website and service is operated by <code>[Insert Website Owner / Company Name here]</code>. For privacy-related inquiries, contact <code>[Insert Legal Contact Email here]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. Data Retention and Account Deletion</h3>
+            <p>We keep your account information while your Yotax account remains active. After an account is closed, we delete or anonymize its information within 30 days, unless we are legally required to keep certain records for longer.</p>
+            <p>Some information may remain in backups for a limited period before being permanently removed.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. Protecting Your Information</h3>
+            <p>We use reasonable measures to protect accounts and information against unauthorized access, loss, or alteration. However, no online service can guarantee complete security. You should use a strong password and avoid sharing your login details with others.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">6. Team Member Access</h3>
+            <p>Workspace administrators may invite team members and choose the permissions available to them. The business account administrator is responsible for managing access and removing users who no longer need access to the workspace.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">7. Your Rights and Choices</h3>
+            <p>Depending on the laws that apply to you, you may have the right to request information about the data connected to your account, correct inaccurate information, request a copy of your information, request the deletion of your account and data, object to certain uses of your information, or withdraw consent where processing is based on consent.</p>
+            <p>Requests can be sent directly to our support and privacy email at <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a> or via our dedicated <Link to="/delete-account" className="text-sky-655 hover:text-sky-700 underline font-semibold">Account Deletion request page</Link>.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">8. Cookies</h3>
+            <p>The website may use essential cookies to keep you signed in, remember your language settings, and protect your session.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">9. Third-Party Services</h3>
+            <p>Yotax may contain links to or integrations with third-party services. Those services have their own privacy practices, and this policy does not cover how they handle information.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">10. Changes to This Policy</h3>
+            <p>We may update this policy when the service or applicable requirements change. If an update materially affects how information is handled, we may notify you through the website or the email address connected to your account.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">11. Contact Us</h3>
+            <p>For privacy questions or requests, contact us at:</p>
+            <ul className="list-none pl-0 space-y-1 text-sm font-semibold text-slate-700">
+              <li><span className="text-slate-500 font-bold">Service operator:</span> Yotax</li>
+              <li><span className="text-slate-500 font-bold">Email:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a></li>
+              <li><span className="text-slate-500 font-bold">Country:</span> Jordan</li>
+              <li><span className="text-slate-500 font-bold">Mailing address:</span> Amman, Jordan</li>
+            </ul>
           </div>
         </article>
       ) : (
         <article className="prose prose-slate max-w-none text-right" dir="rtl">
-          <div className="flex items-center gap-3 mb-6 justify-start">
+          <div className="flex items-center gap-3 mb-2 justify-start">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <FileText className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">سياسة الخصوصية</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">آخر تحديث: 14 يوليو 2026</p>
+
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>نحن في يوتاكس ملتزمون بحماية خصوصيتك. توضح هذه السياسة كيف نتعامل مع سجلات عملك، وعناوين البريد الإلكتروني، وبيانات اعتماد مساحة العمل.</p>
+            <p>في يوتاكس، نجمع بعض البيانات الضرورية حتى نقدر ننشئ حسابك ونشغّل مساحة العمل والخدمات المرتبطة بها. توضح هذه السياسة ما البيانات التي نجمعها، وكيف نستخدمها، والخيارات المتاحة لك بخصوص بياناتك.</p>
             
             <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. البيانات التي نجمعها</h3>
-            <p>يوتاكس هو أداة تتبع مالي يدوي. نجمع البيانات التالية عند التسجيل أو استخدام مساحة عملك:</p>
-            <ul className="list-disc pr-5 space-y-2">
-              <li><strong>بيانات اعتماد الحساب:</strong> اسم الشركة، النطاق الفرعي (subdomain)، البريد الإلكتروني للمسؤول، وكلمة المرور.</li>
-              <li><strong>السجلات المالية (مسجلة يدوياً):</strong> الحسابات البنكية والأرصدة، فواتير الموردين، تفاصيل المدفوعات، والشيكات المؤجلة.</li>
+            <p>عند إنشاء حساب أو استخدام يوتاكس، قد نجمع الأنواع التالية من البيانات:</p>
+            <ul className="list-disc pr-5 space-y-3">
+              <li>
+                <strong>بيانات الحساب:</strong> مثل اسم الشركة، اسم مسؤول الحساب، البريد الإلكتروني، النطاق الفرعي الذي تختاره، وبيانات تسجيل الدخول اللازمة للوصول إلى حسابك.
+              </li>
+              <li>
+                <strong>البيانات التي تضيفها إلى مساحة العمل:</strong> مثل الحسابات البنكية والأرصدة، فواتير الموردين، المدفوعات، الشيكات المؤجلة، ومواعيد الاستحقاق. هذه المعلومات يتم إدخالها من طرفك أو من طرف أعضاء فريقك، ولا يقوم يوتاكس بجلبها مباشرة من البنك.
+              </li>
+              <li>
+                <strong>بيانات الاستخدام:</strong> قد نجمع معلومات تقنية تساعدنا على تشغيل الخدمة وحمايتها، مثل نوع الجهاز والمتصفح، عنوان الإنترنت، مواعيد تسجيل الدخول، والصفحات المستخدمة داخل المنصة.
+              </li>
             </ul>
 
             <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. كيف نستخدم البيانات</h3>
-            <p>تُستخدم البيانات التي تسجلها يدوياً فقط لعرض وضع السيولة الخاص بشركتك وتشغيل لوحة التحكم الخاصة بك. نحن لا نقوم ببيع أو مشاركة بياناتك المالية.</p>
+            <p>نستخدم البيانات للأغراض التالية:</p>
+            <ul className="list-disc pr-5 space-y-2">
+              <li>إنشاء حسابك وإدارة مساحة العمل.</li>
+              <li>عرض الأرصدة والفواتير والمدفوعات والشيكات التي تسجلها.</li>
+              <li>حساب المبالغ المتبقية وإظهار العمليات القادمة.</li>
+              <li>إرسال التنبيهات والتذكيرات المتعلقة بحسابك.</li>
+              <li>تقديم الدعم والرد على الاستفسارات.</li>
+              <li>حماية الحسابات ومتابعة الأعطال أو محاولات الاستخدام غير المصرح بها.</li>
+              <li>تحسين أداء الخدمة وتجربة الاستخدام.</li>
+            </ul>
+            <p>لا نبيع بياناتك الشخصية أو سجلاتك المالية لأغراض إعلانية.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. عزل البيانات</h3>
-            <p>يتم عزل قاعدة البيانات الخاصة بكل شركة بشكل كامل لضمان فصل سجلاتك المالية عن أي مستخدمين آخرين.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. مشاركة البيانات</h3>
+            <p>قد نستعين بجهات موثوقة تساعدنا في تشغيل يوتاكس، مثل خدمات الاستضافة (Netlify و Render)، البريد الإلكتروني، تسجيل الدخول، النسخ الاحتياطي، الدعم الفني، ومعالجة المدفوعات.</p>
+            <p>لا تحصل هذه الجهات إلا على المعلومات اللازمة لتقديم خدماتها لنا، ويكون استخدامها للبيانات مرتبطًا بتشغيل يوتاكس.</p>
+            <p>وقد نكشف عن بعض المعلومات عندما يكون ذلك مطلوبًا بموجب القانون أو لحماية حقوقنا وحقوق المستخدمين.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-905 text-sm text-right">
-              <strong>معلومات المالك (نائب):</strong> يتم تشغيل هذه الخدمة بواسطة <code>[أدخل اسم الشركة / مالك الموقع هنا]</code>. للاستفسارات المتعلقة بالخصوصية، يرجى مراسلة <code>[أدخل البريد الإلكتروني القانوني للتواصل هنا]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. حفظ البيانات وحذفها</h3>
+            <p>نحتفظ ببيانات حسابك طوال فترة استخدامك ليوتاكس.</p>
+            <p>عند إغلاق الحساب، نقوم بحذف البيانات أو إخفاء هويتها خلال 30 يوماً، إلا إذا كان القانون يطلب منا الاحتفاظ ببعض المعلومات لمدة أطول.</p>
+            <p>يمكن أن تبقى بعض البيانات لفترة محدودة داخل النسخ الاحتياطية قبل حذفها نهائيًا.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. حماية الحساب والبيانات</h3>
+            <p>نتخذ إجراءات مناسبة لحماية الحسابات والبيانات من الوصول غير المصرح به أو التعديل أو الفقدان.</p>
+            <p>لكن لا توجد خدمة عبر الإنترنت يمكنها ضمان حماية كاملة بنسبة 100%، لذلك ننصح باستخدام كلمة مرور قوية وعدم مشاركة بيانات الدخول مع أي شخص.</p>
+
+            <h3 className="text-lg font-bold text-slate-950 mt-8 mb-2">6. صلاحيات أعضاء الفريق</h3>
+            <p>يمكن لمسؤول مساحة العمل إضافة أعضاء آخرين وتحديد الصلاحيات المتاحة لهم. مسؤول الشركة هو المسؤول عن الأشخاص الذين يمنحهم حق الوصول، وعن إزالة صلاحيات أي عضو لم يعد يحتاج إلى استخدام الحساب.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">7. حقوقك وخياراتك</h3>
+            <p>بحسب القوانين المطبقة في بلدك، يمكنك طلب معرفة البيانات المرتبطة بحسابك، تصحيح المعلومات غير الدقيقة، الحصول على نسخة من بياناتك، حذف حسابك وبياناتك، الاعتراض على بعض طرق استخدام البيانات، أو سحب موافقتك عندما يكون استخدام البيانات مبنيًا على الموافقة.</p>
+            <p>يمكن إرسال هذه الطلبات مباشرة إلى بريد الدعم الخاص بنا <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a> أو من خلال صفحة <Link to="/delete-account" className="text-sky-655 hover:text-sky-700 underline font-semibold">طلب حذف الحساب والبيانات</Link>.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">8. ملفات الارتباط</h3>
+            <p>قد يستخدم الموقع ملفات ارتباط ضرورية لتسجيل الدخول، حفظ إعدادات اللغة، والمحافظة على أمان الجلسة.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">9. خدمات ومواقع خارجية</h3>
+            <p>قد يحتوي يوتاكس على روابط أو خدمات مقدمة من جهات أخرى. تخضع هذه الخدمات لسياسات الخصوصية الخاصة بها، ولسنا مسؤولين عن محتوى أو ممارسات المواقع الخارجية.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">10. التغييرات على هذه السياسة</h3>
+            <p>قد نقوم بتحديث سياسة الخصوصية عندما تتغير الخدمة أو المتطلبات القانونية. عند إجراء تغيير مهم، سنعرض إشعارًا داخل الموقع أو نرسل إشعارًا إلى البريد المرتبط بالحساب.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">11. تواصل معنا</h3>
+            <p>لأي سؤال متعلق بالخصوصية أو لاستخدام حقوقك، تواصل معنا عبر:</p>
+            <ul className="list-none pr-0 space-y-1 text-sm font-semibold text-slate-700 text-right">
+              <li><span className="text-slate-500 font-bold">اسم الجهة المشغلة:</span> يوتاكس (Yotax)</li>
+              <li><span className="text-slate-500 font-bold">البريد الإلكتروني:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a></li>
+              <li><span className="text-slate-500 font-bold">الدولة:</span> الأردن</li>
+              <li><span className="text-slate-500 font-bold">عنوان المراسلات:</span> عمان، الأردن</li>
+            </ul>
           </div>
         </article>
       )}
