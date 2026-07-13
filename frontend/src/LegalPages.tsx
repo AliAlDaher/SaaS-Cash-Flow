@@ -467,57 +467,134 @@ export function PrivacyPolicy() {
 }
 
 // 2. Terms of Use Page Component
+// 2. Terms of Use Page Component
+// 2. Terms of Use Page Component
 export function TermsOfUse() {
   return (
     <LegalLayout titleEN="Terms of Use" titleAR="شروط الاستخدام">
       {(lang) => lang === 'EN' ? (
         <article className="prose prose-slate max-w-none">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <Scale className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">Terms of Use</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">Last updated: July 14, 2026</p>
+          
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>By creating a workspace on Yotax, you agree to comply with and be bound by the following Terms of Use.</p>
+            <p>These Terms explain the rules for using Yotax. By creating an account or using the service, you agree to follow them.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Registration and Accounts</h3>
-            <p>You must provide accurate company and admin registration information. You are solely responsible for maintaining the confidentiality of your workspace password and for all activity conducted within your subdomain.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Creating an Account</h3>
+            <p>You must provide accurate information when registering and keep it up to date.</p>
+            <p>You are responsible for protecting your login details and for activity carried out through your account or your team members’ accounts. Contact us promptly at <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a> if you notice any unusual activity.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. Acceptable Use</h3>
-            <p>Yotax is designed for manual entry of invoices, cheques, and bank balance estimates. You agree not to use the service for any illegal activities, or to bypass or disrupt the integrity of the application infrastructure.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. Using the Service</h3>
+            <p>Yotax helps you organize supplier invoices, payments, post-dated cheques, and account balances entered by you or your team.</p>
+            <p>You may not use the service to:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Carry out unlawful activities.</li>
+              <li>Access another user’s account or information.</li>
+              <li>Disrupt or interfere with the service.</li>
+              <li>Upload harmful files or content.</li>
+              <li>Copy or resell the service without our written permission.</li>
+            </ul>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. Disclaimers</h3>
-            <p>Yotax is a tool to organize manual entries. The estimated balances and due dates calculated are based on the data you enter. You should verify critical cashing and payment dates independently with your banking institutions.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. Accuracy of Information</h3>
+            <p>The balances, due dates, and projections shown in Yotax depend on the information entered into your workspace. You are responsible for keeping that information accurate and up to date. Important payment and cheque dates should be confirmed with your bank or supplier when necessary.</p>
+            <p>Yotax is an organization and tracking tool. It is not a substitute for professional accounting, financial, or legal advice.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm">
-              <strong>Jurisdiction Placeholder:</strong> These terms are governed by the laws of <code>[Insert Company Legal Jurisdiction / Governing Law here]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. Subscriptions and Payments</h3>
+            <p>Some Yotax features may require a paid subscription. The price and billing cycle will be shown before payment is completed.</p>
+            <p>Subscriptions renew according to the billing cycle shown in your account unless cancelled before the next renewal date.</p>
+            <p>Cancellations and refunds are handled under our Cancellation and Refund Policy.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. Team Members</h3>
+            <p>Workspace administrators may invite team members and choose the permissions available to them. The account owner is responsible for managing access and removing users who no longer need it.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">6. Ownership of Your Information</h3>
+            <p>You or your business continue to own the information entered into your workspace. You give us only the permission needed to process that information and provide the service connected to your account.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">7. Service Availability</h3>
+            <p>We aim to keep Yotax available, but the service may occasionally be interrupted because of maintenance, updates, or events outside our control. We do not guarantee uninterrupted availability at all times.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">8. Account Suspension or Closure</h3>
+            <p>We may suspend or restrict an account if the service is used in violation of these Terms or in a way that may harm the service or other users. Where reasonably possible, we will try to contact the account owner before taking action.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">9. Limitation of Responsibility</h3>
+            <p>Yotax helps organize and display the information entered into your account. It does not guarantee that projected balances will match actual future balances. We are not responsible for financial or business decisions made using incorrect or incomplete information entered into the service.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">10. Changes to These Terms</h3>
+            <p>We may update these Terms when the service or the way it is provided changes. For important changes, we may display a notice on the website or contact you through the email connected to your account.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">11. Governing Law</h3>
+            <p>These Terms are governed by the laws of Jordan.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">12. Contact Us</h3>
+            <p>For questions about these Terms, contact:</p>
+            <ul className="list-none pl-0 space-y-1 text-sm font-semibold text-slate-700">
+              <li><span className="text-slate-500 font-bold">Email:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+              <li><span className="text-slate-500 font-bold">Service operator:</span> Yotax</li>
+              <li><span className="text-slate-500 font-bold">Country:</span> Jordan</li>
+            </ul>
           </div>
         </article>
       ) : (
         <article className="prose prose-slate max-w-none text-right" dir="rtl">
-          <div className="flex items-center gap-3 mb-6 justify-start">
+          <div className="flex items-center gap-3 mb-2 justify-start">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <Scale className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">شروط الاستخدام</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">آخر تحديث: 14 يوليو 2026</p>
+
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>بإنشاء مساحة عمل على يوتاكس، فإنك توافق على الامتثال لشروط الاستخدام التالية والالتزام بها.</p>
+            <p>توضح هذه الشروط القواعد الخاصة باستخدام يوتاكس. عند إنشاء حساب أو استخدام الخدمة، فأنت توافق على الالتزام بهذه الشروط.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. التسجيل والحسابات</h3>
-            <p>يجب تقديم تفاصيل تسجيل دقيقة للشركة والمسؤول. أنت مسؤول بالكامل عن الحفاظ على سرية كلمة مرور مساحة العمل وعن جميع الأنشطة التي تتم تحت النطاق الفرعي الخاص بك.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. إنشاء الحساب</h3>
+            <p>لاستخدام يوتاكس، يجب تقديم معلومات صحيحة عند التسجيل والمحافظة على تحديثها.</p>
+            <p>أنت مسؤول عن حماية بيانات تسجيل الدخول، وعن جميع العمليات التي تتم من خلال حسابك أو حسابات أعضاء فريقك. إذا لاحظت أي استخدام غير معتاد، يرجى التواصل معنا مباشرة على البريد الإلكتروني <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a>.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. الاستخدام المقبول</h3>
-            <p>يوتاكس مصمم لمتابعة وتسجيل الفواتير والشيكات والأرصدة يدوياً. توافق على عدم استخدام الخدمة في أي أنشطة غير قانونية، أو محاولة تعطيل البنية التحتية للتطبيق.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. استخدام الخدمة</h3>
+            <p>يوتاكس يساعدك على تنظيم فواتير الموردين، والمدفوعات، والشيكات المؤجلة، وأرصدة الحسابات التي تدخلها أنت أو أعضاء فريقك.</p>
+            <p>يجب عدم استخدام الخدمة في أي نشاط مخالف للقانون، أو لمحاولة الدخول إلى حسابات أو بيانات تخص مستخدمين آخرين، أو لتعطيل الخدمة أو التأثير على عملها، أو لرفع ملفات أو محتوى ضار، أو لإعادة بيع الخدمة أو نسخها دون موافقة مكتوبة منا.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. إخلاء المسؤولية</h3>
-            <p>يوتاكس هو أداة لتنظيم السجلات المالية اليدوية. الأرصدة المتوقعة وتواريخ الاستحقاق يتم احتسابها بناءً على البيانات التي تدخلها بنفسك. يجب التحقق من المواعيد الحرجة بشكل مستقل مع البنك.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. دقة البيانات</h3>
+            <p>تعتمد النتائج والمبالغ المتوقعة ومواعيد الاستحقاق الظاهرة في يوتاكس على البيانات التي تدخلها. أنت مسؤول عن التأكد من صحة هذه البيانات وتحديثها. ويجب مراجعة المواعيد والمدفوعات المهمة مع البنك أو المورد عند الحاجة.</p>
+            <p>يوتاكس أداة للمساعدة في المتابعة والتنظيم، وليس بديلًا عن الاستشارة المحاسبية أو المالية أو القانونية.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-905 text-sm text-right">
-              <strong>الولاية القضائية (نائب):</strong> تخضع شروط الاستخدام هذه لقوانين <code>[أدخل الولاية القضائية / القانون المعمول به هنا]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. الاشتراك والدفع</h3>
+            <p>قد تتطلب بعض مزايا يوتاكس اشتراكًا مدفوعًا. تظهر قيمة الاشتراك ودورة الفوترة قبل إتمام عملية الدفع. يتم تجديد الاشتراك حسب الدورة الموضحة في حسابك، ما لم تقم بإلغائه قبل موعد التجديد. تخضع عمليات الإلغاء والاسترداد لسياسة الإلغاء والاسترداد المنشورة على الموقع.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. أعضاء الفريق</h3>
+            <p>يمكن لمسؤول مساحة العمل إضافة أعضاء إلى الحساب وتحديد الصلاحيات المتاحة لهم. صاحب الحساب مسؤول عن إدارة هذه الصلاحيات وعن إزالة أي عضو لم يعد بحاجة إلى الوصول.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">6. ملكية البيانات</h3>
+            <p>تظل البيانات التي تدخلها في مساحة العمل ملكًا لك أو لشركتك. تمنحنا فقط الصلاحية اللازمة لمعالجة هذه البيانات من أجل تشغيل الخدمة وتقديم المزايا المرتبطة بحسابك.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">7. توفر الخدمة</h3>
+            <p>نسعى إلى إبقاء يوتاكس متاحًا بشكل مستمر، لكن قد تتوقف الخدمة مؤقتًا بسبب الصيانة أو التحديثات أو الأعطال الخارجة عن إرادتنا. لا نضمن أن الخدمة ستكون متاحة دون انقطاع في جميع الأوقات.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">8. تعليق الحساب أو إغلاقه</h3>
+            <p>يجوز لنا تعليق الحساب أو تقييد الوصول إليه إذا تم استخدام الخدمة بطريقة مخالفة لهذه الشروط، أو إذا كانت هناك محاولة للإضرار بالخدمة أو بالمستخدمين الآخرين. سنحاول التواصل مع صاحب الحساب قبل اتخاذ هذا الإجراء عندما يكون ذلك ممكنًا.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">9. حدود المسؤولية</h3>
+            <p>يوتاكس يساعدك على تنظيم ومتابعة البيانات التي تدخلها، لكنه لا يضمن أن التوقعات أو الأرصدة المستقبلية ستكون مطابقة للنتائج الفعلية. لا نتحمل مسؤولية القرارات المالية أو التجارية التي يتم اتخاذها اعتمادًا على بيانات غير صحيحة أو غير مكتملة داخل الحساب.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">10. تحديث الشروط</h3>
+            <p>قد نقوم بتحديث هذه الشروط عند إضافة مزايا جديدة أو تغيير طريقة تقديم الخدمة. إذا كان التغيير مهمًا، سنعرض إشعارًا داخل الموقع أو نتواصل معك عبر البريد الإلكتروني المرتبط بالحساب.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">11. القانون المعمول به</h3>
+            <p>تخضع هذه الشروط لقوانين الأردن.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">12. التواصل معنا</h3>
+            <p>لأي سؤال متعلق بهذه الشروط، تواصل معنا عبر:</p>
+            <ul className="list-none pr-0 space-y-1 text-sm font-semibold text-slate-700 text-right">
+              <li><span className="text-slate-500 font-bold">البريد الإلكتروني:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+              <li><span className="text-slate-500 font-bold">الجهة المشغلة:</span> يوتاكس (Yotax)</li>
+              <li><span className="text-slate-500 font-bold">الدولة:</span> الأردن</li>
+            </ul>
           </div>
         </article>
       )}
@@ -531,52 +608,102 @@ export function RefundPolicy() {
     <LegalLayout titleEN="Cancellation & Refund" titleAR="سياسة الإلغاء والاسترداد">
       {(lang) => lang === 'EN' ? (
         <article className="prose prose-slate max-w-none">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-2">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <DollarSign className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">Cancellation & Refund Policy</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">Last updated: July 14, 2026</p>
+          
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>Thank you for using Yotax. Please read our cancellation and refund policies carefully.</p>
+            <p>This Policy explains how to cancel a Yotax subscription and when a refund request may be considered.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Subscription Billing</h3>
-            <p>Yotax is billed on a recurring monthly basis. You can review your billing schedule and payment details directly from your workspace billing dashboard.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. Billing</h3>
+            <p>Subscription fees are charged according to the billing cycle shown during signup and in your account’s billing page. You can review the subscription price and the period covered before confirming payment.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. Cancellation</h3>
-            <p>You can cancel your Yotax subscription at any time. When cancelled, your workspace remains fully accessible until the end of the current paid billing period, and no further monthly charges will apply.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. Cancelling a Subscription</h3>
+            <p>You may cancel your subscription through your account settings or by contacting our support team. Cancelling stops the next automatic renewal, and you will not be charged for the following billing cycle. Your account will remain available until the end of the paid period.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. Refunds</h3>
-            <p>Because Yotax provides instant setup of private workspaces, refunds are evaluated on a case-by-case basis. To request a refund, please contact support with details of your workspace subdomain.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. Requesting a Refund</h3>
+            <p>Refund requests may be submitted within 14 days of the payment date.</p>
+            <p>A request may be reviewed when:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>The same payment was charged more than once.</li>
+              <li>A charge was made after a subscription was cancelled on time.</li>
+              <li>A significant technical problem prevented normal use of the service.</li>
+              <li>Another situation reasonably requires review.</li>
+            </ul>
+            <p>Submitting a request does not guarantee approval. We will review the account and payment details before making a decision.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm">
-              <strong>Refund Details Placeholder:</strong> To request a cancellation or refund, email <code>[Insert Refund Support Email / Contact Info here]</code>. Refund requests must be made within <code>[Insert Refund Request Window, e.g. 7 days or 14 days]</code> of the transaction.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. Refunds That May Not Be Approved</h3>
+            <p>A refund may not be available when:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>The customer changes their mind after using the service.</li>
+              <li>The account was not used even though the service was available.</li>
+              <li>The request is submitted after the stated 14-day refund period.</li>
+              <li>The account was closed because of a violation of the Terms of Use.</li>
+            </ul>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. How to Submit a Request</h3>
+            <p>To request a cancellation or refund, contact us at:</p>
+            <ul className="list-none pl-0 space-y-1 text-sm font-semibold text-slate-700">
+              <li><span className="text-slate-500 font-bold">Email:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+              <li>Include your account email, workspace name, payment date, and reason for the request. We usually respond within 3 business days.</li>
+            </ul>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">6. Refund Processing Time</h3>
+            <p>Approved refunds are returned through the original payment method. Depending on the payment provider or bank, the refund may take 7 days to appear.</p>
           </div>
         </article>
       ) : (
         <article className="prose prose-slate max-w-none text-right" dir="rtl">
-          <div className="flex items-center gap-3 mb-6 justify-start">
+          <div className="flex items-center gap-3 mb-2 justify-start">
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <DollarSign className="w-6 h-6" />
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">سياسة الإلغاء والاسترداد</h1>
           </div>
+          <p className="text-xs text-slate-400 mt-0 mb-6 font-bold">آخر تحديث: 14 يوليو 2026</p>
+
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>نشكرك على استخدام يوتاكس. يرجى قراءة سياسة الإلغاء والاسترداد بعناية.</p>
+            <p>توضح هذه السياسة طريقة إلغاء اشتراك يوتاكس والحالات التي يمكن فيها تقديم طلب استرداد.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. فوترة الاشتراكات</h3>
-            <p>يتم تحصيل رسوم يوتاكس شهرياً بشكل متكرر. يمكنك مراجعة جدول الفوترة الخاص بك من إعدادات مساحة العمل.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">1. الفوترة</h3>
+            <p>يتم احتساب رسوم الاشتراك وفق دورة الفوترة الموضحة عند الاشتراك وفي صفحة الفواتير داخل حسابك. قبل تأكيد عملية الدفع، يمكنك مراجعة قيمة الاشتراك والفترة التي تغضاها الدفعة.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. الإلغاء</h3>
-            <p>يمكنك إلغاء اشتراكك في يوتاكس في أي وقت. عند الإلغاء، يظل حسابك ومساحة عملك نشطة بالكامل حتى نهاية فترة الفوترة الحالية ولا يتم تحصيل أي رسوم إضافية.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">2. إلغاء الاشتراك</h3>
+            <p>يمكنك إلغاء الاشتراك في أي وقت من إعدادات الحساب، أو عن طريق التواصل مع فريق الدعم. عند الإلغاء، يتوقف التجديد التلقائي ولا يتم احتساب دفعة جديدة في دورة الفوترة التالية. يبقى الحساب متاحًا حتى نهاية الفترة المدفوعة.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. الاسترداد</h3>
-            <p>نظراً لأن يوتاكس يقدم مساحات عمل رقمية فورية، فإن طلبات الاسترداد يتم تقييمها بشكل فردي. يرجى التواصل مع الدعم لتقديم الطلب.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">3. طلب الاسترداد</h3>
+            <p>يمكن تقديم طلب استرداد خلال 14 يوماً من تاريخ الدفع.</p>
+            <p>تتم مراجعة الطلبات في الحالات التالية:</p>
+            <ul className="list-disc pr-5 space-y-2">
+              <li>تم خصم المبلغ أكثر من مرة بالخطأ.</li>
+              <li>تم احتساب رسوم بعد إلغاء الاشتراك في الوقت المحدد.</li>
+              <li>حدث خطأ تقني منعك من استخدام الخدمة بشكل أساسي.</li>
+              <li>توجد حالة أخرى نرى أنها تستحق المراجعة.</li>
+            </ul>
+            <p>لا يعني تقديم الطلب الموافقة التلقائية على الاسترداد. سنراجع تفاصيل الحساب وعملية الدفع قبل اتخاذ القرار.</p>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-905 text-sm text-right">
-              <strong>تفاصيل الاسترداد (نائب):</strong> لطلب الاسترداد أو الإلغاء، يرجى مراسلة <code>[أدخل البريد الإلكتروني أو معلومات التواصل لطلبات الاسترداد هنا]</code>. يجب تقديم طلب الاسترداد خلال <code>[أدخل فترة طلب الاسترداد، مثل 7 أيام أو 14 يوماً]</code> من تاريخ المعاملة.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">4. الحالات غير المؤهلة للاسترداد</h3>
+            <p>قد لا يتم قبول طلب الاسترداد في الحالات التالية:</p>
+            <ul className="list-disc pr-5 space-y-2">
+              <li>تغيير الرأي بعد استخدام الخدمة خلال الفترة المدفوعة.</li>
+              <li>عدم استخدام الحساب رغم توفر الخدمة.</li>
+              <li>تقديم الطلب بعد انتهاء المدة المحددة وهي 14 يوماً.</li>
+              <li>إغلاق الحساب بسبب مخالفة شروط الاستخدام.</li>
+            </ul>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">5. طريقة تقديم الطلب</h3>
+            <p>لطلب الإلغاء أو الاسترداد، تواصل معنا عبر:</p>
+            <ul className="list-none pr-0 space-y-1 text-sm font-semibold text-slate-700 text-right">
+              <li><span className="text-slate-500 font-bold">البريد الإلكتروني:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+              <li>المعلومات المطلوبة: بريد الحساب، اسم مساحة العمل، تاريخ الدفع، وسبب الطلب. ونرد على الطلبات عادة خلال 3 أيام عمل.</li>
+            </ul>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">6. موعد وصول المبلغ</h3>
+            <p>عند الموافقة على الاسترداد، تتم إعادة المبلغ من خلال وسيلة الدفع الأصلية. قد يحتاج المبلغ إلى 7 أيام حتى يظهر في حسابك، بحسب البنك أو مزود الدفع.</p>
           </div>
         </article>
       )}
@@ -616,15 +743,14 @@ export function ContactUs() {
                   </a>
                 </div>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="font-bold text-slate-900 w-32 shrink-0">Response Time:</span>
-                <span className="text-slate-600">We try to respond to all inquiries within 24 hours.</span>
-              </li>
             </ul>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm">
-              <strong>Office Location Placeholder:</strong> <code>[Insert Business Office Address / Mailing Location here, if applicable]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">Company Information</h3>
+            <ul className="list-none pl-0 space-y-1 text-sm font-semibold text-slate-700">
+              <li><span className="text-slate-500 font-bold">Service operator:</span> Yotax</li>
+              <li><span className="text-slate-500 font-bold">Country:</span> Jordan</li>
+              <li><span className="text-slate-500 font-bold">Mailing address:</span> Amman, Jordan</li>
+            </ul>
           </div>
         </article>
       ) : (
@@ -655,15 +781,14 @@ export function ContactUs() {
                   </a>
                 </div>
               </li>
-              <li className="flex items-start gap-3">
-                <span className="font-bold text-slate-900 w-32 shrink-0">وقت الاستجابة:</span>
-                <span className="text-slate-600">نحاول الرد على جميع الاستفسارات في غضون 24 ساعة.</span>
-              </li>
             </ul>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-905 text-sm text-right">
-              <strong>عنوان المكتب (نائب):</strong> <code>[أدخل عنوان المكتب أو صندوق البريد هنا، إن وجد]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">معلومات الجهة المشغلة</h3>
+            <ul className="list-none pr-0 space-y-1 text-sm font-semibold text-slate-700 text-right">
+              <li><span className="text-slate-500 font-bold">اسم الجهة المشغلة:</span> يوتاكس (Yotax)</li>
+              <li><span className="text-slate-500 font-bold">الدولة:</span> الأردن</li>
+              <li><span className="text-slate-500 font-bold">عنوان المراسلات:</span> عمان، الأردن</li>
+            </ul>
           </div>
         </article>
       )}
@@ -681,27 +806,43 @@ export function DeleteAccount() {
             <div className="w-12 h-12 rounded-2xl bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600">
               <Trash2 className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-extrabold text-slate-900 m-0">Delete Account and Data</h1>
+            <h1 className="text-3xl font-extrabold text-slate-900 m-0">Delete Your Account and Data</h1>
           </div>
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>If you wish to close your Yotax workspace and delete all manually logged business data (invoices, cheques, payments, and balances), you can request permanent deletion.</p>
+            <p>You may request the closure of your workspace and deletion of the information connected to it when you no longer need Yotax. This includes information added by you or your team, such as invoices, payments, cheques, and account balances.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">How to Request Deletion:</h3>
-            <ol className="list-decimal pl-5 space-y-3">
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">How to Request Deletion</h3>
+            <p>Send a deletion request from the workspace administrator’s registered email address to:</p>
+            <ul className="list-none pl-0 space-y-1">
               <li>
-                <strong>Self-Service:</strong> Log in to your workspace account, navigate to <strong>Settings</strong> &gt; <strong>Danger Zone</strong>, and click <strong>Delete Workspace</strong>.
+                <strong>Email:</strong> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a>
               </li>
               <li>
-                <strong>By Email:</strong> Alternatively, send an email request to <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a> from the administrator email address registered on your workspace.
+                <strong>Include:</strong> The workspace name, the administrator’s email address, and a clear request to delete the account and its information.
               </li>
-            </ol>
+            </ul>
+            <p>We may ask you to confirm your identity before processing the request to protect the account from unauthorized deletion.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">What Happens Upon Deletion:</h3>
-            <p>All manually logged bank balances, invoice lists, cheques, user accounts, and credentials associated with your subdomain will be permanently wiped from our active databases.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">What Happens After a Request Is Confirmed?</h3>
+            <p>After confirmation:</p>
+            <ul className="list-disc pl-5 space-y-2">
+              <li>Access to the workspace is disabled.</li>
+              <li>Team-member accounts are removed.</li>
+              <li>Invoices, payments, cheques, balances, and related workspace information are deleted.</li>
+              <li>The account’s subscription or renewal is stopped, depending on its current status.</li>
+            </ul>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-900 text-sm">
-              <strong>Deletion Timeframe Placeholder:</strong> Upon confirming your email request, data deletion will be completed within <code>[Insert expected data deletion timeframe, e.g. 7 days or 30 days]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">Deletion Timeframe</h3>
+            <p>A confirmed deletion request will be completed within 30 days. Some information may remain temporarily in backups and will be removed according to our backup schedule. We may keep limited billing or transaction records where required by law.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">Before Deleting Your Account</h3>
+            <p>Account deletion is permanent, and the information may not be recoverable after the process is completed. We recommend that you download any reports or records you need before confirming deletion.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">Need Help?</h3>
+            <p>Contact us at:</p>
+            <ul className="list-none pl-0 space-y-1 text-sm font-semibold text-slate-700">
+              <li><span className="text-slate-500 font-bold">Email:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+            </ul>
           </div>
         </article>
       ) : (
@@ -713,24 +854,40 @@ export function DeleteAccount() {
             <h1 className="text-3xl font-extrabold text-slate-900 m-0">حذف الحساب والبيانات</h1>
           </div>
           <div className="text-slate-600 space-y-6 text-[15px] leading-relaxed font-medium">
-            <p>إذا كنت ترغب في إغلاق مساحة العمل الخاصة بك في يوتاكس وحذف جميع السجلات اليدوية (الفواتير، الشيكات، المدفوعات، الأرصدة)، يمكنك تقديم طلب حذف نهائي.</p>
+            <p>يمكنك طلب إغلاق مساحة العمل وحذف البيانات المرتبطة بها عندما لا تعود بحاجة إلى استخدام يوتاكس. يشمل ذلك البيانات التي أضفتها أنت أو أعضاء فريقك، مثل الفواتير، والمدفوعات، والشيكات، والأرصدة.</p>
             
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">كيفية تقديم طلب الحذف:</h3>
-            <ol className="list-decimal pr-5 space-y-3">
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">كيف تطلب حذف الحساب؟</h3>
+            <p>أرسل طلبًا من البريد الإلكتروني الخاص بمسؤول مساحة العمل إلى البريد الإلكتروني الخاص بالدعم:</p>
+            <ul className="list-none pr-0 space-y-1 text-right">
               <li>
-                <strong>الخدمة الذاتية:</strong> سجل الدخول إلى مساحة العمل الخاصة بك، وانتقل إلى <strong>الإعدادات</strong> &gt; <strong>منطقة الخطر</strong>، واضغط على <strong>حذف مساحة العمل</strong>.
+                <strong>البريد الإلكتروني:</strong> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a>
               </li>
               <li>
-                <strong>عبر البريد الإلكتروني:</strong> راسلنا من بريد المسؤول المسجل لدينا على <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline font-semibold">support@yotax.app</a> لطلب حذف مساحة العمل.
+                <strong>واكتب في الرسالة:</strong> اسم مساحة العمل، البريد الإلكتروني الخاص بالمسؤول، وطلبًا واضحًا بحذف الحساب والبيانات.
               </li>
-            </ol>
+            </ul>
+            <p>قد نطلب منك تأكيد هويتك قبل تنفيذ الطلب لحماية الحساب من الحذف غير المصرح به.</p>
 
-            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">ماذا يحدث بعد الحذف:</h3>
-            <p>سيتم حذف جميع سجلات الحسابات البنكية المضافة، وتواريخ الفواتير، وبيانات الشيكات، وحسابات أعضاء فريقك بشكل نهائي ولا يمكن استعادتها.</p>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">ماذا يحدث بعد تقديم الطلب؟</h3>
+            <p>بعد تأكيد الطلب:</p>
+            <ul className="list-disc pr-5 space-y-2">
+              <li>يتم إيقاف الوصول إلى مساحة العمل.</li>
+              <li>يتم حذف حسابات أعضاء الفريق.</li>
+              <li>يتم حذف الفواتير، والمدفوعات، والشيكات، والأرصدة والبيانات المرتبطة بالحساب.</li>
+              <li>يتم إيقاف الاشتراك أو التجديد المرتبط بالحساب، بحسب حالة الاشتراك.</li>
+            </ul>
 
-            <div className="mt-12 p-6 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-905 text-sm text-right">
-              <strong>الإطار الزمني للحذف (نائب):</strong> بمجرد تأكيد طلبك، ستكتمل عملية إزالة البيانات بشكل نهائي في غضون <code>[أدخل الإطار الزمني المتوقع لعملية الحذف النهائي للبيانات، مثل 7 أيام أو 30 يوماً]</code>.
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">مدة تنفيذ الحذف</h3>
+            <p>يتم تنفيذ طلب الحذف خلال 30 يوماً من تاريخ تأكيده. قد تبقى بعض المعلومات لفترة محدودة داخل النسخ الاحتياطية، ثم تُحذف وفق دورة النسخ الاحتياطي المعتمدة لدينا. وقد نحتفظ ببعض سجلات الفواتير أو المدفوعات عندما يطلب القانون ذلك.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">قبل حذف الحساب</h3>
+            <p>حذف الحساب إجراء نهائي، وقد لا يكون من الممكن استعادة البيانات بعد تنفيذه. ننصح بتنزيل أي تقارير أو بيانات تحتاج إليها قبل تأكيد الحذف.</p>
+
+            <h3 className="text-lg font-bold text-slate-900 mt-8 mb-2">تحتاج إلى مساعدة؟</h3>
+            <p>تواصل معنا عبر:</p>
+            <ul className="list-none pr-0 space-y-1 text-sm font-semibold text-slate-700 text-right">
+              <li><span className="text-slate-500 font-bold">البريد الإلكتروني:</span> <a href="mailto:support@yotax.app" className="text-sky-655 hover:text-sky-700 underline">support@yotax.app</a></li>
+            </ul>
           </div>
         </article>
       )}
