@@ -808,8 +808,19 @@ export default function LandingPage() {
       setSuccess(true);
       setCreatedSubdomain(data.subdomain);
       
+      const host = window.location.hostname;
+      const useSubdomainRedirect = host === 'localhost' || host.endsWith('.localhost') || (!host.endsWith('.netlify.app') && host.split('.').length > 1);
+
+      if (!useSubdomainRedirect) {
+        localStorage.setItem('tenantSubdomain', data.subdomain);
+      }
+
       setTimeout(() => {
-        window.location.href = `${window.location.protocol}//${data.subdomain}.${getDomainBase()}/login`;
+        if (useSubdomainRedirect) {
+          window.location.href = `${window.location.protocol}//${data.subdomain}.${getDomainBase()}/login`;
+        } else {
+          window.location.href = '/login';
+        }
       }, 3000);
 
     } catch (err: any) {
@@ -837,8 +848,17 @@ export default function LandingPage() {
       return;
     }
 
-    // Redirect to the subdomain login page
-    window.location.href = `${window.location.protocol}//${slug}.${getDomainBase()}/login`;
+    const host = window.location.hostname;
+    const useSubdomainRedirect = host === 'localhost' || host.endsWith('.localhost') || (!host.endsWith('.netlify.app') && host.split('.').length > 1);
+
+    if (useSubdomainRedirect) {
+      // Redirect to the subdomain login page
+      window.location.href = `${window.location.protocol}//${slug}.${getDomainBase()}/login`;
+    } else {
+      // Store subdomain in localStorage and redirect to /login on the same domain
+      localStorage.setItem('tenantSubdomain', slug);
+      window.location.href = '/login';
+    }
   };
 
   return (
