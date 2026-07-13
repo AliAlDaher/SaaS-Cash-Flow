@@ -31,134 +31,135 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const translations = {
   EN: {
     // Header
-    problem: "The Problem",
+    problem: "Why Yotax",
     howItWorks: "How It Works",
     features: "Features",
-    aboutUs: "About Us",
+    aboutUs: "About",
     pricing: "Pricing",
     login: "Login",
-    startTrial: "Start Trial",
-    createWorkspace: "Create Workspace",
+    startTrial: "Start Free Trial",
+    createWorkspace: "Start Free Trial",
     
     // Hero
-    heroBadge: "Simple Treasury Software",
-    heroTitle1: "Know your cash flow.",
-    heroTitle2: "Predict your balance.",
-    heroSubtext: "Track bank accounts, cheques, and bills in one place. Stop guessing your balance and start planning your cash flow with simple, automated tools.",
-    createWorkspaceBtn: "Create Your Workspace",
-    seeHowItWorks: "See How it Works",
+    heroBadge: "Simple Cash Flow Management",
+    heroTitle1: "See your cash clearly.",
+    heroTitle2: "Plan what comes next.",
+    heroSubtext: "Keep bank balances, supplier invoices, payments, and post-dated cheques in one place. Know what is due, when it is due, and how upcoming transactions may affect your balance.",
+    createWorkspaceBtn: "Start Free Trial",
+    seeHowItWorks: "See How It Works",
 
     // Problems
-    problemsBadge: "The Problem with Manual Tracking",
-    problemsTitle: "What holds finance teams back?",
-    problemsSubtext: "Businesses suffer silent cash leaks every day due to outdated tools, delayed bank notifications, and fragile spreadsheet templates.",
+    problemsBadge: "WHY YOTAX",
+    problemsTitle: "Cash gets harder to manage when records are scattered.",
+    problemsSubtext: "Invoices sit in messages, cheque dates are easy to forget, and spreadsheets quickly go out of date. Yotax brings everything together so you can stay ahead.",
     
     // Problem Card 1
-    prob1Title: "Overlooked Vendor Invoices",
-    prob1Text: "Outstanding supplier bills get lost in email threads and paperwork. Missing payment deadlines leads to tense relationships, cut credit lines, and delayed shipments.",
-    prob1Foot: "✖ Ruined Supplier Relations",
+    prob1Title: "Missed Supplier Invoices",
+    prob1Text: "Keep every supplier invoice with its total, remaining balance, and due date.",
+    prob1Foot: "Pay on time and keep supplier relationships running smoothly.",
 
     // Problem Card 2
-    prob2Title: "Bounced Post-Dated Cheques",
-    prob2Text: "Suppliers cash post-dated cheques without warning. Without cashing due date tracking, you risk low account balances, bouncing penalties, and tarnished banking credit.",
-    prob2Foot: "✖ Bounced Cheques & Bank Fees",
+    prob2Title: "Unexpected Cheque Dates",
+    prob2Text: "See which post-dated cheques are coming up before they reach the bank.",
+    prob2Foot: "Prepare the balance early and avoid last-minute surprises.",
 
     // Problem Card 3
-    prob3Title: "Inaccurate Cash Runways",
-    prob3Text: "Manual ledgers hide actual cash availability. You might appear highly profitable on paper, but run out of liquid money in the bank to cover salaries and urgent payouts.",
-    prob3Foot: "✖ Cash Deficit Surprises",
+    prob3Title: "An Unclear Future Balance",
+    prob3Text: "View upcoming money in and out to understand where your balance may be heading.",
+    prob3Foot: "Make decisions with a clearer view of the weeks ahead.",
 
     // Bypass / How it works
-    bypassBadge: "How Yotax Works",
-    bypassTitle: "Simple automation for your money",
-    bypassSubtext: "When you launch your workspace, manual record entry is bypassed. Every critical transaction reconciles automatically.",
+    bypassBadge: "HOW YOTAX WORKS",
+    bypassTitle: "From daily entries to a clear cash plan.",
+    bypassSubtext: "Add the transactions that matter, and Yotax organizes the dates, remaining amounts, and upcoming payments for you.",
     
     // Bypass Card 1
-    bypass1Title: "1. Enter Invoices & Cheques",
-    bypass1Text: "Manually log your vendor invoices and post-dated cheques. The system immediately calculates due dates and payment schedules.",
-    bypass1Foot: "✔ Automated Financial Scheduling",
+    bypass1Title: "1. Add Invoices and Cheques",
+    bypass1Text: "Record supplier invoices and post-dated cheques with their amounts and dates.",
+    bypass1Foot: "Keep every upcoming obligation on one clear schedule.",
 
     // Bypass Card 2
-    bypass2Title: "2. FIFO Payment Allocation",
-    bypass2Text: "Log supplier payments and auto-allocate them to outstanding invoices using FIFO logic to keep ledgers accurate.",
-    bypass2Foot: "✔ Smart AP Allocation",
+    bypass2Title: "2. Record Supplier Payments",
+    bypass2Text: "Add payments as they happen and keep track of the remaining amount on each invoice.",
+    bypass2Foot: "Always know which invoices are paid, partly paid, or still outstanding.",
 
     // Bypass Card 3
-    bypass3Title: "3. Post-Dated Cheque Tracking",
-    bypass3Text: "Manage post-dated cheques in a secure log. Get notifications on upcoming due dates to maintain healthy bank balances.",
-    bypass3Foot: "✔ Bouncing Prevention & Alerts",
+    bypass3Title: "3. Review What Is Coming",
+    bypass3Text: "See upcoming payments, cheque dates, expected collections, and your projected balance in one view.",
+    bypass3Foot: "Prepare for upcoming expenses before they affect your account.",
 
     // Features Section
-    featuresBadge: "Main Modules",
-    featuresTitle: "Simple features to manage your cash",
-    featuresSubtext: "Discover the built-in modules designed to enforce financial control, secure company assets, and eliminate administrative bottlenecks.",
+    featuresBadge: "FEATURES",
+    featuresTitle: "The essentials for managing business cash.",
+    featuresSubtext: "Simple tools for the financial work your team handles every day.",
     
-    feat1Title: "Clear Cash Flow Dashboard",
-    feat1Text: "Visualize cash flow trends, expected collections, and upcoming payments in real time to make data-driven decisions.",
-    feat2Title: "Purchase Invoices & Due Dates",
-    feat2Text: "Log supplier invoices, track remaining balances, and schedule due dates to keep AP relations healthy.",
-    feat3Title: "Custom Supplier Payment Terms",
-    feat3Text: "Customize payment terms for each supplier individually (e.g. 60 or 90 days) to auto-schedule future outflows.",
-    feat4Title: "Post-Dated Cheques Registry",
-    feat4Text: "Register post-dated cheques with cashing dates, and track lifecycle from pending to cleared or bounced.",
-    feat5Title: "24-Hour Cheque Due Alerts",
-    feat5Text: "Receive automatic warnings one day before a cheque is due to cash, ensuring bank liquidity is ready.",
-    feat6Title: "Payment Warning Pop-up",
-    feat6Text: "Get an immediate warning pop-up details on any critical supplier invoice or cheque due for payment today.",
+    feat1Title: "Cash Overview",
+    feat1Text: "See bank balances, expected collections, and upcoming payments from one screen.",
+    feat2Title: "Supplier Invoices",
+    feat2Text: "Track invoice totals, payments, remaining balances, and due dates.",
+    feat3Title: "Supplier Payment Terms",
+    feat3Text: "Set a different payment period for each supplier and see when invoices are due.",
+    feat4Title: "Post-Dated Cheques",
+    feat4Text: "Keep cheque amounts, cashing dates, and current status in one organized list.",
+    feat5Title: "Due-Date Reminders",
+    feat5Text: "Get a reminder before an invoice or cheque reaches its due date.",
+    feat6Title: "Team Access",
+    feat6Text: "Let accountants, managers, and team members work from the same up-to-date records.",
 
     // About Us Section
-    aboutBadge: "About Us",
-    aboutTitle: "Built for practical cash management",
-    aboutText1: "We started Yotax to solve a simple problem: businesses spend too much time tracking bank balances and cheques in manual ledgers.",
-    aboutText2: "We built this tool to simplify day-to-day cash flow management. It tracks purchase invoices, logs cheques, and draws clear cash flow curves dynamically.",
-    aboutText3: "Today, over 15 companies use Yotax to track bank balances, record invoices, and forecast cash positions.",
+    aboutBadge: "ABOUT YOTAX",
+    aboutTitle: "Built for the way small businesses manage cash.",
+    aboutText1: "Yotax was created to make everyday cash management simpler.",
+    aboutText2: "Instead of moving between spreadsheets, messages, and paper records, your team can track invoices, cheques, payments, and balances in one workspace.",
+    aboutText3: "It is made for businesses that need a practical view of today’s cash and what is coming next.",
     
-    stat1: "Companies",
-    stat2: "Cash Tracked",
-    stat3: "System Uptime",
+    stat1: "",
+    stat2: "",
+    stat3: "",
 
-    aboutVal1Title: "Simple Financial Tracking",
-    aboutVal1Text: "All bank ledgers, cheque collections, and expenses are tracked in one simple workspace.",
-    aboutVal2Title: "Custom Supplier Terms",
-    aboutVal2Text: "Set custom payment terms per supplier (60/90 days) to track and schedule invoice maturities accurately.",
-    aboutVal3Title: "Multi-User Access",
-    aboutVal3Text: "Add accountants, managers, and data entry staff to manage your records together.",
+    aboutVal1Title: "Simple Cash Tracking",
+    aboutVal1Text: "Follow bank balances, supplier invoices, payments, and cheques from one workspace.",
+    aboutVal2Title: "Flexible Supplier Terms",
+    aboutVal2Text: "Set payment terms that match the agreement you have with each supplier.",
+    aboutVal3Title: "Work With Your Team",
+    aboutVal3Text: "Give accountants, managers, and other team members access based on their role.",
 
     // Security Section
-    securityBadge: "Data Protection",
-    securityTitle: "Your financial records, locked down.",
-    securitySubtext: "We secure your balances and cheques with industry-standard protocols.",
-    sec1Title: "Isolated Databases",
-    sec1Text: "Each workspace gets a private, separate database. Your data never mixes with others.",
-    sec2Title: "Bank-Grade Encryption",
-    sec2Text: "All records, transactions, and credentials are encrypted using AES-256 protocols.",
-    sec3Title: "Daily Secure Backups",
-    sec3Text: "Automated daily backups are saved securely in redundant cloud vaults.",
+    securityBadge: "MADE FOR DAILY WORK",
+    securityTitle: "Less chasing. Fewer surprises.",
+    securitySubtext: "Yotax helps your team keep records current and quickly see what needs attention.",
+    sec1Title: "Everything in One Place",
+    sec1Text: "Keep invoices, cheques, payments, and balances together instead of searching through different files.",
+    sec2Title: "Dates You Will Not Miss",
+    sec2Text: "See what is due soon and prepare for it before it becomes urgent.",
+    sec3Title: "A Clearer View Ahead",
+    sec3Text: "Understand how expected collections and upcoming payments may affect your balance.",
 
     // Pricing Section
-    pricingBadge: "Pricing",
-    pricingTitle: "Simple, Flat-Rate Pricing",
-    pricingSubtext: "One simple plan with unlimited capabilities. Get full access to all cash flow features with zero limits.",
+    pricingBadge: "PRICING",
+    pricingTitle: "Simple monthly pricing.",
+    pricingSubtext: "One plan with the tools you need to manage your business cash flow. No complicated feature tiers.",
 
-    planTitle: "Monthly Subscription",
-    planDesc: "Everything included to manage your business cash flow.",
+    planTitle: "Monthly Plan",
+    planDesc: "Everything you need to track your day-to-day cash position.",
     planPrice: "$30",
-    planPeriod: "/month",
-    planFeat1: "Private Workspace Subdomain",
+    planPeriod: " / month",
+    planFeat1: "A Workspace for Your Company",
     planFeat2: "Unlimited Bank Accounts",
-    planFeat3: "Post-Dated Cheque Tracking",
-    planFeat4: "Custom Supplier Payment Terms",
-    planFeat5: "Team Member Role Permissions",
-    planFeat6: "PDF Financial Reports & Reminders",
+    planFeat3: "Supplier Invoice Tracking",
+    planFeat4: "Post-Dated Cheque Tracking",
+    planFeat5: "Custom Supplier Payment Terms",
+    planFeat6: "Team Member Roles",
+    planFeat7: "Financial Reports and Reminders",
     planBtn: "Start Free Trial",
 
     // FAQ Section
-    faqBadge: "Frequently Asked Questions",
-    faqTitle: "Got Questions? We Have Answers",
-    faqSubtext: "Learn how Yotax helps you manage your day-to-day cash flow and cheque transactions.",
+    faqBadge: "FREQUENTLY ASKED QUESTIONS",
+    faqTitle: "Common questions about Yotax",
+    faqSubtext: "A quick look at how Yotax helps you manage invoices, cheques, payments, and balances.",
 
     // Footer
-    copyright: "© 2026 Yotax Inc. All rights reserved.",
+    copyright: "© 2026 Yotax. All rights reserved.",
 
     // Modal
     modalTitle: "Create New Workspace",
@@ -181,131 +182,132 @@ const translations = {
   },
   AR: {
     // Header
-    problem: "المشاكل المالية",
-    howItWorks: "كيف يشتغل؟",
-    features: "الميزات",
-    aboutUs: "مين إحنا؟",
-    pricing: "الاشتراك",
-    login: "دخول",
-    startTrial: "جرب يوتاكس مجاناً",
-    createWorkspace: "أنشئ مساحتك",
+    problem: "لماذا يوتاكس",
+    howItWorks: "كيف يعمل",
+    features: "المزايا",
+    aboutUs: "عن يوتاكس",
+    pricing: "الأسعار",
+    login: "تسجيل الدخول",
+    startTrial: "ابدأ التجربة المجانية",
+    createWorkspace: "ابدأ التجربة المجانية",
 
     // Hero
-    heroBadge: "برنامج بسيط لتتبع الكاش وحسابات البنك",
-    heroTitle1: "أدر تدفقاتك النقدية بسهولة،",
-    heroTitle2: "وتوقع رصيدك البنكي بدقة.",
-    heroSubtext: "منصة وحدة تلم حساباتك البنكية، شيكاتك المؤجلة، وفواتيرك. انسى الدفاتر اليدوية والـ Excel، وتابع سيولتك بكل وضوح وبشكل فوري.",
-    createWorkspaceBtn: "سجل وجرب مساحتك مجاناً",
-    seeHowItWorks: "شوف كيف يشتغل",
+    heroBadge: "متابعة السيولة بشكل بسيط",
+    heroTitle1: "تابع السيولة بوضوح،",
+    heroTitle2: "وخطط للخطوة الجاية.",
+    heroSubtext: "اجمع أرصدة الحسابات، وفواتير الموردين، والمدفوعات، والشيكات المؤجلة في مكان واحد. اعرف ما المستحق ومتى، وشوف كيف ممكن تؤثر العمليات القادمة على رصيدك.",
+    createWorkspaceBtn: "ابدأ التجربة المجانية",
+    seeHowItWorks: "شوف كيف يعمل",
 
     // Problems
-    problemsBadge: "ليش الإدارة اليدوية صعبة؟",
-    problemsTitle: "شو اللي يعطل شغلك المالي اليوم؟",
-    problemsSubtext: "الشركات تخسر فلوس بدون ما تحس بسبب دفاتر يدوية، شيكات تضيع، أو إشعارات بنكية متأخرة.",
+    problemsBadge: "لماذا يوتاكس",
+    problemsTitle: "لما تكون السجلات موزعة، متابعة السيولة تصير أصعب.",
+    problemsSubtext: "الفواتير تضيع بين الرسائل، ومواعيد الشيكات تننسى، وجداول الإكسل تتأخر عن الواقع. يوتاكس يجمع كل شيء في مكان واحد عشان تظل مستعد.",
 
     // Problem Card 1
-    prob1Title: "فواتير موردين منسية",
-    prob1Text: "الفواتير تضيع بين الإيميلات والأوراق المتراكمة. فواتير الموردين المنسية تخرب علاقاتك التجارية، وتقطع عليك التسهيلات وتأخر بضائعك.",
-    prob1Foot: "✖ تخرب علاقتك مع الموردين",
+    prob1Title: "فواتير موردين ما تمت متابعتها",
+    prob1Text: "احتفظ بكل فاتورة مع قيمتها، والمبلغ المتبقي، وتاريخ الاستحقاق.",
+    prob1Foot: "ادفع في الوقت المناسب وحافظ على علاقتك بالموردين.",
 
     // Problem Card 2
-    prob2Title: "مفاجأة الشيكات المؤجلة",
-    prob2Text: "الموردين يصرفون الشيكات فجأة وبدون ما يبلغوك. إذا ما تتبعت تواريخ الاستحقاق، ممكن ينكشف حسابك، وتدخل بمشاكل شيكات مرتجعة وغرامات.",
-    prob2Foot: "✖ شيكات مرتجعة ومصاريف بنكية",
+    prob2Title: "مواعيد شيكات تجي بدون تنبيه",
+    prob2Text: "شوف الشيكات المؤجلة القادمة قبل موعد صرفها من البنك.",
+    prob2Foot: "جهّز الرصيد من بدري وتجنب مفاجآت آخر لحظة.",
 
     // Problem Card 3
-    prob3Title: "حسابات سيولة غير دقيقة",
-    prob3Text: "الدفاتر اليدوية تعطيك أرقام وهمية. ممكن تشوف شركتك ربحانة على الورق، لكن تتفاجأ إن رصيد البنك ما يغطي الرواتب أو الالتزامات المستعجلة.",
-    prob3Foot: "✖ نقص مفاجئ بالسيولة",
+    prob3Title: "الرصيد القادم غير واضح",
+    prob3Text: "تابع المبالغ الداخلة والخارجة واعرف كيف ممكن يتغير رصيدك.",
+    prob3Foot: "خذ قراراتك على صورة أوضح للفترة الجاية.",
 
     // Bypass / How it works
-    bypassBadge: "مع يوتاكس الأمر مختلف",
-    bypassTitle: "رتب حساباتك بلمسة واحدة",
-    bypassSubtext: "بمجرد ما تسجل، بتبسط شغلك وتتخلص من تعقيد الدفاتر. كل شي بيمشي بشكل منظم وواضح.",
+    bypassBadge: "كيف يعمل يوتاكس",
+    bypassTitle: "من تسجيل العمليات اليومية إلى خطة واضحة للسيولة.",
+    bypassSubtext: "أضف العمليات المهمة، ويوتاكس يرتب لك المواعيد، والمبالغ المتبقية، والمدفوعات القادمة.",
 
     // Bypass Card 1
-    bypass1Title: "1. سجل فواتيرك وشيكاتك",
-    bypass1Text: "دخل فواتير الموردين والشيكات المؤجلة في ثوانٍ. النظام بيبدأ فوراً يحسب التواريخ ويرتب جدول المدفوعات تلقائياً.",
-    bypass1Foot: "✔ تواريخ مدفوعات مرتبة تلقائياً",
+    bypass1Title: "1. أضف الفواتير والشيكات",
+    bypass1Text: "سجّل فواتير الموردين والشيكات المؤجلة مع المبالغ والتواريخ.",
+    bypass1Foot: "خلي كل الالتزامات القادمة ظاهرة في جدول واضح.",
 
     // Bypass Card 2
-    bypass2Title: "2. وزع المدفوعات بذكاء (FIFO)",
-    bypass2Text: "سجل المبالغ اللي تدفعها للموردين، والنظام بيوزعها تلقائياً على فواتيرهم الأقدم فالأحدث عشان دفاترهم تكون دايم دقيقة.",
-    bypass2Foot: "✔ تسوية فواتير صحيحة ومرتبة",
+    bypass2Title: "2. سجّل دفعات الموردين",
+    bypass2Text: "أضف الدفعات وقت ما تحصل، وتابع المبلغ المتبقي على كل فاتورة.",
+    bypass2Foot: "اعرف الفواتير المدفوعة، والمدفوعة جزئيًا، واللي ما زالت مستحقة.",
 
     // Bypass Card 3
-    bypass3Title: "3. تتبع الشيكات بدون قلق",
-    bypass3Text: "تابع شيكاتك المؤجلة في مكان واحد آمن، واحصل على تنبيهات قبل موعد الصرف عشان تحمي حسابك من الارتجاع.",
-    bypass3Foot: "✔ حماية من الشيكات المرتجعة",
+    bypass3Title: "3. راجع العمليات القادمة",
+    bypass3Text: "شوف المدفوعات القادمة، ومواعيد الشيكات، والتحصيلات المتوقعة، والرصيد المتوقع من شاشة واحدة.",
+    bypass3Foot: "استعد للمصاريف قبل ما تؤثر على حسابك.",
 
     // Features Section
-    featuresBadge: "ميزات أساسية لشغلك",
-    featuresTitle: "كل الأدوات اللي تحتاجها لإدارة الكاش",
-    featuresSubtext: "وحدات برمجية مخصصة عشان تفرض السيطرة المالية، وتحمي أصول الشركة، وتريح راسك من المتابعة اليومية المكررة.",
+    featuresBadge: "المزايا",
+    featuresTitle: "كل اللي تحتاجه لإدارة سيولة شركتك.",
+    featuresSubtext: "أدوات بسيطة للشغل المالي اللي يتعامل معه فريقك كل يوم.",
 
-    feat1Title: "لوحة تحكم واضحة وسهلة",
-    feat1Text: "تابع حركة الكاش والتحصيلات المتوقعة ومدفوعاتك القادمة لحظة بلحظة برسم بياني بسيط ومريح.",
-    feat2Title: "متابعة فواتير الموردين",
-    feat2Text: "سجل فواتير الشراء، وتابع الأرصدة المتبقية وتواريخ استحقاقها عشان تضمن سدادها في وقتها.",
-    feat3Title: "تخصيص فترات سداد الموردين",
-    feat3Text: "حدد شروط الدفع لكل مورد (مثلاً 60 أو 90 يوم)، وخلي النظام يحسب تواريخ الاستحقاق تلقائياً لكل فاتورة.",
-    feat4Title: "سجل شيكات مؤجلة متكامل",
-    feat4Text: "وثّق كل شيك وتاريخ صرفه، وتابع حالته من قيد الانتظار إلى الصرف الفعلي بكل سهولة.",
-    feat5Title: "تنبيهات الشيكات قبل 24 ساعة",
-    feat5Text: "بيوصلك تنبيه تلقائي قبل 24 ساعة من موعد صرف الشيك عشان تتأكد إن رصيدك بالبنك كافي.",
-    feat6Title: "تنبيه المدفوعات اليومية",
-    feat6Text: "أول ما تفتح البرنامج، بتشوف نافذة تنبيهات واضحة تذكرك بأي فواتير أو شيكات مستحقة اليوم عشان ما تتأخر.",
+    feat1Title: "نظرة واضحة على السيولة",
+    feat1Text: "تابع أرصدة الحسابات، والتحصيلات المتوقعة، والمدفوعات القادمة من شاشة واحدة.",
+    feat2Title: "فواتير الموردين",
+    feat2Text: "تابع قيمة كل فاتورة، والدفعات، والمبلغ المتبقي، وتاريخ الاستحقاق.",
+    feat3Title: "شروط دفع الموردين",
+    feat3Text: "حدد فترة دفع مختلفة لكل مورد واعرف متى تستحق فواتيره.",
+    feat4Title: "الشيكات المؤجلة",
+    feat4Text: "احتفظ بقيمة كل شيك، وتاريخ صرفه، وحالته في قائمة مرتبة.",
+    feat5Title: "تذكيرات مواعيد الاستحقاق",
+    feat5Text: "استلم تذكير قبل موعد استحقاق الفاتورة أو صرف الشيك.",
+    feat6Title: "وصول أعضاء الفريق",
+    feat6Text: "خلّ المحاسب والمدير وأعضاء الفريق يشتغلون على نفس السجلات المحدثة.",
 
     // About Us Section
-    aboutBadge: "مين إحنا؟",
-    aboutTitle: "صممنا يوتاكس عشان يحل مشاكل مالية حقيقية",
-    aboutText1: "بلشنا يوتاكس لنحل مشكلة بيعاني منها كل صاحب عمل: ضياع الوقت في مراجعة كشوفات الحسابات البنكية وتحديث دفاتر الشيكات يدوياً خوفاً من مفاجآت السيولة.",
-    aboutText2: "طورنا المنصة لتبسيط متابعة الكاش اليومية. يوتاكس بيتتبع فواتير الموردين، يسجل الشيكات، ويرسم منحنى التدفق النقدي بشكل فوري وواضح.",
-    aboutText3: "اليوم، أكثر من 15 شركة بتعتمد على يوتاكس لتتبع كشوفاتها وتوقعات كاشها اليومي بكل ثقة.",
+    aboutBadge: "عن يوتاكس",
+    aboutTitle: "مبني على طريقة الشركات الصغيرة في إدارة السيولة.",
+    aboutText1: "صممنا يوتاكس عشان نخلي متابعة السيولة اليومية أبسط.",
+    aboutText2: "بدل التنقل بين الإكسل، والرسائل، والدفاتر، يقدر فريقك يتابع الفواتير، والشيكات، والمدفوعات، والأرصدة من مكان واحد.",
+    aboutText3: "يوتاكس مناسب للشركات اللي تحتاج صورة عملية عن رصيد اليوم والعمليات القادمة.",
 
-    stat1: "شركات تستخدمنا",
-    stat2: "كاش متتبع",
-    stat3: "جاهزية النظام",
+    stat1: "",
+    stat2: "",
+    stat3: "",
 
-    aboutVal1Title: "تتبع مالي مبسط",
-    aboutVal1Text: "حساباتك البنكية، شيكاتك، ومصاريفك كلها بمكان واحد سهل ومريح للكل.",
+    aboutVal1Title: "متابعة مالية بسيطة",
+    aboutVal1Text: "تابع أرصدة الحسابات، وفواتير الموردين، والمدفوعات، والشيكات من مكان واحد.",
     aboutVal2Title: "شروط دفع مرنة",
-    aboutVal2Text: "رتب فترات السداد لكل مورد (60/90 يوم) وخل النظام يحسب ويوضح لك التواريخ.",
-    aboutVal3Title: "فريق عمل واحد",
-    aboutVal3Text: "ضف المحاسبين والمدراء ووزع الصلاحيات عشان تديروا الدفاتر سوى وبكل أمان.",
+    aboutVal2Text: "حدد شروط الدفع حسب اتفاقك مع كل مورد.",
+    aboutVal3Title: "اشتغل مع فريقك",
+    aboutVal3Text: "أضف المحاسبين والمديرين وأعضاء الفريق، وحدد صلاحية كل شخص حسب دوره.",
 
     // Security Section
-    securityBadge: "حماية البيانات",
-    securityTitle: "سجلاتك المالية في أمان تام",
-    securitySubtext: "نحمي أرصدتك وشيكاتك بأعلى معايير الأمان وعزل البيانات السحابية.",
-    sec1Title: "بيانات معزولة بالكامل",
-    sec1Text: "لكل مساحة عمل قاعدة بيانات مستقلة وخاصة. لا تختلط بياناتك مع الآخرين نهائياً.",
-    sec2Title: "تشفير بمستوى بنكي",
-    sec2Text: "تشفير كامل لجميع السجلات والعمليات المالية باستخدام معيار AES-256 العالمي.",
-    sec3Title: "نسخ احتياطي يومي",
-    sec3Text: "نسخ احتياطي يومي وتلقائي يُحفظ بأمان في خوادم سحابية متعددة.",
+    securityBadge: "مصمم للشغل اليومي",
+    securityTitle: "متابعة أقل، ومفاجآت أقل.",
+    securitySubtext: "يوتاكس يساعد فريقك يحافظ على تحديث السجلات ويعرف بسرعة ما يحتاج متابعة.",
+    sec1Title: "كل شيء في مكان واحد",
+    sec1Text: "احتفظ بالفواتير، والشيكات، والمدفوعات، والأرصدة مع بعض بدل البحث عنها في ملفات مختلفة.",
+    sec2Title: "مواعيد ما تفوتك",
+    sec2Text: "اعرف ما المستحق قريبًا واستعد له قبل ما يصير مستعجل.",
+    sec3Title: "صورة أوضح للفترة الجاية",
+    sec3Text: "شوف كيف ممكن تؤثر التحصيلات والمدفوعات القادمة على رصيدك.",
 
     // Pricing Section
-    pricingBadge: "باقة الاشتراك",
-    pricingTitle: "اشتراك واحد بسيط وموحد للجميع",
-    pricingSubtext: "خطة اشتراك وحدة بميزات كاملة وبدون أي حدود. وصول كامل لكل ميزات الكاش والشيكات بدون لف ودوران.",
+    pricingBadge: "الأسعار",
+    pricingTitle: "سعر شهري واضح.",
+    pricingSubtext: "باقة واحدة فيها الأدوات اللي تحتاجها لإدارة سيولة شركتك، بدون مستويات معقدة.",
 
-    planTitle: "الاشتراك الشهري",
-    planDesc: "كل الميزات اللي تحتاجها لإدارة الكاش والشيكات لشركتك.",
+    planTitle: "الباقة الشهرية",
+    planDesc: "كل اللي تحتاجه لمتابعة وضع السيولة يومًا بيوم.",
     planPrice: "$30",
-    planPeriod: "/شهرياً",
-    planFeat1: "نطاق فرعي خاص لشركتك (subdomain)",
-    planFeat2: "ربط عدد غير محدود من الحسابات البنكية",
-    planFeat3: "تتبع كامل للشيكات المؤجلة",
-    planFeat4: "شروط دفع مخصصة للموردين",
-    planFeat5: "أدوار وصلاحيات للمستخدمين",
-    planFeat6: "تنبيهات وتقارير مالية PDF",
-    planBtn: "جرب مجاناً الآن",
+    planPeriod: " شهريًا",
+    planFeat1: "مساحة خاصة لشركتك",
+    planFeat2: "حسابات بنكية بدون حد",
+    planFeat3: "متابعة فواتير الموردين",
+    planFeat4: "متابعة الشيكات المؤجلة",
+    planFeat5: "شروط دفع مخصصة للموردين",
+    planFeat6: "صلاحيات لأعضاء الفريق",
+    planFeat7: "تقارير وتذكيرات مالية",
+    planBtn: "ابدأ التجربة المجانية",
 
     // FAQ Section
     faqBadge: "الأسئلة الشائعة",
-    faqTitle: "عندك أسئلة؟ إحنا هنا لنجاوبك",
-    faqSubtext: "تعرف كيف يوتاكس بيساعدك ترتب أمورك المالية اليومية وتتبع شيكاتك المؤجلة بكل سهولة.",
+    faqTitle: "أسئلة شائعة عن يوتاكس",
+    faqSubtext: "إجابات سريعة عن متابعة الفواتير، والشيكات، والمدفوعات، والأرصدة.",
 
     // Footer
     copyright: "© 2026 يوتاكس. جميع الحقوق محفوظة.",
@@ -690,12 +692,12 @@ export default function LandingPage() {
 
     // 2. Dynamic SEO Text
     const seoTitle = lang === 'AR' 
-      ? 'يوتاكس - برنامج بسيط لتتبع الكاش وحسابات البنك' 
-      : 'Yotax - Simple Cash Flow & Financial Tracking';
+      ? 'يوتاكس | متابعة السيولة بشكل بسيط' 
+      : 'Yotax | Simple Cash Flow Management';
     
     const seoDesc = lang === 'AR'
-      ? 'منصة وحدة تلم حساباتك البنكية، شيكاتك المؤجلة، وفواتيرك. انسى الدفاتر اليدوية والـ Excel، وتابع سيولتك بكل وضوح وبشكل فوري.'
-      : 'A simple cash flow tracking platform for modern businesses. Track bank accounts, schedule post-dated cheques, and manage vendor invoice payments in one clear dashboard.';
+      ? 'تابع أرصدة الحسابات، وفواتير الموردين، والمدفوعات، والشيكات المؤجلة من مكان واحد.'
+      : 'Track bank balances, supplier invoices, payments, and post-dated cheques in one simple workspace.';
 
     // 3. Update Document Title
     document.title = seoTitle;
@@ -727,34 +729,34 @@ export default function LandingPage() {
 
   const faqs = [
     {
-      q: lang === 'EN' ? "How does cheque tracking work?" : "كيف يعمل تتبع الشيكات؟",
+      q: lang === 'EN' ? "How does cheque tracking work?" : "كيف تعمل متابعة الشيكات؟",
       a: lang === 'EN' 
-        ? "You log your post-dated cheques with their due dates. Yotax tracks the due dates and alerts you before they clear, helping you avoid overdraft fees."
-        : "تقوم بتسجيل شيكاتك المؤجلة مع تواريخ استحقاقها. يتتبع يوتاكس تواريخ الاستحقاق وينبهك قبل موعد سحبها، مما يجنبك غرامات السحب على المكشوف."
+        ? "Add the cheque amount, bank, and cashing date. Yotax places it on your upcoming schedule and reminds you before it is due."
+        : "أضف قيمة الشيك، والبنك، وتاريخ الصرف. يوتاكس يضيفه للعمليات القادمة وينبهك قبل الموعد."
     },
     {
-      q: lang === 'EN' ? "What bank accounts can I track?" : "ما هي الحسابات البنكية التي يمكنني تتبعها؟",
+      q: lang === 'EN' ? "What bank accounts can I track?" : "ما الحسابات البنكية اللي أقدر أتابعها؟",
       a: lang === 'EN'
-        ? "You can track any current, savings, or credit card accounts. You log or import your bank transactions to keep your cash flow charts accurate."
-        : "يمكنك تتبع أي حسابات جارية، أو ادخارية، أو حسابات بطاقات الائتمان. تقوم بتسجيل أو استيراد حركات حسابك لتحديث رسومات التدفق النقدي."
+        ? "You can add the business bank accounts you use and follow each account balance from the same workspace."
+        : "تقدر تضيف حسابات الشركة البنكية وتتابع رصيد كل حساب من نفس المكان."
     },
     {
-      q: lang === 'EN' ? "What is expense seeding?" : "ما هو التوليد التلقائي للمصروفات؟",
+      q: lang === 'EN' ? "Can I track partial invoice payments?" : "هل أقدر أتابع الدفعات الجزئية للفواتير؟",
       a: lang === 'EN'
-        ? "It automatically generates recurring bills like rent, utilities, and employee salaries on the first of each month. This saves time on manual bookkeeping."
-        : "هي ميزة تنشئ مصروفاتك الدورية تلقائياً (مثل الإيجار، فواتير الكهرباء، ورواتب الموظفين) في اليوم الأول من كل شهر لتفادي الكتابة اليدوية."
+        ? "Yes. Record the invoice and add each payment as it happens. Yotax shows the amount that is still outstanding."
+        : "نعم. أضف الفاتورة وسجّل كل دفعة وقت ما تحصل، ويوتاكس يوضح لك المبلغ اللي ما زال مستحقًا."
     },
     {
-      q: lang === 'EN' ? "Can my accountant use this too?" : "هل يمكن للمحاسب الخاص بي استخدام النظام؟",
+      q: lang === 'EN' ? "Can my accountant use Yotax?" : "هل يقدر المحاسب يستخدم يوتاكس؟",
       a: lang === 'EN'
-        ? "Yes. You can invite team members like accountants, managers, or data-entry staff with customized view or edit access."
-        : "نعم، يمكنك دعوة أعضاء فريق العمل مثل المحاسبين أو المدراء الماليين أو مدخلي البيانات مع تحديد صلاحيات مخصصة لكل منهم للعرض أو التعديل."
+        ? "Yes. You can invite your accountant and other team members, then give each person access based on their role."
+        : "نعم. تقدر تضيف المحاسب وأعضاء الفريق، وتعطي كل شخص الصلاحية المناسبة لدوره."
     },
     {
-      q: lang === 'EN' ? "How does Yotax predict my balance?" : "كيف يتوقع يوتاكس رصيدي المستقبلي؟",
+      q: lang === 'EN' ? "How does Yotax estimate my future balance?" : "كيف يحسب يوتاكس الرصيد المتوقع؟",
       a: lang === 'EN'
-        ? "It combines your current bank balances, upcoming post-dated cheques, and recurring bills to draw a cash flow chart for the next 30 days."
-        : "يقوم النظام بدمج رصيدك الحالي الفعلي في البنك مع الشيكات المؤجلة القادمة والمصروفات الدورية المجدولة ليرسم لك خط السيولة للـ 30 يوماً القادمة."
+        ? "Yotax uses the balances and upcoming transactions you enter, including collections, invoices, payments, and cheques. The projected balance is an estimate and changes when your records change."
+        : "يعتمد يوتاكس على الأرصدة والعمليات القادمة اللي تسجلها، مثل التحصيلات، والفواتير، والمدفوعات، والشيكات. الرصيد المتوقع تقديري ويتغير مع تحديث البيانات."
     }
   ];
 
@@ -1320,7 +1322,7 @@ export default function LandingPage() {
               <span className="text-xs font-extrabold text-sky-600 mt-6 block uppercase tracking-wider">{t.bypass1Foot}</span>
             </div>
 
-            {/* Card 2: FIFO Payment Allocation */}
+            {/* Card 2: Record Supplier Payments */}
             <div className="p-7 sm:p-8 rounded-2xl bg-gradient-to-b from-white to-slate-50/50 border border-slate-200/80 flex flex-col justify-between overflow-hidden shadow-sm relative group hover:border-sky-300/70 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div>
                 <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-100/60 flex items-center justify-center text-sky-600 mb-6 group-hover:scale-110 transition-transform duration-300">
@@ -1335,11 +1337,11 @@ export default function LandingPage() {
                 <div className="relative h-28 w-full bg-slate-50 rounded-xl overflow-hidden p-3 border border-slate-100 space-y-1.5 flex flex-col justify-center">
                   <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-1 shadow-sm">
                     <span>{lang === 'AR' ? 'فاتورة رقم 1093' : 'Invoice #1093'}</span>
-                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'مدفوعة (FIFO)' : 'PAID (FIFO)'}</span>
+                    <span className="text-[7px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'مدفوعة' : 'PAID'}</span>
                   </div>
                   <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-2 opacity-0 shadow-sm">
                     <span>{lang === 'AR' ? 'فاتورة رقم 1094' : 'Invoice #1094'}</span>
-                    <span className="text-[7px] bg-sky-50 text-sky-700 border border-sky-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'جزئي (FIFO)' : 'PARTIAL (FIFO)'}</span>
+                    <span className="text-[7px] bg-sky-50 text-sky-700 border border-sky-100 px-1.5 py-0.5 rounded font-bold">{lang === 'AR' ? 'جزئي' : 'PARTIAL'}</span>
                   </div>
                   <div className="p-1.5 bg-white rounded border border-slate-200 text-[8px] font-bold text-slate-800 flex justify-between items-center animate-cascade-3 opacity-0 shadow-sm">
                     <span>{lang === 'AR' ? 'فاتورة رقم 1095' : 'Invoice #1095'}</span>
@@ -1538,22 +1540,6 @@ export default function LandingPage() {
                 <p>{t.aboutText2}</p>
                 <p>{t.aboutText3}</p>
               </div>
-
-              {/* Stat callouts */}
-              <div className="grid grid-cols-3 gap-6 mt-10 border-t border-slate-200/80 pt-8">
-                <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">15+</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat1}</span>
-                </div>
-                <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-amber-550 block">$4M+</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat2}</span>
-                </div>
-                <div>
-                  <span className="text-2xl md:text-3xl font-extrabold text-sky-600 block">99.9%</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block tracking-wider mt-1">{t.stat3}</span>
-                </div>
-              </div>
             </div>
 
             {/* Core Values */}
@@ -1729,6 +1715,15 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <img src={yotaxLogo} alt="Yotax Logo" className="h-7 w-auto object-contain opacity-80" />
           </div>
+          
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-500">
+            <a href="#problems" className="hover:text-sky-600 transition-colors">{t.problem}</a>
+            <a href="#demo-video" className="hover:text-sky-600 transition-colors">{t.howItWorks}</a>
+            <a href="#features" className="hover:text-sky-600 transition-colors">{t.features}</a>
+            <a href="#about" className="hover:text-sky-600 transition-colors">{t.aboutUs}</a>
+            <a href="#pricing" className="hover:text-sky-600 transition-colors">{t.pricing}</a>
+          </div>
+
           <span className="text-xs font-semibold tracking-wide">
             {t.copyright}
           </span>
