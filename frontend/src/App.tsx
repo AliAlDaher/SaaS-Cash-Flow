@@ -7,6 +7,11 @@ import { BrowserRouter, Routes, Route, Link, useLocation, Navigate, useNavigate 
 const Login = React.lazy(() => import('./Login'))
 const ReportsTab = React.lazy(() => import('./ReportsTab').then(m => ({ default: m.ReportsTab })))
 const LandingPage = React.lazy(() => import('./LandingPage'))
+const PrivacyPolicy = React.lazy(() => import('./LegalPages').then(m => ({ default: m.PrivacyPolicy })))
+const TermsOfUse = React.lazy(() => import('./LegalPages').then(m => ({ default: m.TermsOfUse })))
+const RefundPolicy = React.lazy(() => import('./LegalPages').then(m => ({ default: m.RefundPolicy })))
+const ContactUs = React.lazy(() => import('./LegalPages').then(m => ({ default: m.ContactUs })))
+const DeleteAccount = React.lazy(() => import('./LegalPages').then(m => ({ default: m.DeleteAccount })))
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext'
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
@@ -300,6 +305,11 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfUse />} />
+              <Route path="/refund-policy" element={<RefundPolicy />} />
+              <Route path="/contact" element={<ContactUs />} />
+              <Route path="/delete-account" element={<DeleteAccount />} />
               <Route path="/app/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

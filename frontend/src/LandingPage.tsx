@@ -178,7 +178,24 @@ const translations = {
     loginModalSubdomainLabel: "Workspace Subdomain",
     loginModalSubdomainPlaceholder: "acme",
     loginModalSubmitBtn: "Go to Workspace",
-    loginModalError: "Please enter a valid subdomain."
+    loginModalError: "Please enter a valid subdomain.",
+    footerDesc: "Keep supplier invoices, post-dated cheques, payments, and cash balances organized in one place.",
+    footerCta: "Start Free Trial",
+    footerProduct: "Product",
+    footerSupport: "Support",
+    footerLegal: "Legal",
+    footerHowItWorks: "How It Works",
+    footerFeatures: "Features",
+    footerPricing: "Pricing",
+    footerFaq: "Frequently Asked Questions",
+    footerLogin: "Login",
+    footerContact: "Contact Us",
+    footerWhatsapp: "WhatsApp",
+    footerEmail: "Email Support",
+    footerDeleteAccount: "Delete Account and Data",
+    footerPrivacy: "Privacy Policy",
+    footerTerms: "Terms of Use",
+    footerRefund: "Cancellation and Refund Policy"
   },
   AR: {
     // Header
@@ -329,7 +346,24 @@ const translations = {
     loginModalSubdomainLabel: "رابط مساحة العمل الفرعي (Subdomain)",
     loginModalSubdomainPlaceholder: "acme",
     loginModalSubmitBtn: "الانتقال لمساحة العمل",
-    loginModalError: "يرجى إدخال نطاق فرعي صحيح."
+    loginModalError: "يرجى إدخال نطاق فرعي صحيح.",
+    footerDesc: "رتّب فواتير الموردين، والشيكات المؤجلة، والمدفوعات، وتابع وضع السيولة من مكان واحد.",
+    footerCta: "ابدأ التجربة المجانية",
+    footerProduct: "المنتج",
+    footerSupport: "الدعم",
+    footerLegal: "قانوني",
+    footerHowItWorks: "كيف يعمل",
+    footerFeatures: "المزايا",
+    footerPricing: "الأسعار",
+    footerFaq: "الأسئلة الشائعة",
+    footerLogin: "تسجيل الدخول",
+    footerContact: "تواصل معنا",
+    footerWhatsapp: "تواصل عبر واتساب",
+    footerEmail: "البريد الإلكتروني",
+    footerDeleteAccount: "حذف الحساب والبيانات",
+    footerPrivacy: "سياسة الخصوصية",
+    footerTerms: "شروط الاستخدام",
+    footerRefund: "سياسة الإلغاء والاسترداد"
   }
 };
 
@@ -633,6 +667,9 @@ export default function LandingPage() {
       if (urlLang === 'ar') return 'AR';
       if (urlLang === 'en') return 'EN';
       
+      const stored = localStorage.getItem('yotax_landing_lang');
+      if (stored === 'AR' || stored === 'EN') return stored;
+
       const browserLang = navigator.language?.substring(0, 2).toLowerCase();
       return browserLang === 'ar' ? 'AR' : 'EN';
     } catch {
@@ -665,6 +702,7 @@ export default function LandingPage() {
   const handleLangToggle = (newLang: 'EN' | 'AR') => {
     setLang(newLang);
     try {
+      localStorage.setItem('yotax_landing_lang', newLang);
       const url = new URL(window.location.href);
       url.searchParams.set('lang', newLang.toLowerCase());
       window.history.pushState({}, '', url.toString());
@@ -683,6 +721,20 @@ export default function LandingPage() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  React.useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const action = params.get('openModal');
+      if (action === 'register') {
+        openModal('register');
+      } else if (action === 'login') {
+        openModal('login');
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
 
   React.useEffect(() => {
@@ -1710,23 +1762,111 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/60 py-12 bg-white text-slate-400">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2.5">
-            <img src={yotaxLogo} alt="Yotax Logo" className="h-7 w-auto object-contain opacity-80" />
-          </div>
-          
-          <div className="flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm font-semibold text-slate-500">
-            <a href="#problems" className="hover:text-sky-600 transition-colors">{t.problem}</a>
-            <a href="#demo-video" className="hover:text-sky-600 transition-colors">{t.howItWorks}</a>
-            <a href="#features" className="hover:text-sky-600 transition-colors">{t.features}</a>
-            <a href="#about" className="hover:text-sky-600 transition-colors">{t.aboutUs}</a>
-            <a href="#pricing" className="hover:text-sky-600 transition-colors">{t.pricing}</a>
+      <footer className="border-t border-slate-200/60 py-16 bg-white text-slate-400">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-slate-200/60">
+            {/* Column 1: Brand & Info */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2.5">
+                <img src={yotaxLogo} alt="Yotax Logo" className="h-7.5 w-auto object-contain opacity-90" />
+              </div>
+              <p className="text-slate-550 text-sm leading-relaxed max-w-sm font-medium">
+                {t.footerDesc}
+              </p>
+              <div>
+                <button 
+                  onClick={() => openModal('register')}
+                  className="inline-flex items-center justify-center px-4 py-2 text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-xl shadow-md shadow-sky-500/10 hover:shadow-lg hover:shadow-sky-500/15 hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  {t.footerCta}
+                </button>
+              </div>
+            </div>
+
+            {/* Column 2: Product */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">{t.footerProduct}</h4>
+              <ul className="space-y-2.5 text-sm font-semibold text-slate-550">
+                <li>
+                  <a href="#problems" className="hover:text-sky-600 transition-colors">{t.problem}</a>
+                </li>
+                <li>
+                  <a href="#demo-video" className="hover:text-sky-600 transition-colors">{t.howItWorks}</a>
+                </li>
+                <li>
+                  <a href="#features" className="hover:text-sky-600 transition-colors">{t.features}</a>
+                </li>
+                <li>
+                  <a href="#pricing" className="hover:text-sky-600 transition-colors">{t.pricing}</a>
+                </li>
+                <li>
+                  <a href="#faq" className="hover:text-sky-600 transition-colors">{t.footerFaq}</a>
+                </li>
+                <li>
+                  <button onClick={() => openModal('login')} className="hover:text-sky-600 transition-colors text-left font-semibold">{t.footerLogin}</button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 3: Support */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">{t.footerSupport}</h4>
+              <ul className="space-y-2.5 text-sm font-semibold text-slate-550">
+                <li>
+                  <a href="/contact" className="hover:text-sky-600 transition-colors">{t.footerContact}</a>
+                </li>
+                <li>
+                  <a href="https://wa.me/962790620675" target="_blank" rel="noopener noreferrer" className="hover:text-sky-600 transition-colors">{t.footerWhatsapp}</a>
+                </li>
+                <li>
+                  <a href="mailto:support@yotax.app" className="hover:text-sky-600 transition-colors">{t.footerEmail}</a>
+                </li>
+                <li>
+                  <a href="/delete-account" className="hover:text-sky-600 transition-colors text-rose-500 hover:text-rose-600">{t.footerDeleteAccount}</a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Legal */}
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">{t.footerLegal}</h4>
+              <ul className="space-y-2.5 text-sm font-semibold text-slate-550">
+                <li>
+                  <a href="/privacy" className="hover:text-sky-600 transition-colors">{t.footerPrivacy}</a>
+                </li>
+                <li>
+                  <a href="/terms" className="hover:text-sky-600 transition-colors">{t.footerTerms}</a>
+                </li>
+                <li>
+                  <a href="/refund-policy" className="hover:text-sky-600 transition-colors">{t.footerRefund}</a>
+                </li>
+              </ul>
+            </div>
           </div>
 
-          <span className="text-xs font-semibold tracking-wide">
-            {t.copyright}
-          </span>
+          {/* Bottom Bar */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 pt-8 text-xs font-semibold">
+            <span className="tracking-wide text-slate-400">
+              {t.copyright}
+            </span>
+
+            {/* Bottom Language Selector */}
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => handleLangToggle('AR')}
+                className={`transition-colors ${lang === 'AR' ? 'text-sky-600 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
+              >
+                العربية
+              </button>
+              <span className="text-slate-200">|</span>
+              <button 
+                onClick={() => handleLangToggle('EN')}
+                className={`transition-colors ${lang === 'EN' ? 'text-sky-600 font-bold' : 'text-slate-400 hover:text-slate-900'}`}
+              >
+                English
+              </button>
+            </div>
+          </div>
         </div>
       </footer>
 
